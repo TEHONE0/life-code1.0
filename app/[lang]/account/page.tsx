@@ -40,6 +40,7 @@ function AccountPage() {
   const searchParams = useSearchParams();
   const view = (searchParams.get("view") === "forms" ? "forms" : "reports") as "forms" | "reports";
 
+  const ADMIN_EMAIL = "theone208899@gmail.com";
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [list, setList] = useState<Submission[]>([]);
@@ -264,6 +265,18 @@ function AccountPage() {
             </div>
           );
         })}
+
+        {email === ADMIN_EMAIL && (
+          <button
+            onClick={() => router.push(`/${lang}/admin`)}
+            className="w-full py-3 text-sm font-bold"
+            style={{ border: "1px solid #00ff88", color: "#00ff88", background: "transparent", cursor: "pointer", letterSpacing: "0.05em", fontFamily: "Courier New, monospace" }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#00ff88"; e.currentTarget.style.color = "#050a05" }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#00ff88" }}
+          >
+            {lang === "zh" ? "⚙ 管理后台" : lang === "ko" ? "⚙ 관리자" : "⚙ Admin Dashboard"}
+          </button>
+        )}
 
         <div className="flex gap-3 pt-2" style={{ fontFamily: "Courier New, monospace" }}>
           <button
