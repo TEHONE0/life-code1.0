@@ -38,7 +38,8 @@ function AccountPage() {
   const lang = (params.lang as Lang) ?? "en";
   const router = useRouter();
   const searchParams = useSearchParams();
-  const view = (searchParams.get("view") === "forms" ? "forms" : "reports") as "forms" | "reports";
+  const viewParam = searchParams.get("view");
+  const view = (viewParam === "forms" || viewParam === "reports" || viewParam === "admin" ? viewParam : "reports") as "forms" | "reports" | "admin";
 
   const ADMIN_EMAIL = "theone208899@gmail.com";
   const [loading, setLoading] = useState(true);
@@ -92,7 +93,7 @@ function AccountPage() {
     }
   };
 
-  const switchView = (v: "forms" | "reports") => {
+  const switchView = (v: "forms" | "reports" | "admin") => {
     setExpandedId(null);
     router.push(`/${lang}/account?view=${v}`);
   };
@@ -135,7 +136,7 @@ function AccountPage() {
 
         {/* Tabs */}
         <div className="flex gap-2" style={{ borderBottom: "1px solid #1a3a1a" }}>
-          {(["forms", "reports"] as const).map((v) => (
+          {(["forms", "reports", ...(email === ADMIN_EMAIL ? ["admin"] : [])] as ("forms" | "reports" | "admin")[]).map((v, i) => (
             <button
               key={v}
               onClick={() => switchView(v)}
@@ -159,10 +160,10 @@ function AccountPage() {
                   borderRadius: "50%",
                   background: view === v ? "#00ff88" : "#2d5a2d",
                   boxShadow: view === v ? "0 0 6px #00ff88, 0 0 12px #00ff8866" : "none",
-                  animation: "breathe 2s ease-in-out infinite",
+                  animation: `breathe 2s ease-in-out infinite ${i * 0.5}s`,
                   flexShrink: 0,
                 }} />
-                {v === "forms" ? t.tabForms : t.tabReports}
+                {v === "forms" ? t.tabForms : v === "reports" ? t.tabReports : (lang === "zh" ? "管理" : lang === "ko" ? "관리자" : "Admin")}
               </span>
             </button>
           ))}
@@ -266,16 +267,8 @@ function AccountPage() {
           );
         })}
 
-        {email === ADMIN_EMAIL && (
-          <button
-            onClick={() => router.push(`/${lang}/admin`)}
-            className="w-full py-3 text-sm font-bold"
-            style={{ border: "1px solid #00ff88", color: "#00ff88", background: "transparent", cursor: "pointer", letterSpacing: "0.05em", fontFamily: "Courier New, monospace" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "#00ff88"; e.currentTarget.style.color = "#050a05" }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#00ff88" }}
-          >
-            {lang === "zh" ? "⚙ 管理后台" : lang === "ko" ? "⚙ 관리자" : "⚙ Admin Dashboard"}
-          </button>
+        {view === "admin" && email === ADMIN_EMAIL && (
+          <AdminInlinePanel lang={lang} />
         )}
 
         <div className="flex gap-3 pt-2" style={{ fontFamily: "Courier New, monospace" }}>
@@ -300,5 +293,141 @@ function AccountPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function AdminInlinePanel({ lang }: { lang: Lang }) {
+  const [codes, setCodes] = useState<{id:string;code:string;label:string|null;blogger_email:string|null;used_count:number;is_active:boolean}[]>([]);
+  const [newCode, setNewCode] = useState("");
+  const [newLabel, setNewLabel] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
+  const [tab, setTab] = useState<"codes"|"commissions">("codes");
+  const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
+  const [total, setTotal] = useState(0);
+
+  const getToken = async () => {
+    const { data } = await supabaseBrowser.auth.getSession();
+    return data.session?.access_token ?? "";
+  };
+
+  useEffect(() => { fetchCodes(); fetchCommissions(); }, []);
+
+  const fetchCodes = async () => {
+    const token = await getToken();
+    const res = await fetch("/api/admin/invite-codes", { headers: { Authorization: `Bearer ${token}` } });
+    const json = await res.json();
+    setCodes(json.codes || []);
+  };
+
+  const fetchCommissions = async () => {
+    const token = await getToken();
+    const res = await fetch("/api/admin/commissions", { headers: { Authorization: `Bearer ${token}` } });
+    const json = await res.json();
+    setCommissions(json.commissions || []);
+    setTotal(json.total || 0);
+  };
+
+  const handleCreate = async () => {
+    if (!newCode.trim()) return;
+    setCreating(true); setError("");
+    const token = await getToken();
+    const res = await fetch("/api/admin/invite-codes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code: newCode.trim(), label: newLabel.trim() || null, blogger_email: newEmail.trim() || null }),
+    });
+    const json = await res.json();
+    if (json.error) { setError(json.error); setCreating(false); return; }
+    setNewCode(""); setNewLabel(""); setNewEmail("");
+    setCreating(false); fetchCodes();
+  };
+
+  const handleToggle = async (code: string, is_active: boolean) => {
+    const token = await getToken();
+    await fetch("/api/admin/invite-codes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code, is_active: !is_active }),
+    });
+    fetchCodes();
+  };
+
+  const mono = "Courier New, monospace";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2" style={{ borderBottom: "1px solid #1a3a1a" }}>
+        {(["codes", "commissions"] as const).map((v) => (
+          <button key={v} onClick={() => setTab(v)}
+            className="px-3 py-2 text-xs font-bold"
+            style={{ background: "transparent", border: "none", borderBottom: tab === v ? "2px solid #00ff88" : "2px solid transparent", color: tab === v ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono, marginBottom: "-1px" }}
+          >
+            {v === "codes" ? (lang === "zh" ? "邀请码" : "Codes") : `${lang === "zh" ? "佣金" : "Commissions"} ($${total.toFixed(2)})`}
+          </button>
+        ))}
+      </div>
+
+      {tab === "codes" && (
+        <div className="space-y-3">
+          <div className="p-3 border space-y-2" style={{ borderColor: "#1a3a1a", background: "#080e08", fontFamily: mono }}>
+            <div className="text-xs" style={{ color: "#2d5a2d" }}>// {lang === "zh" ? "生成邀请码" : "Create code"}</div>
+            <div className="flex gap-2 flex-wrap">
+              <input placeholder="CODE" value={newCode} onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "100px", letterSpacing: "0.1em" }} />
+              <input placeholder={lang === "zh" ? "博主名" : "Label"} value={newLabel} onChange={(e) => setNewLabel(e.target.value)}
+                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "80px" }} />
+              <input placeholder={lang === "zh" ? "博主邮箱" : "Email"} value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
+              <button onClick={handleCreate} disabled={creating || !newCode.trim()}
+                className="px-4 py-1 text-xs font-bold"
+                style={{ border: "1px solid #00ff88", color: "#00ff88", background: "transparent", cursor: "pointer", fontFamily: mono, opacity: creating ? 0.5 : 1 }}>
+                {creating ? "..." : "+ 生成"}
+              </button>
+            </div>
+            {error && <div className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</div>}
+          </div>
+          {codes.map((c) => (
+            <div key={c.id} className="p-3 border flex items-center justify-between gap-2"
+              style={{ borderColor: c.is_active ? "#1a3a1a" : "#111", background: "#080e08", fontFamily: mono }}>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold" style={{ color: c.is_active ? "#00ff88" : "#2d5a2d", letterSpacing: "0.1em" }}>{c.code}</div>
+                <div className="text-xs mt-0.5" style={{ color: "#4a7a4a" }}>{c.label || "—"} · {c.blogger_email || "no email"} · {lang === "zh" ? "用了" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-xs" style={{ color: c.is_active ? "#00ff88" : "#ff6b6b" }}>{c.is_active ? "● 有效" : "○ 停用"}</span>
+                <button onClick={() => handleToggle(c.code, c.is_active)} className="text-xs px-2 py-1"
+                  style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
+                  {c.is_active ? (lang === "zh" ? "停用" : "Disable") : (lang === "zh" ? "启用" : "Enable")}
+                </button>
+              </div>
+            </div>
+          ))}
+          {codes.length === 0 && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无邀请码" : "No codes yet"}</div>}
+        </div>
+      )}
+
+      {tab === "commissions" && (
+        <div className="space-y-2">
+          <div className="text-xs p-2 border" style={{ borderColor: "#1a3a1a", background: "#080e08", color: "#00ff88", fontFamily: mono }}>
+            // {lang === "zh" ? "待结算" : "Pending"}: ${total.toFixed(2)} USD
+          </div>
+          {commissions.map((c) => (
+            <div key={c.id} className="p-3 border space-y-1" style={{ borderColor: "#1a3a1a", background: "#080e08", fontFamily: mono }}>
+              <div className="flex justify-between text-xs">
+                <span style={{ color: "#00ff88" }}>${Number(c.amount_usd).toFixed(2)}</span>
+                <span style={{ color: c.status === "pending" ? "#fbbf24" : "#00ff88" }}>● {c.status}</span>
+              </div>
+              <div className="text-xs" style={{ color: "#4a7a4a" }}>{c.invite_code} · {c.blogger_email || "—"}</div>
+              <div className="text-xs" style={{ color: "#2d5a2d" }}>{c.user_email} · {new Date(c.created_at).toLocaleDateString()}</div>
+            </div>
+          ))}
+          {commissions.length === 0 && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无佣金记录" : "No commissions yet"}</div>}
+        </div>
+      )}
+    </div>
   );
 }
