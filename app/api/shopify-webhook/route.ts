@@ -39,12 +39,36 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  const { error } = await supabase
+  const { data: submission, error } = await supabase
     .from("submissions")
     .update({ paid: true, shopify_order_id: String(payload.id ?? "") })
     .eq("id", submissionId)
-    .eq("user_id", userId || "");
+    .eq("user_id", userId || "")
+    .select("invite_code, email")
+    .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Credit commission if invite code was used
+  if (submission?.invite_code) {
+    const { data: codeRow } = await supabase
+      .from("invite_codes")
+      .select("blogger_email, commission_usd")
+      .eq("code", submission.invite_code)
+      .single();
+
+    if (codeRow) {
+      await supabase.from("commissions").insert({
+        invite_code: submission.invite_code,
+        blogger_email: codeRow.blogger_email,
+        user_email: submission.email,
+        submission_id: submissionId,
+        amount_usd: codeRow.commission_usd,
+        status: "pending",
+      });
+      await supabase.rpc("increment_invite_used", { p_code: submission.invite_code });
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

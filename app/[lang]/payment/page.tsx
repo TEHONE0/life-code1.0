@@ -22,6 +22,9 @@ export default function PaymentPage() {
   const [hasAnswers, setHasAnswers] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [error, setError] = useState("")
+  const [inviteCode, setInviteCode] = useState("")
+  const [inviteStatus, setInviteStatus] = useState<"idle" | "valid" | "invalid">("idle")
+  const [inviteLabel, setInviteLabel] = useState("")
 
   useEffect(() => {
     const answers = sessionStorage.getItem("survey_answers")
@@ -40,6 +43,22 @@ export default function PaymentPage() {
     })
   }, [lang, router])
 
+  const handleInviteCheck = async () => {
+    if (!inviteCode.trim()) return
+    const res = await fetch("/api/validate-invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: inviteCode.trim() }),
+    })
+    const json = await res.json()
+    if (json.valid) {
+      setInviteStatus("valid")
+      setInviteLabel(json.label || "")
+    } else {
+      setInviteStatus("invalid")
+    }
+  }
+
   const handlePayment = async () => {
     setError("")
     setLoading(true)
@@ -54,7 +73,7 @@ export default function PaymentPage() {
           "Content-Type": "application/json",
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
-        body: JSON.stringify({ lang, answers }),
+        body: JSON.stringify({ lang, answers, inviteCode: inviteStatus === "valid" ? inviteCode.trim().toUpperCase() : undefined }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -127,12 +146,58 @@ export default function PaymentPage() {
           </div>
         </div>
 
+        {/* Invite code */}
+        <div className="space-y-2">
+          <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
+            {lang === 'zh' ? '// 有邀请码？输入享88折' : lang === 'ko' ? '// 초대 코드가 있나요?' : '// Have an invite code? Get 12% off'}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder={lang === 'zh' ? '输入邀请码' : lang === 'ko' ? '초대 코드 입력' : 'Enter invite code'}
+              value={inviteCode}
+              onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setInviteStatus("idle") }}
+              onKeyDown={(e) => e.key === "Enter" && handleInviteCheck()}
+              className="flex-1 px-3 py-2 text-sm"
+              style={{
+                background: "#0a150a",
+                border: `1px solid ${inviteStatus === "valid" ? "#00ff88" : inviteStatus === "invalid" ? "#ff6b6b" : "#1a3a1a"}`,
+                color: "#e2e8f0",
+                fontFamily: "Courier New, monospace",
+                outline: "none",
+                letterSpacing: "0.1em",
+              }}
+            />
+            <button
+              onClick={handleInviteCheck}
+              className="px-4 py-2 text-xs font-bold"
+              style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace" }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}
+            >
+              {lang === 'zh' ? '验证' : lang === 'ko' ? '확인' : 'Apply'}
+            </button>
+          </div>
+          {inviteStatus === "valid" && (
+            <div className="text-xs" style={{ color: "#00ff88", fontFamily: "Courier New, monospace" }}>
+              ✓ {inviteLabel ? `[${inviteLabel}] ` : ''}{lang === 'zh' ? '邀请码有效 · 88折已激活' : lang === 'ko' ? '초대 코드 유효 · 12% 할인 적용' : 'Code valid · 12% discount applied'}
+            </div>
+          )}
+          {inviteStatus === "invalid" && (
+            <div className="text-xs" style={{ color: "#ff6b6b", fontFamily: "Courier New, monospace" }}>
+              ✗ {lang === 'zh' ? '邀请码无效或已过期' : lang === 'ko' ? '유효하지 않은 코드' : 'Invalid or expired code'}
+            </div>
+          )}
+        </div>
+
         <div
           className="py-8 px-6 border space-y-3"
           style={{ borderColor: "#1a3a1a", background: "#0a150a" }}
         >
           <div className="text-4xl font-bold" style={{ color: "#00ff88" }}>
-            {t.paymentPrice}
+            {inviteStatus === "valid" ? (
+              <span>$7.83 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>$8.90</span></span>
+            ) : t.paymentPrice}
           </div>
           <p className="text-xs" style={{ color: "#2d5a2d" }}>
             {t.paymentDesc}

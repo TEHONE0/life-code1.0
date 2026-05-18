@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { lang, answers } = await req.json();
+    const { lang, answers, inviteCode } = await req.json();
 
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
         legacy: answers.legacy,
         dimension: answers.dimension,
         paid: false,
+        invite_code: inviteCode || null,
       })
       .select("id")
       .single();
@@ -48,7 +49,8 @@ export async function POST(req: NextRequest) {
 
     const sep = checkoutBase.includes("?") ? "&" : "?";
     const returnUrl = `/${lang}/result?sid=${submissionId}`;
-    const url = `${checkoutBase}${sep}attributes[submission_id]=${submissionId}&attributes[user_id]=${user.id}&attributes[lang]=${lang}&return_to=${encodeURIComponent(returnUrl)}`;
+    let url = `${checkoutBase}${sep}attributes[submission_id]=${submissionId}&attributes[user_id]=${user.id}&attributes[lang]=${lang}&return_to=${encodeURIComponent(returnUrl)}`;
+    if (inviteCode) url += `&discount=${encodeURIComponent(inviteCode)}`;
     return NextResponse.json({ url, submissionId });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
