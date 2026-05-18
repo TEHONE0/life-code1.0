@@ -101,7 +101,7 @@ export default function UserMenu({ lang }: { lang: Lang }) {
           </button>
           {email === ADMIN_EMAIL && (
             <button
-              onClick={() => { setOpen(false); router.push(`/${lang}/admin`) }}
+              onClick={() => { setOpen(false); router.push(`/${lang}/account?view=admin`) }}
               className="w-full text-xs px-3 py-2 text-left"
               style={{ color: "#00ff88", background: "transparent", border: "none", cursor: "pointer", borderBottom: "1px solid #1a3a1a", display: "flex", alignItems: "center", gap: "8px" }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "#0a150a")}

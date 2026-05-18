@@ -393,7 +393,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
               style={{ borderColor: c.is_active ? "#1a3a1a" : "#111", background: "#080e08", fontFamily: mono }}>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold" style={{ color: c.is_active ? "#00ff88" : "#2d5a2d", letterSpacing: "0.1em" }}>{c.code}</div>
-                <div className="text-xs mt-0.5" style={{ color: "#4a7a4a" }}>{c.label || "—"} · {c.blogger_email || "no email"} · {lang === "zh" ? "用了" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</div>
+                <div className="text-xs mt-0.5" style={{ color: "#4a7a4a" }}>{c.label || "—"} · {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-xs" style={{ color: c.is_active ? "#00ff88" : "#ff6b6b" }}>{c.is_active ? "● 有效" : "○ 停用"}</span>
