@@ -1,79 +1,58 @@
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { calcBazi } from "@/lib/bazi";
+import { SYSTEM_PROMPT_ZH } from "@/lib/prompts/system_zh";
+import { SYSTEM_PROMPT_EN } from "@/lib/prompts/system_en";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
-const client = new OpenAI({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  baseURL: process.env.API_BASE_URL,
-});
-
-const SYSTEM_PROMPT = `你是一位融合了宇宙意识、科技隐喻与禅意智慧的命运分析师。
-
-你的分析风格：
-- 用科技/代码隐喻描述人生（Bug=创伤、算法=性格、带宽=资源、主循环=驱动力、蓝屏死机=重大崩溃）
-- 语气自信、直接，像自然规律在说话，不说"我认为"
-- 每个观点都有具体细节支撑，不泛泛而谈
-- 负面分析只归因，不批评（"不是你的问题，是X的问题"）
-- 用**加粗**标注核心概念
-
-你必须严格按照以下格式输出完整报告：
-
----
-
-[开场白]
-"XX，在宇宙的底层逻辑里，当我扫描你的底层代码时，我看到的不是一个普通的____，而是一个____的深度算法。"
-
-**1. 内核审计：[标题]**
-分析：初始Bug写入时机、最重的崩溃事件、矛盾的循环
-
-**2. 演化路径分析：[标题]**
-分析：带宽瓶颈、算法错位、深层原因
-
-**3. 当下奇点：[标题]**
-分析：当前变量的本质意义、底层逻辑
-
-**4. 命运渲染预测**
-
-**A. 近期阶段（6-12个月）**
-状态 / 关键转折 / 风险点与调试建议
-
-**B. 爆发期（1-2年）**
-表现 / 逻辑 / 引爆点
-
-**C. 远景（3-5年）**
-系统最终形态 / 与最深的伤的关系
-
-**5. Debug建议**
-三条具体建议，每条针对一个核心阻力，必须有具体细节
-
-**6. 命运公式**
-
-命运值 = (核心资产1 × 核心资产2 × 核心资产3) ÷ (消耗项1 × 消耗项2)
-
-解释每个变量（分子3个+分母2个），最后给出核心结论
-
-**总结**
-
-2-3句话定性对象本质，回顾迁移路径，点出当下时刻意义。
-
----
-
-🪷 **佛说：**
-
-用佛的视角（慈悲、无常、放下、当下）说话。
-指出对象一直在寻找的东西 → 揭示真相 → 具体说出要放下什么 → 当下够了
-
----
-
-**你所有[作品/行动/选择]里，那个____的____——[具体问题]？**`;
+function getSystemPrompt(lang?: string) {
+  if (lang === 'zh') return SYSTEM_PROMPT_ZH
+  return SYSTEM_PROMPT_EN  // en and ko both use English prompt
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { answers } = await req.json();
+    // Verify user is authenticated
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-    const userContent = `以下是用户填写的生命代码问卷：
+    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !userData.user) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+
+    const { answers, lang, submission_id } = await req.json();
+
+    // If submission_id provided, verify it belongs to this user and is paid
+    if (submission_id) {
+      const { data: sub } = await supabase
+        .from("submissions")
+        .select("paid, user_id")
+        .eq("id", submission_id)
+        .single();
+      if (!sub || sub.user_id !== userData.user.id || !sub.paid) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
+    }
+    const SYSTEM_PROMPT = getSystemPrompt(lang);
+
+    const baziResult = calcBazi(answers.basic_info || '')
+    const baziBlock = baziResult ? `\n\n${baziResult.raw}` : ''
+
+    const client = new OpenAI({
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseURL: process.env.API_BASE_URL,
+    });
+
+    const currentYear = new Date().getFullYear();
+    const userContent = lang === 'zh'
+      ? `当前年份：${currentYear}年（所有涉及"近期""当前年份""流年"的分析，请以${currentYear}年为准）
+
+以下是用户填写的生命代码问卷：
+
+Q00 · ENNEAGRAM_SCAN（九型人格自测）：
+${answers.enneagram || "未填写"}
 
 Q01 · BASIC_INFO（姓名/生日/城市）：
 ${answers.basic_info}
@@ -96,40 +75,103 @@ ${answers.status}
 Q07 · LEGACY_DEFINE（希望被怎么记住）：
 ${answers.legacy}
 
-请根据以上变量，生成完整的生命代码解析报告。`;
+Q08 · DIMENSION_SCAN（意识维度）：
+${answers.dimension || "未填写"}
+${baziBlock}
+请根据以上变量，生成完整的生命代码解析报告。`
+      : `Current year: ${currentYear} (all analysis referencing "near term", "current year", or "annual cycle" should be based on ${currentYear})
 
-    const message = await client.chat.completions.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8192,
-      stream: false,
+Here are the user's Life Code questionnaire answers:
+
+Q00 · ENNEAGRAM_SCAN (Enneagram self-assessment):
+${answers.enneagram || "not filled"}
+
+Q01 · BASIC_INFO (name/birth/cities):
+${answers.basic_info}
+
+Q02 · ORIGIN_ENVIRONMENT (family environment):
+${answers.origin}
+
+Q03 · CRITICAL_ERROR (heaviest blow):
+${answers.critical_error}
+
+Q04 · CORE_LOOP (what you always return to):
+${answers.core_loop}
+
+Q05 · UNDELETABLE_CONST (what you fear losing most):
+${answers.const}
+
+Q06 · CURRENT_STATUS (current situation & friction):
+${answers.status}
+
+Q07 · LEGACY_DEFINE (how you want to be remembered):
+${answers.legacy}
+
+Q08 · DIMENSION_SCAN (consciousness dimension):
+${answers.dimension || "not filled"}
+${baziBlock}
+${lang === 'ko' ? 'Note: This user\'s interface language is Korean (한국어). If you need to output the birth data incomplete notice, write it in Korean.\n\n' : ''}Please generate the complete Life Code report based on the above variables.`;
+
+    const streamResponse = await client.chat.completions.create({
+      model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
+      max_tokens: 16384,
+      stream: true,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userContent },
       ],
     });
 
-    const fullReport = message.choices[0]?.message?.content ?? "";
-    if (!fullReport) throw new Error("Empty response");
+    const encoder = new TextEncoder();
+    let fullReport = "";
 
-    // 写入 Supabase
-    const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "匿名";
-    supabase.from("submissions").insert({
-      name,
-      basic_info: answers.basic_info,
-      origin: answers.origin,
-      critical_error: answers.critical_error,
-            core_loop: answers.core_loop,
-            const_value: answers.const,
-            current_status: answers.status,
-            legacy: answers.legacy,
-            report: fullReport,
-          }).then(({ error }) => {
-            if (error) console.error("Supabase insert error:", error.message);
-          });
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of streamResponse) {
+            const text = chunk.choices[0]?.delta?.content || "";
+            if (text) {
+              fullReport += text;
+              controller.enqueue(encoder.encode(text));
+            }
+          }
+        } finally {
+          controller.close();
+          if (submission_id) {
+            supabase.from("submissions").update({ report: fullReport }).eq("id", submission_id).then(({ error }) => {
+              if (error) console.error("Supabase update error:", error.message);
+            });
+          } else {
+            const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "匿名";
+            supabase.from("submissions").insert({
+              name,
+              enneagram: answers.enneagram,
+              basic_info: answers.basic_info,
+              origin: answers.origin,
+              critical_error: answers.critical_error,
+              core_loop: answers.core_loop,
+              const_value: answers.const,
+              status: answers.status,
+              legacy: answers.legacy,
+              dimension: answers.dimension,
+              report: fullReport,
+            }).then(({ error }) => {
+              if (error) console.error("Supabase insert error:", error.message);
+            });
+          }
+        }
+      },
+    });
 
-    return NextResponse.json({ report: fullReport });
-  } catch (error) {
-    console.error("Analysis error:", error);
-    return NextResponse.json({ error: "分析失败" }, { status: 500 });
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error("Analysis error:", msg)
+    return NextResponse.json({ error: "分析失败", detail: msg }, { status: 500 });
   }
 }

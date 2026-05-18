@@ -9,9 +9,11 @@ body {
   min-height: 100vh;
 }
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #050a05; }
-::-webkit-scrollbar-thumb { background: #00ff8833; border-radius: 2px; }
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: #080e08; }
+::-webkit-scrollbar-thumb { background: #1e5a1e; border-radius: 6px; border: 2px solid #080e08; }
+::-webkit-scrollbar-thumb:hover { background: #00ff8888; }
+* { scrollbar-width: thin; scrollbar-color: #1e5a1e #080e08; }
 
 @keyframes blink {
   0%, 100% { opacity: 1; }
@@ -38,9 +40,43 @@ body {
   50% { text-shadow: 0 0 25px #00ff88aa, 0 0 50px #00ff8844; }
 }
 
+@keyframes breatheGlow {
+  0%, 100% {
+    text-shadow: 0 0 8px #00ff8833, 0 0 16px #00ff8822;
+    opacity: 0.85;
+  }
+  50% {
+    text-shadow: 0 0 20px #00ff88bb, 0 0 40px #00ff8866, 0 0 60px #00ff8833;
+    opacity: 1;
+  }
+}
+
 .animate-fade-up { animation: fadeUp 0.7s ease forwards; }
 .animate-fade-in { animation: fadeIn 0.5s ease forwards; }
 .animate-glow-pulse { animation: glowPulse 2.5s ease-in-out infinite; }
+.animate-breathe-glow { animation: breatheGlow 3.2s ease-in-out infinite; }
+
+@keyframes btnGlow {
+  0%, 100% {
+    box-shadow: 0 0 6px #00ff8844, 0 0 12px #00ff8822;
+    border-color: #00ff8866;
+  }
+  50% {
+    box-shadow: 0 0 16px #00ff88aa, 0 0 32px #00ff8855, 0 0 48px #00ff8822;
+    border-color: #00ff88cc;
+  }
+}
+.btn-lang-glow:hover {
+  animation: btnGlow 1.2s ease-in-out infinite;
+  color: #00ff88 !important;
+}
+
+.btn-result:hover {
+  border-color: #00ff88 !important;
+  color: #00ff88 !important;
+  box-shadow: 0 0 12px #00ff8855, 0 0 24px #00ff8822, inset 0 0 12px #00ff8808;
+  transition: all 0.2s;
+}
 
 .cursor::after {
   content: '▌';
