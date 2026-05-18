@@ -3,6 +3,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useState } from "react";
 import { getT, Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import UserMenu from "@/components/UserMenu";
 
 export default function SurveyPage() {
   const params = useParams()
@@ -44,6 +45,9 @@ export default function SurveyPage() {
       className="min-h-screen px-4 py-8 pb-24"
       style={{ background: "radial-gradient(ellipse at top, #061206 0%, #050a05 60%)" }}
     >
+      <div className="fixed top-4 right-4 z-50">
+        <UserMenu lang={lang} />
+      </div>
       <div className="max-w-2xl mx-auto space-y-7">
         {/* Header */}
         <div className="space-y-2">
