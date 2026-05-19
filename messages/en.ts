@@ -23,6 +23,13 @@ export const en = {
     "gives you the patch,",
     "and rewrites your story's ending.",
   ],
+  bodyLinesDesktop: [
+    "Humans wrote code to create AI, so the Creator could just as well have written code to create humans.",
+    "Those patterns you keep repeating in life? Not bad luck — a Bug in your system.",
+    "We used AI formulas to derive the underlying code of human beings — Life Code.",
+    "It finds your Bug, gives you the patch.",
+    "And rewrites your story's ending.",
+  ],
   tagline: "Your life code is waiting to be rewritten.",
   cta: "Decode my life code",
   footer: "// ~6 min · Life Code Report + Psychology Bug Analysis + Fix Recommendations",
