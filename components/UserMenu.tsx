@@ -30,23 +30,13 @@ export default function UserMenu({ lang }: { lang: Lang }) {
     return (
       <button
         onClick={() => router.push(`/${lang}/auth`)}
-        className="text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
+        className="btn-lang-glow text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
         style={{
           border: "1px solid #1a3a1a",
           color: "#2d5a2d",
           background: "transparent",
           cursor: "pointer",
           fontFamily: "Courier New, monospace",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = "#00ff88cc";
-          e.currentTarget.style.color = "#00ff88";
-          e.currentTarget.style.boxShadow = "0 0 12px #00ff8888, 0 0 24px #00ff8844, 0 0 40px #00ff8822";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = "#1a3a1a";
-          e.currentTarget.style.color = "#2d5a2d";
-          e.currentTarget.style.boxShadow = "none";
         }}
       >
         {labelLogin}
@@ -58,7 +48,7 @@ export default function UserMenu({ lang }: { lang: Lang }) {
     <div style={{ position: "relative" }}>
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
+        className="btn-lang-glow text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
         style={{
           border: "1px solid #1a3a1a",
           color: "#00ff88",
@@ -69,17 +59,6 @@ export default function UserMenu({ lang }: { lang: Lang }) {
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
-          transition: "all 0.2s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = "#00ff88cc";
-          e.currentTarget.style.boxShadow = "0 0 12px #00ff8888, 0 0 24px #00ff8844, 0 0 40px #00ff8822";
-          e.currentTarget.style.transition = "none";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = "#1a3a1a";
-          e.currentTarget.style.boxShadow = "none";
-          e.currentTarget.style.transition = "all 0.2s";
         }}
       >
         ▾ {email}
