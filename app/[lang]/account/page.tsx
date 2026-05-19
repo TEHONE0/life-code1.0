@@ -175,7 +175,7 @@ function AccountPage() {
           </div>
         )}
 
-        {!loading && list.length === 0 && (
+        {!loading && list.length === 0 && view !== "admin" && (
           <div className="text-center space-y-4 py-12">
             <p className="text-sm" style={{ color: "#2d5a2d" }}>
               {view === "forms" ? t.emptyForms : t.emptyReports}
@@ -199,7 +199,7 @@ function AccountPage() {
           </div>
         )}
 
-        {!loading && list.map((s) => {
+        {!loading && view !== "admin" && list.map((s) => {
           const date = new Date(s.created_at).toLocaleDateString();
           const statusColor = s.paid ? "#00ff88" : "#ff6b6b";
           const statusLabel = s.paid ? t.paid : t.unpaid;
