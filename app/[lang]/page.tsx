@@ -202,8 +202,8 @@ export default function HomePage() {
           {/* Body copy — desktop */}
           <div className="hidden sm:block px-4 text-left w-full" style={{ letterSpacing: "0.05em" }}>
             {t.bodyLinesDesktop.map((line, i) => (
-              <div key={i} style={{ paddingBottom: "1em" }}>
-                <p className="text-base" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66", lineHeight: "1.5" }}>{line}</p>
+              <div key={i} style={{ paddingBottom: "0.5em" }}>
+                <p className="text-base" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66", lineHeight: "1.2" }}>{line}</p>
               </div>
             ))}
           </div>
