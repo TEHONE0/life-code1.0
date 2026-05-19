@@ -41,13 +41,9 @@ export async function POST(req: NextRequest) {
 
     const submissionId = row.id;
 
-    const checkoutBase = process.env.SHOPIFY_CHECKOUT_URL;
-    console.log("[create-checkout] SHOPIFY_CHECKOUT_URL:", checkoutBase ? "SET" : "NOT SET");
-    if (!checkoutBase) {
-      console.log("[create-checkout] WARN: testMode triggered, no payment collected");
-      await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
-      return NextResponse.json({ testMode: true, submissionId });
-    }
+    const SHOPIFY_CART = "https://theone-ai-studio.myshopify.com/cart/48330888970475:1";
+    const checkoutBase = process.env.SHOPIFY_CHECKOUT_URL || SHOPIFY_CART;
+    console.log("[create-checkout] checkoutBase:", checkoutBase.slice(0, 50));
 
     const sep = checkoutBase.includes("?") ? "&" : "?";
     const host = req.headers.get("host") || "";
