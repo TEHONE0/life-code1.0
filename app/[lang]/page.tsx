@@ -193,11 +193,10 @@ export default function HomePage() {
           </div>
 
           {/* Body copy */}
-          <div className="space-y-4 px-2 text-center">
-            <p className="text-sm leading-relaxed" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66" }}>{t.line1}</p>
-            <p className="text-sm leading-relaxed font-medium" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66" }}>{t.line2}</p>
-            <p className="text-sm leading-relaxed" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66" }}>{t.line3}</p>
-            <p className="text-sm leading-relaxed" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66" }}>{t.line4}</p>
+          <div className="px-2 text-center" style={{ lineHeight: "2.2" }}>
+            {t.bodyLines.map((line, i) => (
+              <p key={i} className="text-sm" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66" }}>{line}</p>
+            ))}
           </div>
 
           {/* Tagline */}
