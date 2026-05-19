@@ -118,33 +118,6 @@ export default function HomePage() {
       <MatrixRain side="left" />
       <MatrixRain side="right" />
 
-      {/* Language switcher + user menu */}
-      <div className="fixed top-3 right-3 flex gap-1.5 z-50 items-center">
-        <UserMenu lang={lang} />
-        {LANGS.map((l) => (
-          <button
-            key={l.code}
-            onClick={() => router.push(`/${l.code}`)}
-            onMouseEnter={() => setHoveredLang(l.code)}
-            onMouseLeave={() => setHoveredLang(null)}
-            className="text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
-            style={{
-              color: hoveredLang === l.code ? '#00ff88' : l.code === lang ? '#00ff88' : '#4a8a4a',
-              border: '1px solid transparent',
-              borderColor: hoveredLang === l.code ? '#00ff88cc' : l.code === lang ? '#00ff8866' : '#1a4a1a',
-              background: l.code === lang ? '#00ff8811' : 'transparent',
-              cursor: 'pointer',
-              fontFamily: 'Courier New, monospace',
-              letterSpacing: '0.05em',
-              boxShadow: hoveredLang === l.code ? '0 0 12px #00ff8888, 0 0 24px #00ff8844, 0 0 40px #00ff8822' : 'none',
-              animation: hoveredLang === l.code ? 'btnGlow 1.2s ease-in-out infinite' : 'none',
-              transition: hoveredLang === l.code ? 'none' : 'all 0.2s',
-            }}
-          >
-            {l.label}
-          </button>
-        ))}
-      </div>
 
       {/* Boot log — 动画结束后隐藏，保证主内容上下居中 */}
       {!ready && (
@@ -169,6 +142,34 @@ export default function HomePage() {
             style={{ borderColor: "#1a3a1a", color: "#00ff8877", background: "#0a1a0a" }}
           >
             {t.badge}
+          </div>
+
+          {/* Language switcher + user menu */}
+          <div className="flex gap-1.5 justify-center items-center flex-wrap">
+            <UserMenu lang={lang} />
+            {LANGS.map((l) => (
+              <button
+                key={l.code}
+                onClick={() => router.push(`/${l.code}`)}
+                onMouseEnter={() => setHoveredLang(l.code)}
+                onMouseLeave={() => setHoveredLang(null)}
+                className="text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
+                style={{
+                  color: hoveredLang === l.code ? '#00ff88' : l.code === lang ? '#00ff88' : '#4a8a4a',
+                  border: '1px solid transparent',
+                  borderColor: hoveredLang === l.code ? '#00ff88cc' : l.code === lang ? '#00ff8866' : '#1a4a1a',
+                  background: l.code === lang ? '#00ff8811' : 'transparent',
+                  cursor: 'pointer',
+                  fontFamily: 'Courier New, monospace',
+                  letterSpacing: '0.05em',
+                  boxShadow: hoveredLang === l.code ? '0 0 12px #00ff8888, 0 0 24px #00ff8844, 0 0 40px #00ff8822' : 'none',
+                  animation: hoveredLang === l.code ? 'btnGlow 1.2s ease-in-out infinite' : 'none',
+                  transition: hoveredLang === l.code ? 'none' : 'all 0.2s',
+                }}
+              >
+                {l.label}
+              </button>
+            ))}
           </div>
 
           {/* Quote */}
