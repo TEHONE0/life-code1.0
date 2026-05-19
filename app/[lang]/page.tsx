@@ -119,7 +119,7 @@ export default function HomePage() {
       <MatrixRain side="right" />
 
       {/* Language switcher + user menu */}
-      <div className="fixed top-4 right-4 flex gap-2 z-50 items-center">
+      <div className="fixed top-3 right-3 flex gap-1.5 z-50 items-center">
         <UserMenu lang={lang} />
         {LANGS.map((l) => (
           <button
@@ -127,7 +127,7 @@ export default function HomePage() {
             onClick={() => router.push(`/${l.code}`)}
             onMouseEnter={() => setHoveredLang(l.code)}
             onMouseLeave={() => setHoveredLang(null)}
-            className="text-sm px-4 py-2 font-bold"
+            className="text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
             style={{
               color: hoveredLang === l.code ? '#00ff88' : l.code === lang ? '#00ff88' : '#4a8a4a',
               border: '1px solid transparent',
@@ -192,7 +192,7 @@ export default function HomePage() {
           </div>
 
           {/* Body copy */}
-          <div className="space-y-2 px-2 text-center">
+          <div className="space-y-4 px-2 text-center">
             <p className="text-sm leading-relaxed" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66" }}>{t.line1}</p>
             <p className="text-sm leading-relaxed font-medium" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66" }}>{t.line2}</p>
             <p className="text-sm leading-relaxed" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff66" }}>{t.line3}</p>

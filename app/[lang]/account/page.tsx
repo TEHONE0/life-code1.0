@@ -89,7 +89,15 @@ function AccountPage() {
       sessionStorage.setItem("stream_mode", "true");
       router.push(`/${lang}/result`);
     } else {
-      router.push(`/${lang}/result?sid=${s.id}`);
+      // 直接跳支付，把问卷答案写入 sessionStorage
+      sessionStorage.setItem("survey_answers", JSON.stringify({
+        enneagram: s.answers.enneagram, basic_info: s.answers.basic_info,
+        origin: s.answers.origin, critical_error: s.answers.critical_error,
+        core_loop: s.answers.core_loop, const: s.answers.const,
+        status: s.answers.status, legacy: s.answers.legacy, dimension: s.answers.dimension,
+      }));
+      sessionStorage.setItem("survey_lang", s.lang);
+      router.push(`/${lang}/payment`);
     }
   };
 
