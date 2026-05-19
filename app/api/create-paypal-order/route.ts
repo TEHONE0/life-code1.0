@@ -3,15 +3,22 @@ import { createClient } from "@supabase/supabase-js";
 
 async function getPayPalToken() {
   const base = process.env.PAYPAL_BASE_URL || "https://api-m.paypal.com";
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const secret = process.env.PAYPAL_SECRET;
+  if (!clientId || !secret) throw new Error(`Missing PayPal env vars: CLIENT_ID=${!!clientId} SECRET=${!!secret}`);
   const res = await fetch(`${base}/v1/oauth2/token`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`).toString("base64")}`,
+      Authorization: `Basic ${Buffer.from(`${clientId}:${secret}`).toString("base64")}`,
     },
     body: "grant_type=client_credentials",
   });
   const data = await res.json();
+  if (!data.access_token) {
+    console.error("[getPayPalToken] PayPal response:", JSON.stringify(data));
+    throw new Error(`PayPal OAuth failed: ${data.error_description || data.error || JSON.stringify(data)}`);
+  }
   return data.access_token as string;
 }
 
