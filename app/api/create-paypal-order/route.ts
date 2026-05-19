@@ -79,12 +79,11 @@ export async function POST(req: NextRequest) {
     if (inviteCode) {
       const { data: invite } = await supabase
         .from("invite_codes")
-        .select("discount_percent")
+        .select("is_active")
         .eq("code", inviteCode.toUpperCase())
         .single();
-      if (invite) {
-        const discountedPrice = 8.9 * (1 - (invite.discount_percent || 12) / 100);
-        price = discountedPrice.toFixed(2);
+      if (invite?.is_active) {
+        price = (8.9 * 0.88).toFixed(2); // 12% off
       }
     }
 
