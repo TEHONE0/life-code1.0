@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         .eq("code", inviteCode.toUpperCase())
         .single();
       if (invite?.is_active) {
-        price = (8.9 * 0.88).toFixed(2); // 12% off
+        price = (8.9 * 0.8).toFixed(2); // 20% off
       }
     }
 

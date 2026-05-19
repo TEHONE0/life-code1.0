@@ -149,7 +149,7 @@ export default function PaymentPage() {
         {/* Invite code */}
         <div className="space-y-2">
           <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
-            {lang === 'zh' ? '// 有邀请码？输入享88折' : lang === 'ko' ? '// 초대 코드가 있나요?' : '// Have an invite code? Get 12% off'}
+            {lang === 'zh' ? '// 有邀请码？输入享8折' : lang === 'ko' ? '// 초대 코드가 있나요?' : '// Have an invite code? Get 20% off'}
           </div>
           <div className="flex gap-2">
             <input
@@ -180,7 +180,7 @@ export default function PaymentPage() {
           </div>
           {inviteStatus === "valid" && (
             <div className="text-xs" style={{ color: "#00ff88", fontFamily: "Courier New, monospace" }}>
-              ✓ {inviteLabel ? `[${inviteLabel}] ` : ''}{lang === 'zh' ? '邀请码有效 · 88折已激活' : lang === 'ko' ? '초대 코드 유효 · 12% 할인 적용' : 'Code valid · 12% discount applied'}
+              ✓ {inviteLabel ? `[${inviteLabel}] ` : ''}{lang === 'zh' ? '邀请码有效 · 8折已激活' : lang === 'ko' ? '초대 코드 유효 · 20% 할인 적용' : 'Code valid · 20% discount applied'}
             </div>
           )}
           {inviteStatus === "invalid" && (
@@ -196,7 +196,7 @@ export default function PaymentPage() {
         >
           <div className="text-4xl font-bold" style={{ color: "#00ff88" }}>
             {inviteStatus === "valid" ? (
-              <span>$7.83 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>$8.90</span></span>
+              <span>$7.12 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>$8.90</span></span>
             ) : t.paymentPrice}
           </div>
           <p className="text-xs" style={{ color: "#2d5a2d" }}>
