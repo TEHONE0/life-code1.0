@@ -81,7 +81,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const accessToken = await getPayPalToken();
+    let accessToken: string;
+    try {
+      accessToken = await getPayPalToken();
+      if (!accessToken) throw new Error("Empty access token from PayPal");
+    } catch (tokenErr: unknown) {
+      const msg = tokenErr instanceof Error ? tokenErr.message : String(tokenErr);
+      console.error("[create-paypal-order] Token error:", msg);
+      return NextResponse.json({ error: "PayPal token error: " + msg }, { status: 500 });
+    }
     const base = process.env.PAYPAL_BASE_URL || "https://api-m.paypal.com";
 
     const orderRes = await fetch(`${base}/v2/checkout/orders`, {
@@ -109,8 +117,8 @@ export async function POST(req: NextRequest) {
 
     const order = await orderRes.json();
     if (!orderRes.ok) {
-      console.error("[create-paypal-order] PayPal error:", order);
-      return NextResponse.json({ error: order.message || "PayPal error" }, { status: 500 });
+      console.error("[create-paypal-order] PayPal error:", JSON.stringify(order));
+      return NextResponse.json({ error: order.message || "PayPal error", details: order }, { status: 500 });
     }
 
     const approvalUrl = order.links?.find((l: { rel: string; href: string }) => l.rel === "approve")?.href;
