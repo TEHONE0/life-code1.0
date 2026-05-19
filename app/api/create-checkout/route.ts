@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { lang, answers, inviteCode } = await req.json();
+    const { lang, answers, inviteCode, existingSubmissionId } = await req.json();
 
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
@@ -14,32 +14,38 @@ export async function POST(req: NextRequest) {
     if (userErr || !userData.user) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
 
     const user = userData.user;
-    const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "anonymous";
-
-    const { data: row, error: insertErr } = await supabase
-      .from("submissions")
-      .insert({
-        user_id: user.id,
-        email: user.email,
-        name,
-        lang,
-        enneagram: answers.enneagram,
-        basic_info: answers.basic_info,
-        origin: answers.origin,
-        critical_error: answers.critical_error,
-        core_loop: answers.core_loop,
-        const_value: answers.const,
-        status: answers.status,
-        legacy: answers.legacy,
-        dimension: answers.dimension,
-        paid: false,
-        invite_code: inviteCode || null,
-      })
-      .select("id")
-      .single();
-    if (insertErr || !row) return NextResponse.json({ error: insertErr?.message || "DB error" }, { status: 500 });
-
-    const submissionId = row.id;
+    let submissionId: string;
+    if (existingSubmissionId) {
+      submissionId = existingSubmissionId;
+      if (inviteCode) {
+        await supabase.from("submissions").update({ invite_code: inviteCode }).eq("id", submissionId);
+      }
+    } else {
+      const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "anonymous";
+      const { data: row, error: insertErr } = await supabase
+        .from("submissions")
+        .insert({
+          user_id: user.id,
+          email: user.email,
+          name,
+          lang,
+          enneagram: answers.enneagram,
+          basic_info: answers.basic_info,
+          origin: answers.origin,
+          critical_error: answers.critical_error,
+          core_loop: answers.core_loop,
+          const_value: answers.const,
+          status: answers.status,
+          legacy: answers.legacy,
+          dimension: answers.dimension,
+          paid: false,
+          invite_code: inviteCode || null,
+        })
+        .select("id")
+        .single();
+      if (insertErr || !row) return NextResponse.json({ error: insertErr?.message || "DB error" }, { status: 500 });
+      submissionId = row.id;
+    }
 
     const SHOPIFY_CART = "https://theone-ai-studio.myshopify.com/cart/48330888970475:1";
     const checkoutBase = process.env.SHOPIFY_CHECKOUT_URL || SHOPIFY_CART;

@@ -73,7 +73,7 @@ export default function PaymentPage() {
           "Content-Type": "application/json",
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
-        body: JSON.stringify({ lang, answers, inviteCode: inviteStatus === "valid" ? inviteCode.trim().toUpperCase() : undefined }),
+        body: JSON.stringify({ lang, answers, inviteCode: inviteStatus === "valid" ? inviteCode.trim().toUpperCase() : undefined, existingSubmissionId: sessionStorage.getItem("existing_submission_id") || undefined }),
       })
       const json = await res.json()
       if (!res.ok) {

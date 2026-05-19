@@ -89,7 +89,6 @@ function AccountPage() {
       sessionStorage.setItem("stream_mode", "true");
       router.push(`/${lang}/result`);
     } else {
-      // 直接跳支付，把问卷答案写入 sessionStorage
       sessionStorage.setItem("survey_answers", JSON.stringify({
         enneagram: s.answers.enneagram, basic_info: s.answers.basic_info,
         origin: s.answers.origin, critical_error: s.answers.critical_error,
@@ -97,6 +96,7 @@ function AccountPage() {
         status: s.answers.status, legacy: s.answers.legacy, dimension: s.answers.dimension,
       }));
       sessionStorage.setItem("survey_lang", s.lang);
+      sessionStorage.setItem("existing_submission_id", s.id);
       router.push(`/${lang}/payment`);
     }
   };
