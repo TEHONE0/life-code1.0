@@ -48,7 +48,9 @@ export async function POST(req: NextRequest) {
     }
 
     const sep = checkoutBase.includes("?") ? "&" : "?";
-    const returnUrl = `/${lang}/result?sid=${submissionId}`;
+    const host = req.headers.get("host") || "";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const returnUrl = `${protocol}://${host}/${lang}/result?sid=${submissionId}`;
     let url = `${checkoutBase}${sep}attributes[submission_id]=${submissionId}&attributes[user_id]=${user.id}&attributes[lang]=${lang}&return_to=${encodeURIComponent(returnUrl)}`;
     if (inviteCode) url += `&discount=${encodeURIComponent(inviteCode)}`;
     return NextResponse.json({ url, submissionId });
