@@ -30,7 +30,7 @@ export default function UserMenu({ lang }: { lang: Lang }) {
     return (
       <button
         onClick={() => router.push(`/${lang}/auth`)}
-        className="text-xs px-3 py-1"
+        className="text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
         style={{
           border: "1px solid #1a3a1a",
           color: "#2d5a2d",
@@ -50,7 +50,7 @@ export default function UserMenu({ lang }: { lang: Lang }) {
     <div style={{ position: "relative" }}>
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs px-3 py-1"
+        className="text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
         style={{
           border: "1px solid #1a3a1a",
           color: "#00ff88",
