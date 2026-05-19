@@ -51,11 +51,15 @@ export async function PATCH(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { code, is_active } = await req.json();
+  const { code, is_active, label, blogger_email } = await req.json();
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const updates: Record<string, unknown> = {};
+  if (is_active !== undefined) updates.is_active = is_active;
+  if (label !== undefined) updates.label = label;
+  if (blogger_email !== undefined) updates.blogger_email = blogger_email;
   const { error } = await supabase
     .from("invite_codes")
-    .update({ is_active })
+    .update(updates)
     .eq("code", code);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

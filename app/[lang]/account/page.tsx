@@ -303,6 +303,9 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [newEmail, setNewEmail] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [editingCode, setEditingCode] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [tab, setTab] = useState<"codes"|"commissions">("codes");
   const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
   const [total, setTotal] = useState(0);
@@ -342,6 +345,24 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     if (json.error) { setError(json.error); setCreating(false); return; }
     setNewCode(""); setNewLabel(""); setNewEmail("");
     setCreating(false); fetchCodes();
+  };
+
+  const handleEdit = (c: {code:string;label:string|null;blogger_email:string|null}) => {
+    setEditingCode(c.code);
+    setEditLabel(c.label || "");
+    setEditEmail(c.blogger_email || "");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCode) return;
+    const token = await getToken();
+    await fetch("/api/admin/invite-codes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code: editingCode, label: editLabel.trim() || null, blogger_email: editEmail.trim() || null }),
+    });
+    setEditingCode(null);
+    fetchCodes();
   };
 
   const handleToggle = async (code: string, is_active: boolean) => {
@@ -389,21 +410,41 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             {error && <div className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</div>}
           </div>
           {codes.map((c) => (
-            <div key={c.id} className="p-3 border flex items-center justify-between gap-2"
+            <div key={c.id} className="border"
               style={{ borderColor: c.is_active ? "#1a3a1a" : "#111", background: "#080e08", fontFamily: mono }}>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold" style={{ color: c.is_active ? "#00ff88" : "#2d5a2d", letterSpacing: "0.1em" }}>{c.code}</div>
-                <div className="text-xs mt-0.5" style={{ color: "#4a7a4a" }}>{c.label || "—"} · {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</div>
+              <div className="p-3 flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold" style={{ color: c.is_active ? "#00ff88" : "#2d5a2d", letterSpacing: "0.1em" }}>{c.code}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "#4a7a4a" }}>{c.label || "—"} · {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-xs" style={{ color: c.is_active ? "#00ff88" : "#ff6b6b" }}>{c.is_active ? "● 有效" : "○ 停用"}</span>
+                  <button onClick={() => editingCode === c.code ? setEditingCode(null) : handleEdit(c)} className="text-xs px-2 py-1"
+                    style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
+                    {editingCode === c.code ? (lang === "zh" ? "取消" : "Cancel") : (lang === "zh" ? "编辑" : "Edit")}
+                  </button>
+                  <button onClick={() => handleToggle(c.code, c.is_active)} className="text-xs px-2 py-1"
+                    style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
+                    {c.is_active ? (lang === "zh" ? "停用" : "Disable") : (lang === "zh" ? "启用" : "Enable")}
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs" style={{ color: c.is_active ? "#00ff88" : "#ff6b6b" }}>{c.is_active ? "● 有效" : "○ 停用"}</span>
-                <button onClick={() => handleToggle(c.code, c.is_active)} className="text-xs px-2 py-1"
-                  style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
-                  {c.is_active ? (lang === "zh" ? "停用" : "Disable") : (lang === "zh" ? "启用" : "Enable")}
-                </button>
-              </div>
+              {editingCode === c.code && (
+                <div className="px-3 pb-3 flex gap-2 flex-wrap" style={{ borderTop: "1px solid #1a3a1a", paddingTop: "10px" }}>
+                  <input placeholder={lang === "zh" ? "博主名" : "Label"} value={editLabel} onChange={(e) => setEditLabel(e.target.value)}
+                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "80px" }} />
+                  <input placeholder={lang === "zh" ? "博主邮箱" : "Email"} value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
+                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "150px" }} />
+                  <button onClick={handleSaveEdit} className="px-4 py-1 text-xs font-bold"
+                    style={{ border: "1px solid #00ff88", color: "#00ff88", background: "transparent", cursor: "pointer", fontFamily: mono }}>
+                    {lang === "zh" ? "保存" : "Save"}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
           {codes.length === 0 && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无邀请码" : "No codes yet"}</div>}
