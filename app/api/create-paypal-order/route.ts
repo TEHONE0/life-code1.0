@@ -1,0 +1,122 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+async function getPayPalToken() {
+  const base = process.env.PAYPAL_BASE_URL || "https://api-m.paypal.com";
+  const res = await fetch(`${base}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`).toString("base64")}`,
+    },
+    body: "grant_type=client_credentials",
+  });
+  const data = await res.json();
+  return data.access_token as string;
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const { lang, answers, inviteCode, existingSubmissionId } = await req.json();
+
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+    const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !userData.user) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+
+    const user = userData.user;
+    let submissionId: string;
+
+    if (existingSubmissionId) {
+      submissionId = existingSubmissionId;
+      if (inviteCode) {
+        await supabase.from("submissions").update({ invite_code: inviteCode }).eq("id", submissionId);
+      }
+    } else {
+      const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "anonymous";
+      const { data: row, error: insertErr } = await supabase
+        .from("submissions")
+        .insert({
+          user_id: user.id,
+          email: user.email,
+          name,
+          lang,
+          enneagram: answers.enneagram,
+          basic_info: answers.basic_info,
+          origin: answers.origin,
+          critical_error: answers.critical_error,
+          core_loop: answers.core_loop,
+          const_value: answers.const,
+          status: answers.status,
+          legacy: answers.legacy,
+          dimension: answers.dimension,
+          paid: false,
+          invite_code: inviteCode || null,
+        })
+        .select("id")
+        .single();
+      if (insertErr || !row) return NextResponse.json({ error: insertErr?.message || "DB error" }, { status: 500 });
+      submissionId = row.id;
+    }
+
+    const host = req.headers.get("host") || "";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const returnUrl = `${protocol}://${host}/${lang}/result?sid=${submissionId}&paypal=1`;
+    const cancelUrl = `${protocol}://${host}/${lang}/payment`;
+
+    // Validate invite code for discount
+    let price = "8.90";
+    if (inviteCode) {
+      const { data: invite } = await supabase
+        .from("invite_codes")
+        .select("discount_percent")
+        .eq("code", inviteCode.toUpperCase())
+        .single();
+      if (invite) {
+        const discountedPrice = 8.9 * (1 - (invite.discount_percent || 12) / 100);
+        price = discountedPrice.toFixed(2);
+      }
+    }
+
+    const accessToken = await getPayPalToken();
+    const base = process.env.PAYPAL_BASE_URL || "https://api-m.paypal.com";
+
+    const orderRes = await fetch(`${base}/v2/checkout/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        intent: "CAPTURE",
+        purchase_units: [{
+          amount: { currency_code: "USD", value: price },
+          description: "Life Code Report",
+          custom_id: submissionId,
+        }],
+        application_context: {
+          return_url: returnUrl,
+          cancel_url: cancelUrl,
+          brand_name: "THEONE AI Studio",
+          landing_page: "BILLING",
+          user_action: "PAY_NOW",
+        },
+      }),
+    });
+
+    const order = await orderRes.json();
+    if (!orderRes.ok) {
+      console.error("[create-paypal-order] PayPal error:", order);
+      return NextResponse.json({ error: order.message || "PayPal error" }, { status: 500 });
+    }
+
+    const approvalUrl = order.links?.find((l: { rel: string; href: string }) => l.rel === "approve")?.href;
+    return NextResponse.json({ url: approvalUrl, submissionId });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}

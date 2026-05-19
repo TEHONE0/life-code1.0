@@ -67,7 +67,7 @@ export default function PaymentPage() {
       const { data: sessionData } = await supabaseBrowser.auth.getSession()
       const accessToken = sessionData.session?.access_token
 
-      const res = await fetch("/api/create-checkout", {
+      const res = await fetch("/api/create-paypal-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

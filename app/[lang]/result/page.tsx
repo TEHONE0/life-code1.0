@@ -383,6 +383,18 @@ function ResultPage() {
           router.replace(`/${lang}/auth?next=${encodeURIComponent(`/${lang}/result?sid=${sidParam}`)}`)
           return
         }
+
+        // Capture PayPal payment if returning from PayPal checkout
+        const isPayPal = searchParams.get('paypal') === '1'
+        const paypalOrderId = searchParams.get('token')
+        if (isPayPal && paypalOrderId) {
+          await fetch('/api/capture-paypal-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: paypalOrderId, submissionId: sidParam }),
+          })
+        }
+
         const res = await fetch(`/api/submission/${sidParam}`, {
           headers: { Authorization: `Bearer ${data.session.access_token}` },
         })
