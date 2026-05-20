@@ -83,6 +83,9 @@ const LANGS = [
   { code: 'en', label: 'EN' },
   { code: 'zh', label: '中文' },
   { code: 'ko', label: '한국어' },
+  { code: 'ja', label: '日本語' },
+  { code: 'th', label: 'ไทย' },
+  { code: 'id', label: 'ID' },
 ]
 
 export default function HomePage() {

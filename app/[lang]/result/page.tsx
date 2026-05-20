@@ -61,6 +61,9 @@ const LABELS = {
   en: { rescan: "Scan again", home: "Back to home", generated: "LIFE CODE REPORT GENERATED" },
   zh: { rescan: "重新扫描", home: "返回首页", generated: "生命代码解析报告已生成" },
   ko: { rescan: "다시 스캔", home: "홈으로", generated: "생명 코드 보고서 생성 완료" },
+  ja: { rescan: "再スキャン", home: "ホームに戻る", generated: "ライフコードレポート生成完了" },
+  th: { rescan: "สแกนใหม่", home: "กลับหน้าหลัก", generated: "รายงาน LIFE CODE ถูกสร้างแล้ว" },
+  id: { rescan: "Scan ulang", home: "Kembali ke beranda", generated: "LAPORAN LIFE CODE TELAH DIBUAT" },
 }
 
 const PORTRAIT_DATA: Record<string, {
