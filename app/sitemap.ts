@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "https://lifecode.app";
-  const langs = ["zh", "en", "ko"];
+  const langs = ["zh", "en", "ko", "ja", "th", "id"];
   const routes = ["", "/survey", "/auth"];
 
   return langs.flatMap((lang) =>

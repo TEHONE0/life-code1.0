@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const SUPPORTED_LANGS = ['en', 'zh', 'ko']
+const SUPPORTED_LANGS = ['en', 'zh', 'ko', 'ja', 'th', 'id']
 const DEFAULT_LANG = 'en'
 
 export function proxy(req: NextRequest) {
@@ -21,9 +21,13 @@ pathname.includes('.')
   }
 
   const acceptLang = req.headers.get('accept-language') ?? ''
+  const al = acceptLang.toLowerCase()
   let lang = DEFAULT_LANG
-  if (acceptLang.toLowerCase().includes('zh')) lang = 'zh'
-  else if (acceptLang.toLowerCase().includes('ko')) lang = 'ko'
+  if (al.includes('zh')) lang = 'zh'
+  else if (al.includes('ko')) lang = 'ko'
+  else if (al.includes('ja')) lang = 'ja'
+  else if (al.includes('th')) lang = 'th'
+  else if (al.includes('id')) lang = 'id'
 
   const url = req.nextUrl.clone()
   url.pathname = `/${lang}${pathname === '/' ? '' : pathname}`

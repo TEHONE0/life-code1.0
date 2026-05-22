@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+const ADMIN_EMAILS = ['theone208899@gmail.com']
+
 async function getPayPalToken() {
   const base = process.env.PAYPAL_BASE_URL || "https://api-m.paypal.com";
   const clientId = process.env.PAYPAL_CLIENT_ID;
@@ -35,6 +37,7 @@ export async function POST(req: NextRequest) {
     if (userErr || !userData.user) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
 
     const user = userData.user;
+    const isAdmin = ADMIN_EMAILS.includes(user.email || '')
     let submissionId: string;
 
     if (existingSubmissionId) {
@@ -60,13 +63,19 @@ export async function POST(req: NextRequest) {
           status: answers.status,
           legacy: answers.legacy,
           dimension: answers.dimension,
-          paid: false,
+          paid: isAdmin,
           invite_code: inviteCode || null,
         })
         .select("id")
         .single();
       if (insertErr || !row) return NextResponse.json({ error: insertErr?.message || "DB error" }, { status: 500 });
       submissionId = row.id;
+    }
+
+    // Admin accounts skip payment entirely
+    if (isAdmin) {
+      await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
+      return NextResponse.json({ testMode: true, submissionId });
     }
 
     const host = req.headers.get("host") || "";
