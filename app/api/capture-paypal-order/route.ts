@@ -40,7 +40,29 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-    await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
+
+    // Mark paid
+    const { data: sub } = await supabase
+      .from("submissions")
+      .update({ paid: true })
+      .eq("id", submissionId)
+      .select("invite_code")
+      .single();
+
+    // Increment used_count on the invite code
+    if (sub?.invite_code) {
+      const { data: codeRow } = await supabase
+        .from("invite_codes")
+        .select("used_count")
+        .eq("code", sub.invite_code)
+        .single();
+      if (codeRow) {
+        await supabase
+          .from("invite_codes")
+          .update({ used_count: (codeRow.used_count || 0) + 1 })
+          .eq("code", sub.invite_code);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (e: unknown) {

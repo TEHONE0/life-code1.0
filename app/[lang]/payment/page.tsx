@@ -25,21 +25,45 @@ export default function PaymentPage() {
   const [inviteCode, setInviteCode] = useState("")
   const [inviteStatus, setInviteStatus] = useState<"idle" | "valid" | "invalid">("idle")
   const [inviteLabel, setInviteLabel] = useState("")
+  const [inviteFreeAccess, setInviteFreeAccess] = useState(false)
 
   useEffect(() => {
-    const answers = sessionStorage.getItem("survey_answers")
-    if (!answers) {
+    const answersRaw = sessionStorage.getItem("survey_answers")
+    if (!answersRaw) {
       router.push(`/${lang}/survey`)
       return
     }
     setHasAnswers(true)
 
-    supabaseBrowser.auth.getSession().then(({ data }) => {
+    supabaseBrowser.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
         router.push(`/${lang}/auth?next=${encodeURIComponent(`/${lang}/payment`)}`)
         return
       }
       setUserEmail(data.session.user.email ?? null)
+
+      // Claim anonymous draft (or create new draft) now that user is logged in
+      const existingId = sessionStorage.getItem("existing_submission_id") || undefined
+      try {
+        const res = await fetch("/api/save-draft", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({
+            answers: JSON.parse(answersRaw),
+            lang,
+            existingSubmissionId: existingId,
+          }),
+        })
+        const json = await res.json()
+        if (json.submissionId) {
+          sessionStorage.setItem("existing_submission_id", json.submissionId)
+        }
+      } catch {
+        // Non-fatal: answers still in sessionStorage as fallback
+      }
     })
   }, [lang, router])
 
@@ -54,8 +78,10 @@ export default function PaymentPage() {
     if (json.valid) {
       setInviteStatus("valid")
       setInviteLabel(json.label || "")
+      setInviteFreeAccess(!!json.freeAccess)
     } else {
       setInviteStatus("invalid")
+      setInviteFreeAccess(false)
     }
   }
 
@@ -156,7 +182,7 @@ export default function PaymentPage() {
               type="text"
               placeholder={lang === 'zh' ? '输入邀请码' : lang === 'ko' ? '초대 코드 입력' : 'Enter invite code'}
               value={inviteCode}
-              onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setInviteStatus("idle") }}
+              onChange={(e) => { setInviteCode(e.target.value); setInviteStatus("idle") }}
               onKeyDown={(e) => e.key === "Enter" && handleInviteCheck()}
               className="flex-1 px-3 py-2 text-sm"
               style={{
@@ -180,7 +206,11 @@ export default function PaymentPage() {
           </div>
           {inviteStatus === "valid" && (
             <div className="text-xs" style={{ color: "#00ff88", fontFamily: "Courier New, monospace" }}>
-              ✓ {inviteLabel ? `[${inviteLabel}] ` : ''}{lang === 'zh' ? '邀请码有效 · 8折已激活' : lang === 'ko' ? '초대 코드 유효 · 20% 할인 적용' : 'Code valid · 20% discount applied'}
+              ✓ {inviteLabel ? `[${inviteLabel}] ` : ''}
+              {inviteFreeAccess
+                ? (lang === 'zh' ? '内测邀请码有效 · 免费解锁' : lang === 'ko' ? '베타 코드 유효 · 무료 이용' : 'Beta code valid · Free access')
+                : (lang === 'zh' ? '邀请码有效 · 8折已激活' : lang === 'ko' ? '초대 코드 유효 · 20% 할인 적용' : 'Code valid · 20% discount applied')
+              }
             </div>
           )}
           {inviteStatus === "invalid" && (
@@ -195,7 +225,9 @@ export default function PaymentPage() {
           style={{ borderColor: "#1a3a1a", background: "#0a150a" }}
         >
           <div className="text-4xl font-bold" style={{ color: "#00ff88" }}>
-            {inviteStatus === "valid" ? (
+            {inviteStatus === "valid" && inviteFreeAccess ? (
+              <span>{lang === 'zh' ? '免费' : lang === 'ko' ? '무료' : 'FREE'} <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>$8.90</span></span>
+            ) : inviteStatus === "valid" ? (
               <span>$7.12 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>$8.90</span></span>
             ) : t.paymentPrice}
           </div>

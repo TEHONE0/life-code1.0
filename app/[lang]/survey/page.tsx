@@ -32,8 +32,28 @@ export default function SurveyPage() {
     sessionStorage.setItem("survey_lang", lang)
     localStorage.removeItem(DRAFT_KEY)
 
-    const { data } = await supabaseBrowser.auth.getSession()
-    if (!data.session) {
+    // Save to DB immediately — with auth token if logged in, anonymous if not
+    const { data: sessionData } = await supabaseBrowser.auth.getSession()
+    const token = sessionData.session?.access_token
+    const existingId = sessionStorage.getItem("existing_submission_id") || undefined
+    try {
+      const res = await fetch("/api/save-draft", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ answers, lang, existingSubmissionId: existingId }),
+      })
+      const json = await res.json()
+      if (json.submissionId) {
+        sessionStorage.setItem("existing_submission_id", json.submissionId)
+      }
+    } catch {
+      // Non-fatal: sessionStorage is still the fallback
+    }
+
+    if (!sessionData.session) {
       router.push(`/${lang}/auth?next=${encodeURIComponent(`/${lang}/payment`)}`)
       return
     }

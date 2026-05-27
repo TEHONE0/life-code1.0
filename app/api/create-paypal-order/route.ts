@@ -83,13 +83,27 @@ export async function POST(req: NextRequest) {
     const returnUrl = `${protocol}://${host}/${lang}/result?sid=${submissionId}&paypal=1`;
     const cancelUrl = `${protocol}://${host}/${lang}/payment`;
 
-    // Validate invite code for discount
+    // Free beta codes — full access, no payment required
+    const FREE_ACCESS_CODES = ["FANDAO666"];
+
+    // Validate invite code for discount or free access
     let price = "8.90";
     if (inviteCode) {
+      const normalized = inviteCode.trim().toUpperCase();
+      if (FREE_ACCESS_CODES.includes(normalized)) {
+        // Free access: skip PayPal entirely
+        await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
+        // Increment used_count
+        const { data: codeRow } = await supabase.from("invite_codes").select("used_count").eq("code", normalized).single();
+        if (codeRow) {
+          await supabase.from("invite_codes").update({ used_count: (codeRow.used_count || 0) + 1 }).eq("code", normalized);
+        }
+        return NextResponse.json({ testMode: true, submissionId });
+      }
       const { data: invite } = await supabase
         .from("invite_codes")
         .select("is_active")
-        .eq("code", inviteCode.toUpperCase())
+        .eq("code", normalized)
         .single();
       if (invite?.is_active) {
         price = (8.9 * 0.8).toFixed(2); // 20% off

@@ -317,6 +317,8 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [tab, setTab] = useState<"codes"|"commissions">("codes");
   const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
   const [total, setTotal] = useState(0);
+  const [expandedCode, setExpandedCode] = useState<string | null>(null);
+  const [usageMap, setUsageMap] = useState<Record<string, {id:string;email:string|null;name:string|null;lang:string;paid:boolean;created_at:string}[]>>({});
 
   const getToken = async () => {
     const { data } = await supabaseBrowser.auth.getSession();
@@ -371,6 +373,16 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     });
     setEditingCode(null);
     fetchCodes();
+  };
+
+  const handleExpandUsage = async (code: string) => {
+    if (expandedCode === code) { setExpandedCode(null); return; }
+    setExpandedCode(code);
+    if (usageMap[code]) return; // already fetched
+    const token = await getToken();
+    const res = await fetch(`/api/admin/invite-usage?code=${code}`, { headers: { Authorization: `Bearer ${token}` } });
+    const json = await res.json();
+    setUsageMap(prev => ({ ...prev, [code]: json.users || [] }));
   };
 
   const handleToggle = async (code: string, is_active: boolean) => {
@@ -439,8 +451,32 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
                     {c.is_active ? (lang === "zh" ? "停用" : "Disable") : (lang === "zh" ? "启用" : "Enable")}
                   </button>
+                  <button onClick={() => handleExpandUsage(c.code)} className="text-xs px-2 py-1"
+                    style={{ border: "1px solid #1a3a1a", color: expandedCode === c.code ? "#00ff88" : "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#00ff88" }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = expandedCode === c.code ? "#00ff88" : "#2d5a2d" }}>
+                    {expandedCode === c.code ? "▲" : "▼"} {lang === "zh" ? "用户" : "Users"}
+                  </button>
                 </div>
               </div>
+              {expandedCode === c.code && (
+                <div className="px-3 pb-3" style={{ borderTop: "1px solid #1a3a1a", paddingTop: "10px" }}>
+                  {!usageMap[c.code] && <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// 加载中...</div>}
+                  {usageMap[c.code]?.length === 0 && <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无使用记录" : "No usage yet"}</div>}
+                  {usageMap[c.code]?.map((u) => (
+                    <div key={u.id} className="flex justify-between items-center py-1" style={{ borderBottom: "1px solid #0d1f0d" }}>
+                      <div>
+                        <span className="text-xs" style={{ color: u.paid ? "#00ff88" : "#fbbf24", fontFamily: mono }}>{u.email || "—"}</span>
+                        {u.name && <span className="text-xs ml-2" style={{ color: "#4a7a4a", fontFamily: mono }}>{u.name}</span>}
+                      </div>
+                      <div className="flex gap-3 text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>
+                        <span style={{ color: u.paid ? "#00ff88" : "#fbbf24" }}>{u.paid ? "● 已付款" : "○ 未付款"}</span>
+                        <span>{new Date(u.created_at).toLocaleDateString("zh-CN")}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               {editingCode === c.code && (
                 <div className="px-3 pb-3 flex gap-2 flex-wrap" style={{ borderTop: "1px solid #1a3a1a", paddingTop: "10px" }}>
                   <input placeholder={lang === "zh" ? "博主名" : "Label"} value={editLabel} onChange={(e) => setEditLabel(e.target.value)}
