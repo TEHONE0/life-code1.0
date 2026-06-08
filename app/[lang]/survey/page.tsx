@@ -115,6 +115,9 @@ export default function SurveyPage() {
           </span>
         </div>
 
+        {/* Security note */}
+        <div className="text-xs" style={{ color: "#2d6a2d" }}>{t.securityNote}</div>
+
         {/* Questions */}
         {QUESTIONS.map((q, i) => (
           <div

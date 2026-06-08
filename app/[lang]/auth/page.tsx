@@ -69,14 +69,6 @@ function AuthPage() {
     }
   };
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    await supabaseBrowser.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/${lang}/auth/callback?next=${encodeURIComponent(redirectTo)}` },
-    });
-  };
-
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center px-5 py-10"
@@ -93,30 +85,6 @@ function AuthPage() {
           <p className="text-xs" style={{ color: "#2d5a2d" }}>
             {t.authSubtitle}
           </p>
-        </div>
-
-        <button
-          onClick={handleGoogle}
-          disabled={loading}
-          className="w-full py-3 text-sm font-bold transition-all"
-          style={{
-            border: "1px solid #1e5a1e",
-            color: "#00ff88",
-            background: "#0a150a",
-            cursor: loading ? "not-allowed" : "pointer",
-            fontFamily: "Courier New, monospace",
-            letterSpacing: "0.05em",
-          }}
-          onMouseEnter={(e) => { if (!loading) e.currentTarget.style.borderColor = "#00ff88" }}
-          onMouseLeave={(e) => { if (!loading) e.currentTarget.style.borderColor = "#1e5a1e" }}
-        >
-          {t.authContinueGoogle}
-        </button>
-
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px" style={{ background: "#1a3a1a" }} />
-          <div className="text-xs" style={{ color: "#1e4a1e" }}>OR</div>
-          <div className="flex-1 h-px" style={{ background: "#1a3a1a" }} />
         </div>
 
         <div className="space-y-3">

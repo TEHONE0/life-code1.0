@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
     lang: r.lang,
     paid: r.paid,
     created_at: r.created_at,
-    hasReport: !!(r.report && r.report.length > 0),
+    // 完整报告固定以 DIMENSION_LEVEL 行结尾；缺这行=生成中途卡断，视为未完成（可免费重生成）
+    hasReport: !!(r.report && /DIMENSION_LEVEL/.test(r.report)),
     answers: {
       enneagram: r.enneagram, basic_info: r.basic_info, origin: r.origin,
       critical_error: r.critical_error, core_loop: r.core_loop, const: r.const_value,

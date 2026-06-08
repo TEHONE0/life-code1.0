@@ -1,0 +1,114 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
+
+const ADMIN_EMAILS = ['theone208899@gmail.com'];
+const FREE_ACCESS_CODES = ["FANDAO666","LCFREE01","LCFREE02","LCFREE03","LCFREE04","LCFREE05","LCFREE06","LCFREE07","LCFREE08","LCFREE09","LCFREE10","LCFREE11","LCFREE12","LCFREE13","LCFREE14","LCFREE15","LCFREE16","LCFREE17","LCFREE18","LCFREE19","LCFREE20"];
+const PRICE = "8.80";
+const DISCOUNT_PRICE = "6.80"; // 达人邀请码（lifecode01-10）专属价
+
+function epaySign(params: Record<string, string>, key: string): string {
+  const str =
+    Object.keys(params)
+      .filter((k) => k !== "sign" && k !== "sign_type" && params[k] !== "")
+      .sort()
+      .map((k) => `${k}=${params[k]}`)
+      .join("&") + key;
+  return crypto.createHash("md5").update(str).digest("hex");
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const { lang, answers, inviteCode, existingSubmissionId, tradeType } = await req.json();
+
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+    const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !userData.user) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+
+    const user = userData.user;
+    const isAdmin = ADMIN_EMAILS.includes(user.email || "");
+    let submissionId: string;
+
+    if (existingSubmissionId) {
+      submissionId = existingSubmissionId;
+      if (inviteCode) {
+        await supabase.from("submissions").update({ invite_code: inviteCode }).eq("id", submissionId);
+      }
+    } else {
+      const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "anonymous";
+      const { data: row, error: insertErr } = await supabase
+        .from("submissions")
+        .insert({
+          user_id: user.id, email: user.email, name, lang,
+          enneagram: answers.enneagram, basic_info: answers.basic_info,
+          origin: answers.origin, critical_error: answers.critical_error,
+          core_loop: answers.core_loop, const_value: answers.const,
+          status: answers.status, legacy: answers.legacy,
+          dimension: answers.dimension, paid: isAdmin,
+          invite_code: inviteCode || null,
+        })
+        .select("id").single();
+      if (insertErr || !row) return NextResponse.json({ error: insertErr?.message || "DB error" }, { status: 500 });
+      submissionId = row.id;
+    }
+
+    if (isAdmin) {
+      await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
+      return NextResponse.json({ testMode: true, submissionId });
+    }
+
+    let price = PRICE;
+    if (inviteCode) {
+      const normalized = inviteCode.trim().toUpperCase();
+      if (FREE_ACCESS_CODES.includes(normalized)) {
+        await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
+        const { data: codeRow } = await supabase.from("invite_codes").select("used_count").eq("code", normalized).single();
+        if (codeRow) {
+          await supabase.from("invite_codes").update({ used_count: (codeRow.used_count || 0) + 1 }).eq("code", normalized);
+        }
+        return NextResponse.json({ testMode: true, submissionId });
+      }
+      const { data: invite } = await supabase.from("invite_codes").select("is_active").eq("code", normalized).single();
+      if (invite?.is_active) price = DISCOUNT_PRICE;
+    }
+
+    // 未配置 ZPay → 测试模式
+    const pid = process.env.ZPAY_PID;
+    const zkey = process.env.ZPAY_KEY;
+    if (!pid || !zkey) {
+      await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
+      return NextResponse.json({ testMode: true, submissionId });
+    }
+
+    const host = req.headers.get("host") || "";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const orderId = `LC${Date.now()}${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+    void tradeType; // 当前仅开通支付宝渠道
+    const notifyUrl = `${protocol}://${host}/api/payment-notify`;
+    const returnUrl = `${protocol}://${host}/${lang}/result?sid=${submissionId}&source=payment`;
+
+    const params: Record<string, string> = {
+      pid,
+      type: "alipay",
+      out_trade_no: orderId,
+      notify_url: notifyUrl,
+      return_url: returnUrl,
+      name: "生命代码报告",
+      money: price,
+      sign_type: "MD5",
+    };
+    params.sign = epaySign(params, zkey);
+
+    await supabase.from("submissions").update({ shopify_order_id: orderId }).eq("id", submissionId);
+
+    const url = `https://zpayz.cn/submit.php?${new URLSearchParams(params).toString()}`;
+    return NextResponse.json({ url, submissionId });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://lifecode9.com"),
   title: "生命代码 · LIFE CODE",
   description: "如果宇宙是写好的代码，你想不想知道你的生命代码是什么？解锁你的心理Bug与生命主权重。",
   keywords: ["生命代码", "心理分析", "九型人格", "life code", "personality report", "psychological analysis"],
@@ -9,14 +10,14 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "生命代码" },
   openGraph: {
     title: "生命代码 · LIFE CODE",
-    description: "如果宇宙是写好的代码，你想不想知道你的生命代码是什么？",
+    description: "找到人生系统里悄悄运行的Bug，重新选择怎么活",
     type: "website",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Life Code" }],
+    images: [{ url: "/og-image.png", width: 682, height: 865, alt: "Life Code" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "生命代码 · LIFE CODE",
-    description: "如果宇宙是写好的代码，你想不想知道你的生命代码是什么？",
+    description: "找到人生系统里悄悄运行的Bug，重新选择怎么活",
     images: ["/og-image.png"],
   },
   robots: { index: true, follow: true },

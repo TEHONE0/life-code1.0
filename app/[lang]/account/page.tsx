@@ -62,6 +62,7 @@ function AccountPage() {
     viewReport: lang === "zh" ? "查看报告 →" : lang === "ko" ? "보고서 보기 →" : "View report →",
     completeReport: lang === "zh" ? "继续生成报告 →" : lang === "ko" ? "보고서 생성 →" : "Continue →",
     payNow: lang === "zh" ? "去支付 →" : lang === "ko" ? "결제 →" : "Pay now →",
+    rescan: lang === "zh" ? "↻ 重新扫描" : lang === "ko" ? "↻ 다시 스캔" : "↻ Rescan",
   };
 
   useEffect(() => {
@@ -82,12 +83,9 @@ function AccountPage() {
   }, [lang, router, view]);
 
   const handleReportClick = (s: Submission) => {
-    if (s.hasReport) {
+    if (s.paid) {
+      // 已付款：一律走 ?sid= 路径，结果页自动判断有报告则加载、无报告则生成
       router.push(`/${lang}/result?sid=${s.id}`);
-    } else if (s.paid) {
-      sessionStorage.setItem("submission_id", s.id);
-      sessionStorage.setItem("stream_mode", "true");
-      router.push(`/${lang}/result`);
     } else {
       sessionStorage.setItem("survey_answers", JSON.stringify({
         enneagram: s.answers.enneagram, basic_info: s.answers.basic_info,
@@ -208,7 +206,8 @@ function AccountPage() {
         )}
 
         {!loading && view !== "admin" && list.map((s) => {
-          const date = new Date(s.created_at).toLocaleDateString();
+          const _dt = new Date(s.created_at);
+          const date = `${_dt.toLocaleDateString()} ${_dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
           const statusColor = s.paid ? "#00ff88" : "#ff6b6b";
           const statusLabel = s.paid ? t.paid : t.unpaid;
           const isExpanded = expandedId === s.id;
@@ -246,6 +245,20 @@ function AccountPage() {
                         </div>
                       );
                     })}
+                    {s.hasReport && email === ADMIN_EMAIL && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/${lang}/result?sid=${s.id}&rescan=1`);
+                        }}
+                        className="text-xs px-3 py-1.5 border mt-1"
+                        style={{ borderColor: "#00ff8866", color: "#00ff88", background: "#0a1f0a", cursor: "pointer", fontFamily: "Courier New, monospace" }}
+                        onMouseEnter={(ev) => { ev.currentTarget.style.borderColor = "#00ff88" }}
+                        onMouseLeave={(ev) => { ev.currentTarget.style.borderColor = "#00ff8866" }}
+                      >
+                        {t.rescan}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -375,6 +388,20 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     fetchCodes();
   };
 
+  // 常驻用户名输入框：本地即时更新（保住焦点），失焦时写库 label
+  const handleNameChange = (code: string, name: string) => {
+    setCodes(prev => prev.map(c => c.code === code ? { ...c, label: name } : c));
+  };
+
+  const handleSaveName = async (code: string, name: string) => {
+    const token = await getToken();
+    await fetch("/api/admin/invite-codes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ code, label: name.trim() || null }),
+    });
+  };
+
   const handleExpandUsage = async (code: string) => {
     if (expandedCode === code) { setExpandedCode(null); return; }
     setExpandedCode(code);
@@ -429,13 +456,40 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             </div>
             {error && <div className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</div>}
           </div>
-          {codes.map((c) => (
-            <div key={c.id} className="border"
+          {(() => {
+            const groupOf = (code: string) => code.startsWith("LIFECODE") ? 0 : code.startsWith("LCFREE") ? 1 : 2;
+            const groupTitle = (g: number) => g === 0
+              ? (lang === "zh" ? "// 博主邀请码 LIFECODE01～LIFECODE10" : "// Blogger codes LIFECODE01-10")
+              : g === 1
+              ? (lang === "zh" ? "// 免费邀请码 LCFREE01～LCFREE20" : "// Free codes LCFREE01-20")
+              : (lang === "zh" ? "// 其他邀请码" : "// Other codes");
+            const sorted = [...codes].sort((a, b) => groupOf(a.code) - groupOf(b.code) || a.code.localeCompare(b.code));
+            let lastGroup = -1;
+            return sorted.map((c) => {
+              const g = groupOf(c.code);
+              const showHeader = g !== lastGroup;
+              lastGroup = g;
+              return (
+            <div key={c.id}>
+              {showHeader && (
+                <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono, marginTop: "14px", marginBottom: "4px" }}>{groupTitle(g)}</div>
+              )}
+            <div className="border"
               style={{ borderColor: c.is_active ? "#1a3a1a" : "#111", background: "#080e08", fontFamily: mono }}>
               <div className="p-3 flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold" style={{ color: c.is_active ? "#00ff88" : "#2d5a2d", letterSpacing: "0.1em" }}>{c.code}</div>
-                  <div className="text-xs mt-0.5" style={{ color: "#4a7a4a" }}>{c.label || "—"} · {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</div>
+                  <div className="text-xs mt-1 flex items-center gap-1 flex-wrap" style={{ color: "#4a7a4a" }}>
+                    <input
+                      placeholder={lang === "zh" ? "用户名" : "User"}
+                      value={c.label || ""}
+                      onChange={(e) => handleNameChange(c.code, e.target.value)}
+                      onBlur={(e) => handleSaveName(c.code, e.target.value)}
+                      className="px-1.5 py-0.5 text-xs"
+                      style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "100px" }}
+                    />
+                    <span>· {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-xs" style={{ color: c.is_active ? "#00ff88" : "#ff6b6b" }}>{c.is_active ? "● 有效" : "○ 停用"}</span>
@@ -490,8 +544,11 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                 </div>
               )}
             </div>
-          ))}
-          {codes.length === 0 && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无邀请码" : "No codes yet"}</div>}
+            </div>
+              );
+            });
+          })()}
+          {codes.length === 0 &&<div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无邀请码" : "No codes yet"}</div>}
         </div>
       )}
 

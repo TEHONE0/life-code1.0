@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 // Free beta codes — full access, no payment required
-const FREE_ACCESS_CODES = ["FANDAO666"];
+const FREE_ACCESS_CODES = ["FANDAO666","LCFREE01","LCFREE02","LCFREE03","LCFREE04","LCFREE05","LCFREE06","LCFREE07","LCFREE08","LCFREE09","LCFREE10","LCFREE11","LCFREE12","LCFREE13","LCFREE14","LCFREE15","LCFREE16","LCFREE17","LCFREE18","LCFREE19","LCFREE20"];
 
 export async function POST(req: NextRequest) {
   const { code } = await req.json();

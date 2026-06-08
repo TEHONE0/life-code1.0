@@ -24,16 +24,18 @@ export async function POST(req: NextRequest) {
 
     const { answers, lang, submission_id } = await req.json();
 
-    // If submission_id provided, verify it belongs to this user and is paid
-    if (submission_id) {
-      const { data: sub } = await supabase
-        .from("submissions")
-        .select("paid, user_id")
-        .eq("id", submission_id)
-        .single();
-      if (!sub || sub.user_id !== userData.user.id || !sub.paid) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-      }
+    // submission_id is required — no paid check bypass allowed
+    if (!submission_id) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    const { data: sub } = await supabase
+      .from("submissions")
+      .select("paid, user_id")
+      .eq("id", submission_id)
+      .single();
+    if (!sub || sub.user_id !== userData.user.id || !sub.paid) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
     const SYSTEM_PROMPT = getSystemPrompt(lang);
 
@@ -112,53 +114,62 @@ ${answers.dimension || "not filled"}
 ${baziBlock}
 ${lang === 'ko' ? 'Note: This user\'s interface language is Korean (한국어). If you need to output the birth data incomplete notice, write it in Korean.\n\n' : ''}Please generate the complete Life Code report based on the above variables.`;
 
-    const streamResponse = await client.chat.completions.create({
-      model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
-      max_tokens: 16384,
-      stream: true,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userContent },
-      ],
-    });
-
+    const model = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
     const encoder = new TextEncoder();
     let fullReport = "";
 
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of streamResponse) {
-            const text = chunk.choices[0]?.delta?.content || "";
-            if (text) {
-              fullReport += text;
-              controller.enqueue(encoder.encode(text));
+          const baseMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userContent },
+          ];
+
+          // 单次输出可能因 max_tokens 被截断（比如只写到第五章），最多自动续写3次
+          for (let round = 0; round < 4; round++) {
+            const messages = round === 0
+              ? baseMessages
+              : [...baseMessages, { role: "assistant" as const, content: fullReport }, { role: "user" as const, content: "继续，从刚才中断的地方接着往下写，不要重复已经写过的内容，也不要重新输出标题或开场白。" }];
+
+            const streamResponse = await client.chat.completions.create({
+              model,
+              max_tokens: 16384,
+              stream: true,
+              messages,
+            });
+
+            let finishReason: string | null = null;
+            let lastBeat = 0;
+            for await (const chunk of streamResponse) {
+              const delta = chunk.choices[0]?.delta as { content?: string; reasoning_content?: string } | undefined;
+              const text = delta?.content || "";
+              if (text) {
+                fullReport += text;
+                controller.enqueue(encoder.encode(text));
+              } else if (delta?.reasoning_content && Date.now() - lastBeat > 1000) {
+                // 推理模型出正文前会先思考数十秒，期间无 content 输出，连接静默会被
+                // 手机/微信浏览器掐断（nginx 记 499），前端卡在加载页。每秒发一个空白
+                // 心跳保活；前端 cleanReport 的 trim() 会吃掉这些前导空白，不影响报告显示。
+                controller.enqueue(encoder.encode(" "));
+                lastBeat = Date.now();
+              }
+              if (chunk.choices[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
             }
+
+            if (finishReason !== "length") break; // 正常结束，无需续写
+          }
+
+          // 先存库再关流：确保 Vercel 函数回收前写入完成
+          if (fullReport && submission_id) {
+            const { error } = await supabase
+              .from("submissions")
+              .update({ report: fullReport })
+              .eq("id", submission_id);
+            if (error) console.error("Supabase update error:", error.message);
           }
         } finally {
           controller.close();
-          if (submission_id) {
-            supabase.from("submissions").update({ report: fullReport }).eq("id", submission_id).then(({ error }) => {
-              if (error) console.error("Supabase update error:", error.message);
-            });
-          } else {
-            const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "匿名";
-            supabase.from("submissions").insert({
-              name,
-              enneagram: answers.enneagram,
-              basic_info: answers.basic_info,
-              origin: answers.origin,
-              critical_error: answers.critical_error,
-              core_loop: answers.core_loop,
-              const_value: answers.const,
-              status: answers.status,
-              legacy: answers.legacy,
-              dimension: answers.dimension,
-              report: fullReport,
-            }).then(({ error }) => {
-              if (error) console.error("Supabase insert error:", error.message);
-            });
-          }
         }
       },
     });
@@ -167,6 +178,7 @@ ${lang === 'ko' ? 'Note: This user\'s interface language is Korean (한국어). 
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "X-Content-Type-Options": "nosniff",
+        "X-Accel-Buffering": "no", // 关闭 nginx 缓冲，确保心跳和正文逐字节实时下发
       },
     });
   } catch (error: unknown) {

@@ -11,6 +11,8 @@ import "katex/dist/katex.min.css";
 import { Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import UserMenu from "@/components/UserMenu";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 function cleanReport(text: string, userName?: string): string {
   let result = text
@@ -270,18 +272,16 @@ function ResultPage() {
   const [streamDone, setStreamDone] = useState(false)
   const [shared, setShared] = useState(false)
   const [shareModal, setShareModal] = useState(false)
-  const [screenshotHint, setScreenshotHint] = useState(false)
+  const [exportingPdf, setExportingPdf] = useState(false)
+  const reportRef = useRef<HTMLDivElement>(null)
+  const reportInnerRef = useRef<HTMLDivElement>(null)
   // Prevents double execution (StrictMode guard + re-render guard)
   const effectRan = useRef(false)
 
-  const shareUrl = lang === 'zh'
-    ? 'https://lifecode.theone.so/zh'
-    : lang === 'ko'
-    ? 'https://lifecode.theone.so/ko'
-    : 'https://lifecode.theone.so/en'
+  const shareUrl = `https://lifecode9.com/${lang}`
 
   const shareText = lang === 'zh'
-    ? '如果宇宙是代码，你是哪一行？测测你的生命代码 →'
+    ? '找到人生系统里悄悄运行的Bug，重新选择怎么活 →'
     : lang === 'ko'
     ? '우주가 코드라면, 당신은 어떤 줄인가요? 생명 코드를 확인하세요 →'
     : 'If life is code — which line are you? Decode yours →'
@@ -303,6 +303,21 @@ function ResultPage() {
     setTimeout(() => setShared(false), 2000)
   }
 
+  // 微信不开放网页直接拉起分享的接口（无法用URL跳转），唯一能"直接打到App"的办法
+  // 是调用系统分享面板（Web Share API）——手机装了微信的话，面板里会直接出现微信选项
+  const handleShareToWeChat = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareText, text: shareText, url: shareUrl })
+        return
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return // 用户取消分享面板
+      }
+    }
+    // 不支持系统分享面板（如桌面浏览器）时，退回复制链接
+    handleCopyLink()
+  }
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(report)
@@ -320,7 +335,74 @@ function ResultPage() {
     }
   }
 
-  const handleScreenshotHint = () => setScreenshotHint(v => !v)
+  const handleExportPdf = async () => {
+    const node = reportRef.current
+    const inner = reportInnerRef.current
+    if (!node || !inner || exportingPdf) return
+    setExportingPdf(true)
+
+    // 整个报告一次性截成大canvas，html2canvas克隆超高DOM时会被截断（手机上只渲染到一半就停）
+    // 改法：每次只让html2canvas克隆"一屏"高度的内容——把外层裁成固定高度窗口，
+    // 内层用 translateY 把对应分段移到窗口里，逐段截图后拼成多页PDF
+    const origNodeStyle = { height: node.style.height, overflow: node.style.overflow }
+    const origInnerTransform = inner.style.transform
+    try {
+      // +32px缓冲：避免最后一个区块（如画像边框）因取整误差被切掉底边
+      const totalHeight = inner.scrollHeight + 32
+      const totalWidth = node.clientWidth
+      const sliceHeight = 1000 // 窗口高度（px），保持较小，确保每次克隆的DOM体积可控
+      const scale = 1.5
+      let pdf: jsPDF | null = null
+
+      node.style.overflow = "hidden"
+      for (let top = 0; top < totalHeight; top += sliceHeight) {
+        const sh = Math.min(sliceHeight, totalHeight - top)
+        node.style.height = `${sh}px`
+        inner.style.transform = `translateY(-${top}px)`
+        // 等待重排完成再截图
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+        const canvas = await html2canvas(node, {
+          backgroundColor: "#080e08",
+          scale,
+          useCORS: true,
+          width: totalWidth,
+          height: sh,
+        })
+        const imgData = canvas.toDataURL("image/jpeg", 0.92)
+        if (!pdf) {
+          pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width, canvas.height] })
+        } else {
+          pdf.addPage([canvas.width, canvas.height])
+        }
+        pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height)
+      }
+      if (!pdf) return
+      const fileName = `生命代码报告_${Date.now()}.pdf`
+      const blob = pdf.output("blob")
+
+      // 手机浏览器（尤其iOS Safari）对 a[download] 支持差，优先用系统分享面板，让用户选"存储到文件/保存图片"
+      const file = new File([blob], fileName, { type: "application/pdf" })
+      // 桌面端系统分享面板没有"保存到文件"，直接触发浏览器下载；移动端保留分享面板（可存到"文件"）
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName })
+      } else {
+        pdf.save(fileName)
+      }
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        // 用户取消了分享面板，不算错误
+      } else {
+        console.error("PDF export failed:", e)
+      }
+    } finally {
+      node.style.height = origNodeStyle.height
+      node.style.overflow = origNodeStyle.overflow
+      inner.style.transform = origInnerTransform
+      setExportingPdf(false)
+    }
+  }
 
   const streamFromAnswers = async (answers: Record<string, string>, surveyLang: string, submissionId: string | null) => {
     const userName = extractName(answers.basic_info)
@@ -381,28 +463,39 @@ function ResultPage() {
 
     if (sidParam) {
       (async () => {
+       try {
         const { data } = await supabaseBrowser.auth.getSession()
         if (!data.session) {
           router.replace(`/${lang}/auth?next=${encodeURIComponent(`/${lang}/result?sid=${sidParam}`)}`)
           return
         }
 
-        // Capture PayPal payment if returning from PayPal checkout
-        const isPayPal = searchParams.get('paypal') === '1'
-        const paypalOrderId = searchParams.get('token')
-        if (isPayPal && paypalOrderId) {
-          await fetch('/api/capture-paypal-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: paypalOrderId, submissionId: sidParam }),
+        // 从支付页跳回时，异步回调可能还未到达，轮询等待 paid=true（最多30秒）
+        const fromPayment = searchParams.get('source') === 'payment'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let submission: any = null
+
+        const fetchSubmission = async () => {
+          const res = await fetch(`/api/submission/${sidParam}`, {
+            headers: { Authorization: `Bearer ${data.session.access_token}` },
           })
+          if (!res.ok) { router.replace(`/${lang}/account`); return false }
+          submission = (await res.json()).submission
+          return true
         }
 
-        const res = await fetch(`/api/submission/${sidParam}`, {
-          headers: { Authorization: `Bearer ${data.session.access_token}` },
-        })
-        if (!res.ok) { router.replace(`/${lang}/account`); return }
-        const { submission } = await res.json()
+        if (fromPayment) {
+          for (let i = 0; i < 15; i++) {
+            const ok = await fetchSubmission()
+            if (!ok) return
+            if (submission.paid) break
+            await new Promise(r => setTimeout(r, 2000))
+          }
+        } else {
+          const ok = await fetchSubmission()
+          if (!ok) return
+        }
+
         if (!submission.paid) {
           sessionStorage.setItem("survey_answers", JSON.stringify({
             enneagram: submission.enneagram, basic_info: submission.basic_info, origin: submission.origin,
@@ -413,7 +506,10 @@ function ResultPage() {
           router.replace(`/${lang}/payment`)
           return
         }
-        if (submission.report && submission.report.length > 0) {
+        const rescan = searchParams.get('rescan') === '1'
+        // 完整报告固定以 DIMENSION_LEVEL 结尾；付费但报告残缺（卡断）时，自动免费重生成
+        const reportComplete = submission.report && /DIMENSION_LEVEL/.test(submission.report)
+        if (reportComplete && !rescan) {
           const userName = extractName(submission.basic_info)
           const lvl = submission.report.match(/DIMENSION_LEVEL\s*[:：]\s*\[?(\w+)/)
           if (lvl && ['LOWER_DIMENSION','SAPIENT_ENTITY','AWAKENED','HIGH_DIMENSION'].includes(lvl[1])) {
@@ -439,6 +535,10 @@ function ResultPage() {
           }
           await streamFromAnswers(answers, submission.lang, submission.id)
         }
+       } catch (e) {
+         console.error("Result page load failed:", e)
+         router.replace(`/${lang}/account`)
+       }
       })()
       return
     }
@@ -538,7 +638,7 @@ function ResultPage() {
           >
             <span style={{ color: "#1e4a1e" }}>&gt; </span>
             {streaming
-              ? (lang === 'zh' ? '正在生成报告，请稍候...' : 'Generating report...')
+              ? (lang === 'zh' ? '正在生成报告，由于算法复杂，要消耗大量token，请耐心等待...' : 'Generating report — this involves heavy computation and may take a while, please be patient...')
               : `SCANNING COMPLETE · ${labels.generated}`}
           </div>
           {streaming && (
@@ -550,9 +650,11 @@ function ResultPage() {
 
         {/* Report */}
         <div
+          ref={reportRef}
           className={`transition-opacity duration-700 delay-300 ${visible ? "opacity-100" : "opacity-0"}`}
           style={{ background: "#080e08", border: "1px solid #0f2a0f", borderRadius: "4px", padding: "1.5rem" }}
         >
+          <div ref={reportInnerRef}>
           <div className="prose prose-invert max-w-none text-sm leading-relaxed" style={{ fontFamily: "Courier New, monospace" }}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
@@ -563,7 +665,7 @@ function ResultPage() {
                 h3: ({ children }) => <h3 style={{ color: "#00cc6a", fontSize: "0.9rem", marginTop: "1rem", marginBottom: "0.25rem" }}>{children}</h3>,
                 p: ({ children }) => <p style={{ color: "#94a3b8", marginBottom: "0.75rem", lineHeight: "1.8" }}>{children}</p>,
                 strong: ({ children }) => <strong style={{ color: "#e2e8f0" }}>{children}</strong>,
-                code: ({ children }) => <code style={{ color: "#00ff88", background: "#0a1a0a", padding: "0 4px", borderRadius: "2px" }}>{children}</code>,
+                code: ({ children }) => <code style={{ color: "#00ff88", background: "#0a1a0a", padding: "0 4px", borderRadius: "2px", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{children}</code>,
                 blockquote: ({ children }) => <blockquote style={{ borderLeft: "2px solid #00ff8833", paddingLeft: "1rem", color: "#4a7a4a", fontStyle: "italic" }}>{children}</blockquote>,
                 hr: () => <hr style={{ borderColor: "#0f2a0f", margin: "1.5rem 0" }} />,
                 li: ({ children }) => <li style={{ color: "#94a3b8", marginBottom: "0.25rem" }}>{children}</li>,
@@ -600,28 +702,29 @@ function ResultPage() {
               {report}
             </ReactMarkdown>
           </div>
-        </div>
 
-        {/* Dimension Portrait — only shown after stream completes */}
-        {portrait && streamDone && (
-          <div className={`transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`}>
-            <pre style={{
-              color: portrait.color,
-              fontFamily: "Courier New, monospace",
-              fontSize: "0.7rem",
-              lineHeight: "1.45",
-              background: "#080e08",
-              border: `1px solid ${portrait.color}33`,
-              borderRadius: "4px",
-              padding: "1rem",
-              overflowX: "auto",
-              margin: 0,
-              textAlign: "left",
-            }}>
-              {portrait.art}
-            </pre>
+          {/* Dimension Portrait — only shown after stream completes. 放在 reportRef 容器内，导出PDF时才能截到 */}
+          {portrait && streamDone && (
+            <div className={`transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`} style={{ marginTop: "1.5rem" }}>
+              <pre style={{
+                color: portrait.color,
+                fontFamily: "Courier New, monospace",
+                fontSize: "0.7rem",
+                lineHeight: "1.45",
+                background: "#080e08",
+                border: `1px solid ${portrait.color}33`,
+                borderRadius: "4px",
+                padding: "1rem",
+                overflowX: "auto",
+                margin: 0,
+                textAlign: "left",
+              }}>
+                {portrait.art}
+              </pre>
+            </div>
+          )}
           </div>
-        )}
+        </div>
 
         {/* Share / Save section */}
         {streamDone && (
@@ -653,13 +756,16 @@ function ResultPage() {
                 {copied ? (lang === 'zh' ? '✓ 已复制' : lang === 'ko' ? '✓ 복사됨' : '✓ Copied') : (lang === 'zh' ? '[ 复制报告 ]' : lang === 'ko' ? '[ 보고서 복사 ]' : '[ Copy ]')}
               </button>
               <button
-                onClick={handleScreenshotHint}
+                onClick={handleExportPdf}
+                disabled={exportingPdf}
                 className="btn-result flex-1 py-3 text-sm font-bold tracking-wider"
-                style={{ ...btnBase, border: "1px solid #3a6a3a", color: "#5a9a5a" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" }}
+                style={{ ...btnBase, border: "1px solid #3a6a3a", color: "#5a9a5a", opacity: exportingPdf ? 0.6 : 1, cursor: exportingPdf ? "not-allowed" : "pointer" }}
+                onMouseEnter={(e) => { if (!exportingPdf) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
+                onMouseLeave={(e) => { if (!exportingPdf) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
               >
-                {lang === 'zh' ? '[ 保存截图 ]' : lang === 'ko' ? '[ 스크린샷 ]' : '[ Screenshot ]'}
+                {exportingPdf
+                  ? (lang === 'zh' ? '[ 生成中... ]' : lang === 'ko' ? '[ 생성 중... ]' : '[ Generating... ]')
+                  : (lang === 'zh' ? '[ 保存为PDF ]' : lang === 'ko' ? '[ PDF로 저장 ]' : '[ Save as PDF ]')}
               </button>
             </div>
 
@@ -692,16 +798,6 @@ function ResultPage() {
                   {/* Platform buttons */}
                   {[
                     {
-                      label: "WhatsApp",
-                      color: "#25D366",
-                      href: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`,
-                    },
-                    {
-                      label: "X (Twitter)",
-                      color: "#1DA1F2",
-                      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-                    },
-                    {
                       label: lang === 'zh' ? '微博' : 'Weibo',
                       color: "#E6162D",
                       href: `https://service.weibo.com/share/share.php?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`,
@@ -721,21 +817,16 @@ function ResultPage() {
                     </a>
                   ))}
 
-                  {/* WeChat: copy link */}
-                  <div className="space-y-2">
-                    <div className="text-xs" style={{ color: "#4a7a4a" }}>
-                      {lang === 'zh' ? '微信：复制链接后在微信中粘贴分享' : lang === 'ko' ? 'WeChat: 링크를 복사해서 WeChat에 붙여넣기' : 'WeChat: Copy link and paste in WeChat'}
-                    </div>
-                    <button
-                      onClick={handleCopyLink}
-                      className="w-full py-3 text-sm font-bold"
-                      style={{ border: `1px solid ${shared ? "#00ff88" : "#07C160"}`, color: shared ? "#00ff88" : "#07C160", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", letterSpacing: "0.05em" }}
-                      onMouseEnter={(e) => { if (!shared) (e.currentTarget as HTMLElement).style.background = "#07C16022" }}
-                      onMouseLeave={(e) => { if (!shared) (e.currentTarget as HTMLElement).style.background = "transparent" }}
-                    >
-                      {shared ? (lang === 'zh' ? '✓ 已复制' : '✓ Copied') : (lang === 'zh' ? '微信 — 复制链接' : lang === 'ko' ? 'WeChat — 링크 복사' : 'WeChat — Copy Link')}
-                    </button>
-                  </div>
+                  {/* WeChat: 系统分享面板，装了微信会直接出现微信选项；不支持时退回复制链接 */}
+                  <button
+                    onClick={handleShareToWeChat}
+                    className="w-full py-3 text-sm font-bold"
+                    style={{ border: `1px solid ${shared ? "#00ff88" : "#07C160"}`, color: shared ? "#00ff88" : "#07C160", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", letterSpacing: "0.05em" }}
+                    onMouseEnter={(e) => { if (!shared) (e.currentTarget as HTMLElement).style.background = "#07C16022" }}
+                    onMouseLeave={(e) => { if (!shared) (e.currentTarget as HTMLElement).style.background = "transparent" }}
+                  >
+                    {shared ? (lang === 'zh' ? '✓ 已复制链接' : '✓ Copied') : (lang === 'zh' ? '分享到微信' : lang === 'ko' ? 'WeChat으로 공유' : 'Share to WeChat')}
+                  </button>
 
                   <button
                     onClick={() => setShareModal(false)}
@@ -743,55 +834,6 @@ function ResultPage() {
                     style={{ border: "1px solid #2a5a2a", color: "#4a8a4a", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace" }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#00ff8866"; (e.currentTarget as HTMLElement).style.color = "#7aba7a" }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#2a5a2a"; (e.currentTarget as HTMLElement).style.color = "#4a8a4a" }}
-                  >
-                    {lang === 'zh' ? '关闭' : lang === 'ko' ? '닫기' : 'Close'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Screenshot modal */}
-            {screenshotHint && (
-              <div
-                style={{ position: "fixed", inset: 0, background: "#000000bb", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
-                onClick={handleScreenshotHint}
-              >
-                <div
-                  className="text-xs space-y-3 p-6 border"
-                  style={{ borderColor: "#2a5a2a", background: "#080e08", color: "#5a9a5a", fontFamily: "Courier New, monospace", maxWidth: "380px", width: "90%" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="text-sm font-bold" style={{ color: "#00ff88" }}>
-                    {lang === 'zh' ? '// 保存截图 / 导出 PDF' : lang === 'ko' ? '// 스크린샷 저장 / PDF 내보내기' : '// Save Screenshot / Export PDF'}
-                  </div>
-                  {lang === 'zh' ? (
-                    <>
-                      <div>Mac：Command + Shift + 4 框选报告区域</div>
-                      <div>Windows：Win + Shift + S 截取报告区域</div>
-                      <div>导出 PDF：右键页面 → 打印 → 另存为 PDF</div>
-                      <div>手机：使用系统截屏功能</div>
-                    </>
-                  ) : lang === 'ko' ? (
-                    <>
-                      <div>Mac: Command + Shift + 4 로 영역 선택</div>
-                      <div>Windows: Win + Shift + S 로 캡처</div>
-                      <div>PDF 내보내기: 우클릭 → 인쇄 → PDF로 저장</div>
-                      <div>모바일: 시스템 스크린샷 기능 사용</div>
-                    </>
-                  ) : (
-                    <>
-                      <div>Mac: Command + Shift + 4 to select area</div>
-                      <div>Windows: Win + Shift + S to capture</div>
-                      <div>Export PDF: Right-click → Print → Save as PDF</div>
-                      <div>Mobile: Use system screenshot</div>
-                    </>
-                  )}
-                  <button
-                    onClick={handleScreenshotHint}
-                    className="w-full py-2 text-sm font-bold"
-                    style={{ border: "1px solid #3a6a3a", color: "#5a9a5a", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", marginTop: "8px" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" }}
                   >
                     {lang === 'zh' ? '关闭' : lang === 'ko' ? '닫기' : 'Close'}
                   </button>

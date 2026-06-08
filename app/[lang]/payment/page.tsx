@@ -26,6 +26,7 @@ export default function PaymentPage() {
   const [inviteStatus, setInviteStatus] = useState<"idle" | "valid" | "invalid">("idle")
   const [inviteLabel, setInviteLabel] = useState("")
   const [inviteFreeAccess, setInviteFreeAccess] = useState(false)
+  const [tradeType] = useState<"ALIPAY">("ALIPAY")
 
   useEffect(() => {
     const answersRaw = sessionStorage.getItem("survey_answers")
@@ -85,6 +86,14 @@ export default function PaymentPage() {
     }
   }
 
+  // 自动识别邀请码：输入停顿后自动验证，不用再手动点"验证"
+  useEffect(() => {
+    if (!inviteCode.trim()) { setInviteStatus("idle"); return }
+    const timer = setTimeout(() => { handleInviteCheck() }, 600)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inviteCode])
+
   const handlePayment = async () => {
     setError("")
     setLoading(true)
@@ -93,13 +102,13 @@ export default function PaymentPage() {
       const { data: sessionData } = await supabaseBrowser.auth.getSession()
       const accessToken = sessionData.session?.access_token
 
-      const res = await fetch("/api/create-paypal-order", {
+      const res = await fetch("/api/create-payment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
-        body: JSON.stringify({ lang, answers, inviteCode: inviteStatus === "valid" ? inviteCode.trim().toUpperCase() : undefined, existingSubmissionId: sessionStorage.getItem("existing_submission_id") || undefined }),
+        body: JSON.stringify({ lang, answers, tradeType, inviteCode: inviteStatus === "valid" ? inviteCode.trim().toUpperCase() : undefined, existingSubmissionId: sessionStorage.getItem("existing_submission_id") || undefined }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -113,7 +122,13 @@ export default function PaymentPage() {
         router.push(`/${lang}/result`)
         return
       }
-      window.location.href = json.url
+      // 虎皮椒返回跳转URL，直接跳到支付页
+      if (json.url) {
+        window.location.href = json.url
+        return
+      }
+      setError(lang === 'zh' ? '支付创建失败，请重试' : 'Payment failed, please retry')
+      setLoading(false)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Network error")
       setLoading(false)
@@ -226,14 +241,29 @@ export default function PaymentPage() {
         >
           <div className="text-4xl font-bold" style={{ color: "#00ff88" }}>
             {inviteStatus === "valid" && inviteFreeAccess ? (
-              <span>{lang === 'zh' ? '免费' : lang === 'ko' ? '무료' : 'FREE'} <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>$8.90</span></span>
+              <span>免费 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥8.80</span></span>
             ) : inviteStatus === "valid" ? (
-              <span>$7.12 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>$8.90</span></span>
-            ) : t.paymentPrice}
+              <span>¥6.80 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥8.80</span></span>
+            ) : (
+              <span>¥8.80</span>
+            )}
           </div>
           <p className="text-xs" style={{ color: "#2d5a2d" }}>
             {t.paymentDesc}
           </p>
+        </div>
+
+        {/* 支付方式（目前仅支持支付宝） */}
+        <div
+          className="py-3 text-sm font-bold text-center"
+          style={{
+            border: '1px solid #00ff88',
+            color: '#00ff88',
+            background: '#0a1f0a',
+            fontFamily: 'Courier New, monospace',
+          }}
+        >
+          支付宝
         </div>
 
         {error && <p className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</p>}
