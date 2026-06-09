@@ -142,10 +142,10 @@ export default function SurveyPage() {
                   fontFamily: "Courier New, monospace",
                   resize: "vertical",
                   outline: "none",
-                  transition: "border-color 0.2s",
+                  transition: "border-color 0.2s, box-shadow 0.2s",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "#00ff8866")}
-                onBlur={(e) => (e.target.style.borderColor = answers[q.id]?.trim() ? "#1e5a1e" : "#00ff8866")}
+                onFocus={(e) => { e.target.style.borderColor = "#00ff88"; e.target.style.boxShadow = "0 0 14px #00ff8877, 0 0 5px #00ff8855"; }}
+                onBlur={(e) => { const f = answers[q.id]?.trim(); e.target.style.borderColor = f ? "#1e5a1e" : "#00ff8866"; e.target.style.boxShadow = f ? "none" : "0 0 6px #00ff8822"; }}
               />
             ) : (
               <input
@@ -161,10 +161,10 @@ export default function SurveyPage() {
                   color: "#e2e8f0",
                   fontFamily: "Courier New, monospace",
                   outline: "none",
-                  transition: "border-color 0.2s",
+                  transition: "border-color 0.2s, box-shadow 0.2s",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "#00ff8866")}
-                onBlur={(e) => (e.target.style.borderColor = answers[q.id]?.trim() ? "#1e5a1e" : "#00ff8866")}
+                onFocus={(e) => { e.target.style.borderColor = "#00ff88"; e.target.style.boxShadow = "0 0 14px #00ff8877, 0 0 5px #00ff8855"; }}
+                onBlur={(e) => { const f = answers[q.id]?.trim(); e.target.style.borderColor = f ? "#1e5a1e" : "#00ff8866"; e.target.style.boxShadow = f ? "none" : "0 0 6px #00ff8822"; }}
               />
             )}
           </div>
