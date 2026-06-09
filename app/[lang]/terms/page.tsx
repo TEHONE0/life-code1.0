@@ -49,7 +49,7 @@ export default function TermsPage() {
             </section>
             <section className="space-y-2">
               <h2 className="font-bold" style={{ color: "#00ff88" }}>7. 运营主体与联系方式</h2>
-              <p>本服务由 Life Code 运营。如有疑问，请联系：theone208899@gmail.com</p>
+              <p>本服务由 Life Code 运营。如有疑问，请联系：theone@lifecode9.com</p>
             </section>
           </div>
         ) : isKo ? (
@@ -72,7 +72,7 @@ export default function TermsPage() {
             </section>
             <section className="space-y-2">
               <h2 className="font-bold" style={{ color: "#00ff88" }}>5. 운영 주체 및 문의</h2>
-              <p>본 서비스는 Life Code가 운영합니다. 문의: theone208899@gmail.com</p>
+              <p>본 서비스는 Life Code가 운영합니다. 문의: theone@lifecode9.com</p>
             </section>
           </div>
         ) : (
@@ -103,7 +103,7 @@ export default function TermsPage() {
             </section>
             <section className="space-y-2">
               <h2 className="font-bold" style={{ color: "#00ff88" }}>7. Operator & Contact</h2>
-              <p>This service is operated by Life Code. For questions, contact: theone208899@gmail.com</p>
+              <p>This service is operated by Life Code. For questions, contact: theone@lifecode9.com</p>
             </section>
           </div>
         )}

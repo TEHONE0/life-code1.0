@@ -53,7 +53,7 @@ export default function PrivacyPage() {
             </section>
             <section className="space-y-2">
               <h2 className="font-bold" style={{ color: "#00ff88" }}>7. 联系我们</h2>
-              <p>如有隐私相关问题，请联系：theone208899@gmail.com</p>
+              <p>如有隐私相关问题，请联系：theone@lifecode9.com</p>
             </section>
           </div>
         ) : isKo ? (
@@ -79,11 +79,11 @@ export default function PrivacyPage() {
             </section>
             <section className="space-y-2">
               <h2 className="font-bold" style={{ color: "#00ff88" }}>5. 데이터 보관 및 삭제</h2>
-              <p>데이터는 삭제 요청 시까지 보관됩니다. 언제든지 theone208899@gmail.com으로 계정 및 모든 관련 데이터 삭제를 요청할 수 있으며, 요청 후 15 영업일 이내에 처리됩니다.</p>
+              <p>데이터는 삭제 요청 시까지 보관됩니다. 언제든지 theone@lifecode9.com으로 계정 및 모든 관련 데이터 삭제를 요청할 수 있으며, 요청 후 15 영업일 이내에 처리됩니다.</p>
             </section>
             <section className="space-y-2">
               <h2 className="font-bold" style={{ color: "#00ff88" }}>6. 문의</h2>
-              <p>개인정보 관련 문의: theone208899@gmail.com</p>
+              <p>개인정보 관련 문의: theone@lifecode9.com</p>
             </section>
           </div>
         ) : (
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
             </section>
             <section className="space-y-2">
               <h2 className="font-bold" style={{ color: "#00ff88" }}>7. Contact</h2>
-              <p>For privacy-related questions: theone208899@gmail.com</p>
+              <p>For privacy-related questions: theone@lifecode9.com</p>
             </section>
           </div>
         )}
