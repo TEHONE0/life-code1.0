@@ -34,18 +34,18 @@ export async function POST(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { blogger_email, order_count, note } = await req.json();
+  const { invite_code, order_count, note } = await req.json();
   const n = parseInt(order_count, 10);
-  if (!blogger_email || !Number.isInteger(n) || n <= 0)
-    return NextResponse.json({ error: "blogger_email 与正整数 order_count 必填" }, { status: 400 });
+  if (!invite_code || !Number.isInteger(n) || n <= 0)
+    return NextResponse.json({ error: "invite_code 与正整数 order_count 必填" }, { status: 400 });
 
   const supabase = svc();
 
-  // 取该博主最早的 N 笔待结算佣金
+  // 取该邀请码最早的 N 笔待结算佣金
   const { data: pending, error: pErr } = await supabase
     .from("commissions")
     .select("id, amount_usd")
-    .eq("blogger_email", blogger_email)
+    .eq("invite_code", invite_code)
     .eq("status", "pending")
     .is("settlement_id", null)
     .order("created_at", { ascending: true })
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   // 写结算流水
   const { data: settlement, error: sErr } = await supabase
     .from("settlements")
-    .insert({ blogger_email, order_count: n, amount_usd: amount, note: note || null, created_by: admin.email })
+    .insert({ invite_code, order_count: n, amount_usd: amount, note: note || null, created_by: admin.email })
     .select()
     .single();
   if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 });

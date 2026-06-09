@@ -49,8 +49,8 @@ async function handle(req: NextRequest) {
             .update({ used_count: (codeRow.used_count || 0) + 1 })
             .eq("code", submission.invite_code);
 
-          // 达人分成自动记录（commission_usd 字段在国内版存的是人民币金额）
-          if (codeRow.blogger_email && codeRow.commission_usd) {
+          // 达人分成自动记录（认邀请码，blogger_email 可空；commission_usd 在国内版存人民币）
+          if (codeRow.commission_usd) {
             await supabase.from("commissions").insert({
               invite_code: submission.invite_code,
               blogger_email: codeRow.blogger_email,

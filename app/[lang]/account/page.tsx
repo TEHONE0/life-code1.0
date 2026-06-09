@@ -330,7 +330,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [tab, setTab] = useState<"blogger"|"free"|"commissions">("blogger");
   const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
   const [total, setTotal] = useState(0);
-  const [settlements, setSettlements] = useState<{id:string;blogger_email:string;order_count:number;amount_usd:number;note:string|null;created_at:string}[]>([]);
+  const [settlements, setSettlements] = useState<{id:string;invite_code:string|null;order_count:number;amount_usd:number;note:string|null;created_at:string}[]>([]);
   const [settlingFor, setSettlingFor] = useState<string | null>(null);
   const [settleCount, setSettleCount] = useState("");
   const [settleNote, setSettleNote] = useState("");
@@ -366,13 +366,13 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     setSettlements(json.settlements || []);
   };
 
-  // 某博主待结算/已结算单数
-  const pendingCountFor = (email: string | null) =>
-    email ? commissions.filter((c) => c.blogger_email === email && c.status === "pending").length : 0;
-  const settledCountFor = (email: string | null) =>
-    email ? commissions.filter((c) => c.blogger_email === email && c.status === "settled").length : 0;
+  // 某邀请码待结算/已结算单数
+  const pendingCountFor = (code: string) =>
+    commissions.filter((c) => c.invite_code === code && c.status === "pending").length;
+  const settledCountFor = (code: string) =>
+    commissions.filter((c) => c.invite_code === code && c.status === "settled").length;
 
-  const handleSettle = async (blogger_email: string) => {
+  const handleSettle = async (invite_code: string) => {
     const n = parseInt(settleCount, 10);
     if (!Number.isInteger(n) || n <= 0) return;
     setError("");
@@ -380,7 +380,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     const res = await fetch("/api/admin/settlements", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ blogger_email, order_count: n, note: settleNote.trim() || null }),
+      body: JSON.stringify({ invite_code, order_count: n, note: settleNote.trim() || null }),
     });
     const json = await res.json();
     if (json.error) { setError(json.error); return; }
@@ -516,8 +516,8 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                       style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "100px" }}
                     />
                     <span>· {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</span>
-                    {tab === "blogger" && c.blogger_email && (
-                      <span style={{ color: "#fbbf24" }}>· {lang === "zh" ? "待结算" : "pending"} {pendingCountFor(c.blogger_email)}{lang === "zh" ? "单" : ""} / {lang === "zh" ? "已结" : "settled"} {settledCountFor(c.blogger_email)}{lang === "zh" ? "单" : ""}</span>
+                    {tab === "blogger" && (
+                      <span style={{ color: "#fbbf24" }}>· {lang === "zh" ? "待结算" : "pending"} {pendingCountFor(c.code)}{lang === "zh" ? "单" : ""} / {lang === "zh" ? "已结" : "settled"} {settledCountFor(c.code)}{lang === "zh" ? "单" : ""}</span>
                     )}
                   </div>
                 </div>
@@ -541,12 +541,16 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = expandedCode === c.code ? "#00ff88" : "#2d5a2d" }}>
                     {expandedCode === c.code ? "▲" : "▼"} {lang === "zh" ? "用户" : "Users"}
                   </button>
-                  {tab === "blogger" && c.blogger_email && pendingCountFor(c.blogger_email) > 0 && (
-                    <button onClick={() => { setSettlingFor(settlingFor === c.blogger_email ? null : c.blogger_email); setSettleCount(""); setSettleNote(""); setError(""); }} className="text-xs px-2 py-1"
-                      style={{ border: "1px solid #fbbf2466", color: settlingFor === c.blogger_email ? "#fbbf24" : "#8a7a2d", background: "transparent", cursor: "pointer" }}>
-                      {settlingFor === c.blogger_email ? (lang === "zh" ? "取消" : "Cancel") : (lang === "zh" ? "结算" : "Settle")}
+                  {tab === "blogger" && (() => {
+                    const pend = pendingCountFor(c.code);
+                    const open = settlingFor === c.code;
+                    return (
+                    <button onClick={() => { if (pend === 0) return; setSettlingFor(open ? null : c.code); setSettleCount(""); setSettleNote(""); setError(""); }} disabled={pend === 0} className="text-xs px-2 py-1"
+                      style={{ border: `1px solid ${pend === 0 ? "#1a3a1a" : "#fbbf2466"}`, color: pend === 0 ? "#2d5a2d" : open ? "#fbbf24" : "#8a7a2d", background: "transparent", cursor: pend === 0 ? "not-allowed" : "pointer" }}>
+                      {open ? (lang === "zh" ? "取消" : "Cancel") : (lang === "zh" ? "结算" : "Settle")}
                     </button>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
               {expandedCode === c.code && (
@@ -579,14 +583,14 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                   </button>
                 </div>
               )}
-              {tab === "blogger" && c.blogger_email && settlingFor === c.blogger_email && (
+              {tab === "blogger" && settlingFor === c.code && (
                 <div className="px-3 pb-3 flex gap-2 flex-wrap items-center" style={{ borderTop: "1px solid #1a3a1a", paddingTop: "10px" }}>
-                  <span className="text-xs" style={{ color: "#8a7a2d", fontFamily: mono }}>{lang === "zh" ? `结算单数（待结算 ${pendingCountFor(c.blogger_email)} 单）` : `Orders to settle (pending ${pendingCountFor(c.blogger_email)})`}</span>
-                  <input type="number" min="1" max={pendingCountFor(c.blogger_email)} placeholder={lang === "zh" ? "单数" : "count"} value={settleCount} onChange={(e) => setSettleCount(e.target.value)}
+                  <span className="text-xs" style={{ color: "#8a7a2d", fontFamily: mono }}>{lang === "zh" ? `结算单数（待结算 ${pendingCountFor(c.code)} 单）` : `Orders to settle (pending ${pendingCountFor(c.code)})`}</span>
+                  <input type="number" min="1" max={pendingCountFor(c.code)} placeholder={lang === "zh" ? "单数" : "count"} value={settleCount} onChange={(e) => setSettleCount(e.target.value)}
                     className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "80px" }} />
                   <input placeholder={lang === "zh" ? "打款备注（选填）" : "note"} value={settleNote} onChange={(e) => setSettleNote(e.target.value)}
                     className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
-                  <button onClick={() => c.blogger_email && handleSettle(c.blogger_email)} className="px-4 py-1 text-xs font-bold"
+                  <button onClick={() => handleSettle(c.code)} className="px-4 py-1 text-xs font-bold"
                     style={{ border: "1px solid #fbbf24", color: "#fbbf24", background: "transparent", cursor: "pointer", fontFamily: mono }}>
                     {lang === "zh" ? "确认结算" : "Confirm"}
                   </button>
@@ -623,7 +627,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             <div key={s.id} className="p-3 border flex items-center justify-between gap-2" style={{ borderColor: "#1a3a1a", background: "#080e08", fontFamily: mono }}>
               <div className="min-w-0">
                 <div className="text-xs" style={{ color: "#00ff88" }}>¥{Number(s.amount_usd).toFixed(2)} · {s.order_count}{lang === "zh" ? "单" : ""}</div>
-                <div className="text-xs mt-1" style={{ color: "#4a7a4a" }}>{s.blogger_email}{s.note ? ` · ${s.note}` : ""}</div>
+                <div className="text-xs mt-1" style={{ color: "#4a7a4a" }}>{s.invite_code || "—"}{s.note ? ` · ${s.note}` : ""}</div>
                 <div className="text-xs" style={{ color: "#2d5a2d" }}>{new Date(s.created_at).toLocaleString(lang === "zh" ? "zh-CN" : undefined)}</div>
               </div>
               <button onClick={() => handleUnsettle(s.id)} className="text-xs px-2 py-1 flex-shrink-0"
