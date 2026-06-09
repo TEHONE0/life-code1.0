@@ -136,7 +136,8 @@ export default function SurveyPage() {
                 className="w-full p-3 text-sm rounded-sm"
                 style={{
                   background: "#0a150a",
-                  border: `1px solid ${answers[q.id]?.trim() ? "#1e5a1e" : "#0f2a0f"}`,
+                  border: `1px solid ${answers[q.id]?.trim() ? "#1e5a1e" : "#00ff8866"}`,
+                  boxShadow: answers[q.id]?.trim() ? "none" : "0 0 6px #00ff8822",
                   color: "#e2e8f0",
                   fontFamily: "Courier New, monospace",
                   resize: "vertical",
@@ -144,7 +145,7 @@ export default function SurveyPage() {
                   transition: "border-color 0.2s",
                 }}
                 onFocus={(e) => (e.target.style.borderColor = "#00ff8866")}
-                onBlur={(e) => (e.target.style.borderColor = answers[q.id]?.trim() ? "#1e5a1e" : "#0f2a0f")}
+                onBlur={(e) => (e.target.style.borderColor = answers[q.id]?.trim() ? "#1e5a1e" : "#00ff8866")}
               />
             ) : (
               <input
@@ -155,14 +156,15 @@ export default function SurveyPage() {
                 className="w-full p-3 text-sm rounded-sm"
                 style={{
                   background: "#0a150a",
-                  border: `1px solid ${answers[q.id]?.trim() ? "#1e5a1e" : "#0f2a0f"}`,
+                  border: `1px solid ${answers[q.id]?.trim() ? "#1e5a1e" : "#00ff8866"}`,
+                  boxShadow: answers[q.id]?.trim() ? "none" : "0 0 6px #00ff8822",
                   color: "#e2e8f0",
                   fontFamily: "Courier New, monospace",
                   outline: "none",
                   transition: "border-color 0.2s",
                 }}
                 onFocus={(e) => (e.target.style.borderColor = "#00ff8866")}
-                onBlur={(e) => (e.target.style.borderColor = answers[q.id]?.trim() ? "#1e5a1e" : "#0f2a0f")}
+                onBlur={(e) => (e.target.style.borderColor = answers[q.id]?.trim() ? "#1e5a1e" : "#00ff8866")}
               />
             )}
           </div>
