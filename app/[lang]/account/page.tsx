@@ -327,9 +327,13 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editEmail, setEditEmail] = useState("");
-  const [tab, setTab] = useState<"codes"|"commissions">("codes");
+  const [tab, setTab] = useState<"blogger"|"free"|"commissions">("blogger");
   const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
   const [total, setTotal] = useState(0);
+  const [settlements, setSettlements] = useState<{id:string;blogger_email:string;order_count:number;amount_usd:number;note:string|null;created_at:string}[]>([]);
+  const [settlingFor, setSettlingFor] = useState<string | null>(null);
+  const [settleCount, setSettleCount] = useState("");
+  const [settleNote, setSettleNote] = useState("");
   const [expandedCode, setExpandedCode] = useState<string | null>(null);
   const [usageMap, setUsageMap] = useState<Record<string, {id:string;email:string|null;name:string|null;lang:string;paid:boolean;created_at:string}[]>>({});
 
@@ -338,7 +342,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     return data.session?.access_token ?? "";
   };
 
-  useEffect(() => { fetchCodes(); fetchCommissions(); }, []);
+  useEffect(() => { fetchCodes(); fetchCommissions(); fetchSettlements(); }, []);
 
   const fetchCodes = async () => {
     const token = await getToken();
@@ -353,6 +357,41 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     const json = await res.json();
     setCommissions(json.commissions || []);
     setTotal(json.total || 0);
+  };
+
+  const fetchSettlements = async () => {
+    const token = await getToken();
+    const res = await fetch("/api/admin/settlements", { headers: { Authorization: `Bearer ${token}` } });
+    const json = await res.json();
+    setSettlements(json.settlements || []);
+  };
+
+  // 某博主待结算/已结算单数
+  const pendingCountFor = (email: string | null) =>
+    email ? commissions.filter((c) => c.blogger_email === email && c.status === "pending").length : 0;
+  const settledCountFor = (email: string | null) =>
+    email ? commissions.filter((c) => c.blogger_email === email && c.status === "settled").length : 0;
+
+  const handleSettle = async (blogger_email: string) => {
+    const n = parseInt(settleCount, 10);
+    if (!Number.isInteger(n) || n <= 0) return;
+    setError("");
+    const token = await getToken();
+    const res = await fetch("/api/admin/settlements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ blogger_email, order_count: n, note: settleNote.trim() || null }),
+    });
+    const json = await res.json();
+    if (json.error) { setError(json.error); return; }
+    setSettlingFor(null); setSettleCount(""); setSettleNote("");
+    fetchCommissions(); fetchSettlements();
+  };
+
+  const handleUnsettle = async (id: string) => {
+    const token = await getToken();
+    await fetch(`/api/admin/settlements?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    fetchCommissions(); fetchSettlements();
   };
 
   const handleCreate = async () => {
@@ -427,17 +466,17 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   return (
     <div className="space-y-4">
       <div className="flex gap-2" style={{ borderBottom: "1px solid #1a3a1a" }}>
-        {(["codes", "commissions"] as const).map((v) => (
+        {(["blogger", "free", "commissions"] as const).map((v) => (
           <button key={v} onClick={() => setTab(v)}
             className="px-3 py-2 text-xs font-bold"
             style={{ background: "transparent", border: "none", borderBottom: tab === v ? "2px solid #00ff88" : "2px solid transparent", color: tab === v ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono, marginBottom: "-1px" }}
           >
-            {v === "codes" ? (lang === "zh" ? "邀请码" : "Codes") : `${lang === "zh" ? "佣金" : "Commissions"} ($${total.toFixed(2)})`}
+            {v === "blogger" ? (lang === "zh" ? "博主邀请码" : "Blogger") : v === "free" ? (lang === "zh" ? "免费码" : "Free") : `${lang === "zh" ? "佣金" : "Commissions"} (¥${total.toFixed(2)})`}
           </button>
         ))}
       </div>
 
-      {tab === "codes" && (
+      {(tab === "blogger" || tab === "free") && (
         <div className="space-y-3">
           <div className="p-3 border space-y-2" style={{ borderColor: "#1a3a1a", background: "#080e08", fontFamily: mono }}>
             <div className="text-xs" style={{ color: "#2d5a2d" }}>// {lang === "zh" ? "生成邀请码" : "Create code"}</div>
@@ -457,23 +496,11 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             {error && <div className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</div>}
           </div>
           {(() => {
-            const groupOf = (code: string) => code.startsWith("LIFECODE") ? 0 : code.startsWith("LCFREE") ? 1 : 2;
-            const groupTitle = (g: number) => g === 0
-              ? (lang === "zh" ? "// 博主邀请码 LIFECODE01～LIFECODE10" : "// Blogger codes LIFECODE01-10")
-              : g === 1
-              ? (lang === "zh" ? "// 免费邀请码 LCFREE01～LCFREE20" : "// Free codes LCFREE01-20")
-              : (lang === "zh" ? "// 其他邀请码" : "// Other codes");
-            const sorted = [...codes].sort((a, b) => groupOf(a.code) - groupOf(b.code) || a.code.localeCompare(b.code));
-            let lastGroup = -1;
-            return sorted.map((c) => {
-              const g = groupOf(c.code);
-              const showHeader = g !== lastGroup;
-              lastGroup = g;
+            const prefix = tab === "blogger" ? "LIFECODE" : "LCFREE";
+            const filtered = codes.filter((c) => c.code.startsWith(prefix)).sort((a, b) => a.code.localeCompare(b.code));
+            return filtered.map((c) => {
               return (
             <div key={c.id}>
-              {showHeader && (
-                <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono, marginTop: "14px", marginBottom: "4px" }}>{groupTitle(g)}</div>
-              )}
             <div className="border"
               style={{ borderColor: c.is_active ? "#1a3a1a" : "#111", background: "#080e08", fontFamily: mono }}>
               <div className="p-3 flex items-center justify-between gap-2">
@@ -489,6 +516,9 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                       style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "100px" }}
                     />
                     <span>· {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</span>
+                    {tab === "blogger" && c.blogger_email && (
+                      <span style={{ color: "#fbbf24" }}>· {lang === "zh" ? "待结算" : "pending"} {pendingCountFor(c.blogger_email)}{lang === "zh" ? "单" : ""} / {lang === "zh" ? "已结" : "settled"} {settledCountFor(c.blogger_email)}{lang === "zh" ? "单" : ""}</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -511,6 +541,12 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = expandedCode === c.code ? "#00ff88" : "#2d5a2d" }}>
                     {expandedCode === c.code ? "▲" : "▼"} {lang === "zh" ? "用户" : "Users"}
                   </button>
+                  {tab === "blogger" && c.blogger_email && pendingCountFor(c.blogger_email) > 0 && (
+                    <button onClick={() => { setSettlingFor(settlingFor === c.blogger_email ? null : c.blogger_email); setSettleCount(""); setSettleNote(""); setError(""); }} className="text-xs px-2 py-1"
+                      style={{ border: "1px solid #fbbf2466", color: settlingFor === c.blogger_email ? "#fbbf24" : "#8a7a2d", background: "transparent", cursor: "pointer" }}>
+                      {settlingFor === c.blogger_email ? (lang === "zh" ? "取消" : "Cancel") : (lang === "zh" ? "结算" : "Settle")}
+                    </button>
+                  )}
                 </div>
               </div>
               {expandedCode === c.code && (
@@ -543,25 +579,69 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                   </button>
                 </div>
               )}
+              {tab === "blogger" && c.blogger_email && settlingFor === c.blogger_email && (
+                <div className="px-3 pb-3 flex gap-2 flex-wrap items-center" style={{ borderTop: "1px solid #1a3a1a", paddingTop: "10px" }}>
+                  <span className="text-xs" style={{ color: "#8a7a2d", fontFamily: mono }}>{lang === "zh" ? `结算单数（待结算 ${pendingCountFor(c.blogger_email)} 单）` : `Orders to settle (pending ${pendingCountFor(c.blogger_email)})`}</span>
+                  <input type="number" min="1" max={pendingCountFor(c.blogger_email)} placeholder={lang === "zh" ? "单数" : "count"} value={settleCount} onChange={(e) => setSettleCount(e.target.value)}
+                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "80px" }} />
+                  <input placeholder={lang === "zh" ? "打款备注（选填）" : "note"} value={settleNote} onChange={(e) => setSettleNote(e.target.value)}
+                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
+                  <button onClick={() => c.blogger_email && handleSettle(c.blogger_email)} className="px-4 py-1 text-xs font-bold"
+                    style={{ border: "1px solid #fbbf24", color: "#fbbf24", background: "transparent", cursor: "pointer", fontFamily: mono }}>
+                    {lang === "zh" ? "确认结算" : "Confirm"}
+                  </button>
+                  {error && <span className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</span>}
+                </div>
+              )}
             </div>
             </div>
               );
             });
           })()}
-          {codes.length === 0 &&<div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无邀请码" : "No codes yet"}</div>}
+          {codes.filter((c) => c.code.startsWith(tab === "blogger" ? "LIFECODE" : "LCFREE")).length === 0 &&<div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无邀请码" : "No codes yet"}</div>}
         </div>
       )}
 
-      {tab === "commissions" && (
+      {tab === "commissions" && (() => {
+        const pendingList = commissions.filter((c) => c.status === "pending");
+        const pendingTotal = pendingList.reduce((s, c) => s + Number(c.amount_usd), 0);
+        const settledTotal = settlements.reduce((s, x) => s + Number(x.amount_usd), 0);
+        const statusLabel = (s: string) => lang !== "zh" ? s : s === "pending" ? "待结算" : s === "settled" ? "已结算" : s;
+        return (
         <div className="space-y-2">
-          <div className="text-xs p-2 border" style={{ borderColor: "#1a3a1a", background: "#080e08", color: "#00ff88", fontFamily: mono }}>
-            // {lang === "zh" ? "待结算" : "Pending"}: ${total.toFixed(2)} USD
+          <div className="flex gap-2 text-xs">
+            <div className="flex-1 p-2 border" style={{ borderColor: "#1a3a1a", background: "#080e08", color: "#fbbf24", fontFamily: mono }}>
+              // {lang === "zh" ? "待结算" : "Pending"}: ¥{pendingTotal.toFixed(2)} ({pendingList.length}{lang === "zh" ? "单" : ""})
+            </div>
+            <div className="flex-1 p-2 border" style={{ borderColor: "#1a3a1a", background: "#080e08", color: "#00ff88", fontFamily: mono }}>
+              // {lang === "zh" ? "已结算" : "Settled"}: ¥{settledTotal.toFixed(2)}
+            </div>
           </div>
+
+          <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono, marginTop: "14px" }}>// {lang === "zh" ? "结算流水" : "Settlement records"}</div>
+          {settlements.map((s) => (
+            <div key={s.id} className="p-3 border flex items-center justify-between gap-2" style={{ borderColor: "#1a3a1a", background: "#080e08", fontFamily: mono }}>
+              <div className="min-w-0">
+                <div className="text-xs" style={{ color: "#00ff88" }}>¥{Number(s.amount_usd).toFixed(2)} · {s.order_count}{lang === "zh" ? "单" : ""}</div>
+                <div className="text-xs mt-1" style={{ color: "#4a7a4a" }}>{s.blogger_email}{s.note ? ` · ${s.note}` : ""}</div>
+                <div className="text-xs" style={{ color: "#2d5a2d" }}>{new Date(s.created_at).toLocaleString(lang === "zh" ? "zh-CN" : undefined)}</div>
+              </div>
+              <button onClick={() => handleUnsettle(s.id)} className="text-xs px-2 py-1 flex-shrink-0"
+                style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#ff6b6b66"; e.currentTarget.style.color = "#ff6b6b" }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
+                {lang === "zh" ? "撤销" : "Undo"}
+              </button>
+            </div>
+          ))}
+          {settlements.length === 0 && <div className="text-xs text-center py-3" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无结算记录" : "No settlements yet"}</div>}
+
+          <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono, marginTop: "14px" }}>// {lang === "zh" ? "佣金明细" : "Commission details"}</div>
           {commissions.map((c) => (
             <div key={c.id} className="p-3 border space-y-1" style={{ borderColor: "#1a3a1a", background: "#080e08", fontFamily: mono }}>
               <div className="flex justify-between text-xs">
-                <span style={{ color: "#00ff88" }}>${Number(c.amount_usd).toFixed(2)}</span>
-                <span style={{ color: c.status === "pending" ? "#fbbf24" : "#00ff88" }}>● {c.status}</span>
+                <span style={{ color: "#00ff88" }}>¥{Number(c.amount_usd).toFixed(2)}</span>
+                <span style={{ color: c.status === "pending" ? "#fbbf24" : "#00ff88" }}>● {statusLabel(c.status)}</span>
               </div>
               <div className="text-xs" style={{ color: "#4a7a4a" }}>{c.invite_code} · {c.blogger_email || "—"}</div>
               <div className="text-xs" style={{ color: "#2d5a2d" }}>{c.user_email} · {new Date(c.created_at).toLocaleDateString()}</div>
@@ -569,7 +649,8 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
           ))}
           {commissions.length === 0 && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无佣金记录" : "No commissions yet"}</div>}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
