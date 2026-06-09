@@ -588,6 +588,15 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                   <span className="text-xs" style={{ color: "#8a7a2d", fontFamily: mono }}>{lang === "zh" ? `结算单数（待结算 ${pendingCountFor(c.code)} 单）` : `Orders to settle (pending ${pendingCountFor(c.code)})`}</span>
                   <input type="number" min="1" max={pendingCountFor(c.code)} placeholder={lang === "zh" ? "单数" : "count"} value={settleCount} onChange={(e) => setSettleCount(e.target.value)}
                     className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "80px" }} />
+                  {(() => {
+                    const unit = Number(commissions.find((x) => x.invite_code === c.code && x.status === "pending")?.amount_usd ?? 3);
+                    const amt = (parseInt(settleCount, 10) || 0) * unit;
+                    return (
+                      <input readOnly tabIndex={-1} value={`${lang === "zh" ? "金额 " : ""}¥${amt.toFixed(2)}`}
+                        title={lang === "zh" ? `每笔 ¥${unit} × 单数` : `¥${unit} per order × count`}
+                        className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #fbbf2466", color: "#fbbf24", fontFamily: mono, outline: "none", width: "110px", textAlign: "center" }} />
+                    );
+                  })()}
                   <input placeholder={lang === "zh" ? "打款备注（选填）" : "note"} value={settleNote} onChange={(e) => setSettleNote(e.target.value)}
                     className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
                   <button onClick={() => handleSettle(c.code)} className="px-4 py-1 text-xs font-bold"
