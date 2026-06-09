@@ -71,9 +71,7 @@ export default function SurveyPage() {
       <div className="max-w-2xl mx-auto space-y-7">
         {/* Header */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="text-xs" style={{ color: "#1e4a1e" }}>{t.surveyHeader}</div>
-            <div className="flex gap-2">
+          <div className="flex gap-2">
               <button
                 onClick={() => router.push(`/${lang}`)}
                 className="text-xs px-3 py-1"
@@ -95,8 +93,8 @@ export default function SurveyPage() {
               >
                 {lang === 'zh' ? 'EN / KO' : lang === 'en' ? 'KO / 中文' : '中文 / EN'}
               </button>
-            </div>
           </div>
+          <div className="text-xs" style={{ color: "#1e4a1e" }}>{t.surveyHeader}</div>
           <h1 className="text-xl font-bold" style={{ color: "#00ff88" }}>
             {t.surveyTitle}
           </h1>
