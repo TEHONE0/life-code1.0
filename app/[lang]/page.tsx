@@ -148,8 +148,8 @@ export default function HomePage() {
           </div>
 
           {/* Language switcher + user menu */}
-          <div className="flex gap-1.5 justify-center items-center flex-wrap">
-            <UserMenu lang={lang} />
+          <div className="space-y-2">
+            <div className="flex gap-1.5 justify-center items-center flex-wrap">
             {LANGS.map((l) => (
               <button
                 key={l.code}
@@ -173,6 +173,10 @@ export default function HomePage() {
                 {l.label}
               </button>
             ))}
+            </div>
+            <div className="flex justify-center">
+              <UserMenu lang={lang} />
+            </div>
           </div>
 
           {/* Quote */}

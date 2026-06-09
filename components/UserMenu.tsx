@@ -25,6 +25,13 @@ export default function UserMenu({ lang }: { lang: Lang }) {
   const labelMyReports = lang === "zh" ? "我的报告" : lang === "ko" ? "내 보고서" : "My Reports";
   const labelLogout = lang === "zh" ? "退出登录" : lang === "ko" ? "로그아웃" : "Logout";
   const labelLogin = lang === "zh" ? "登录" : lang === "ko" ? "로그인" : "Login";
+  const labelAccount = lang === "zh" ? "个人中心" : lang === "ko" ? "마이페이지" : "Account";
+
+  const PersonIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }} aria-hidden>
+      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+    </svg>
+  );
 
   if (!email) {
     return (
@@ -37,8 +44,12 @@ export default function UserMenu({ lang }: { lang: Lang }) {
           background: "transparent",
           cursor: "pointer",
           fontFamily: "Courier New, monospace",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
         }}
       >
+        <PersonIcon />
         {labelLogin}
       </button>
     );
@@ -55,13 +66,15 @@ export default function UserMenu({ lang }: { lang: Lang }) {
           background: "#0a150a",
           cursor: "pointer",
           fontFamily: "Courier New, monospace",
-          maxWidth: "180px",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
           whiteSpace: "nowrap",
         }}
       >
-        ▾ {email}
+        <PersonIcon />
+        {labelAccount}
+        <span style={{ fontSize: "0.7em" }}>{open ? "▴" : "▾"}</span>
       </button>
       {open && (
         <div
@@ -77,6 +90,13 @@ export default function UserMenu({ lang }: { lang: Lang }) {
           }}
         >
           <style>{`@keyframes breathe{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:0.6}}`}</style>
+          <div
+            className="text-xs px-3 py-2"
+            style={{ color: "#4a7a4a", borderBottom: "1px solid #1a3a1a", wordBreak: "break-all", display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            <PersonIcon />
+            {email}
+          </div>
           <button
             onClick={() => { setOpen(false); router.push(`/${lang}/account?view=forms`) }}
             className="w-full text-xs px-3 py-2 text-left"
