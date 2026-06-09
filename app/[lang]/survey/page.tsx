@@ -197,6 +197,18 @@ export default function SurveyPage() {
             {t.submitBtn}
           </button>
         </div>
+
+        <div className="text-center pb-10 text-xs" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
+          <button onClick={() => router.push(`/${lang}/privacy`)} style={{ background: "transparent", border: "none", color: "#2d5a2d", cursor: "pointer", textDecoration: "underline" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#00ff88")} onMouseLeave={(e) => (e.currentTarget.style.color = "#2d5a2d")}>
+            {lang === 'zh' ? '隐私政策' : lang === 'ko' ? '개인정보 처리방침' : 'Privacy Policy'}
+          </button>
+          <span className="mx-2">·</span>
+          <button onClick={() => router.push(`/${lang}/terms`)} style={{ background: "transparent", border: "none", color: "#2d5a2d", cursor: "pointer", textDecoration: "underline" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#00ff88")} onMouseLeave={(e) => (e.currentTarget.style.color = "#2d5a2d")}>
+            {lang === 'zh' ? '服务条款' : lang === 'ko' ? '서비스 이용약관' : 'Terms of Service'}
+          </button>
+        </div>
       </div>
 
       {/* Missing fields modal */}
