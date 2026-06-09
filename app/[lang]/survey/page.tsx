@@ -198,6 +198,10 @@ export default function SurveyPage() {
           </button>
         </div>
 
+        <div className="text-center text-xs pb-3" style={{ color: "#3a6a3a", fontFamily: "Courier New, monospace" }}>
+          {lang === 'zh' ? '如果此刻情绪难受，可拨打全国 24 小时心理援助热线 12356' : lang === 'ko' ? '지금 마음이 힘들다면, 자살예방 상담전화 109' : "If you're struggling right now, please reach out to a local crisis hotline."}
+        </div>
+
         <div className="text-center pb-10 text-xs" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
           <button onClick={() => router.push(`/${lang}/privacy`)} style={{ background: "transparent", border: "none", color: "#2d5a2d", cursor: "pointer", textDecoration: "underline" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "#00ff88")} onMouseLeave={(e) => (e.currentTarget.style.color = "#2d5a2d")}>
