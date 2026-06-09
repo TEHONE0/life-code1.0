@@ -123,8 +123,8 @@ export default function SurveyPage() {
             className="space-y-2 animate-fade-up"
             style={{ animationDelay: `${i * 0.08}s`, opacity: 0, animationFillMode: "forwards" }}
           >
-            <div className="text-sm font-bold" style={{ color: "#00ff88" }}>{q.code}</div>
-            <div className="text-xs" style={{ color: "#2d6a2d", whiteSpace: "pre-wrap" }}>{q.comment}</div>
+            <div className="text-lg font-bold" style={{ color: "#00ff88" }}>{q.code}</div>
+            <div className="text-sm" style={{ color: "#6fae6f", whiteSpace: "pre-wrap", lineHeight: "1.6" }}>{q.comment}</div>
             <div className="text-base" style={{ color: "#4db8ff", textShadow: "0 0 8px #4db8ff88", whiteSpace: "pre-wrap", lineHeight: "1.7" }}>{q.label}</div>
 
             {q.multiline ? (
