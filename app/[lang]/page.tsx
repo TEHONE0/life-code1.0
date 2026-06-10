@@ -240,66 +240,52 @@ export default function HomePage() {
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-8">
 
-        {/* ───── Hero ───── */}
-        <section className="py-14 md:py-20 grid md:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6">
-            <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
-              {zh ? <>用 AI 看见你<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>反复卡住的人生模式</span></> : <>See the life pattern<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>you keep getting stuck in</span></>}
-            </h1>
-            <div className="text-sm md:text-base" style={{ color: "#4a8a4a", fontFamily: mono }}>
-              {zh ? "生辰代码算法 × 九型人格 × AI 引擎" : "Birth-code algorithm × Enneagram × AI engine"}
+        {/* ───── Hero（整体居中） ───── */}
+        <section className="py-14 md:py-20 flex flex-col items-center text-center space-y-7">
+          <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
+            {zh ? <>用 AI 看见你<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>反复卡住的人生模式</span></> : <>See the life pattern<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>you keep getting stuck in</span></>}
+          </h1>
+          <div className="text-sm md:text-base" style={{ color: "#4a8a4a", fontFamily: mono }}>
+            {zh ? "生辰代码算法 × 九型人格 × AI 引擎" : "Birth-code algorithm × Enneagram × AI engine"}
+          </div>
+          <p className="text-sm leading-relaxed max-w-xl" style={{ color: "#5a7a5a" }}>
+            {zh
+              ? "不是星座，也不是你看腻了的标准化测试。生成一份关于你的性格内核、关系模式、事业卡点与人生方向的生命代码解析报告。"
+              : "Not horoscopes, not another standardized test. A full report on your personality kernel, relationship patterns, career blocks and direction."}
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {startBtn(true)}
+            {ghostBtn(zh ? "查看报告示例" : "See a sample", "#preview")}
+          </div>
+          {promoActive && (
+            <div className="text-xs" style={{ color: "#fbbf24", fontFamily: mono }}>
+              🎁 {zh ? "首发活动（至6月30日）：买一赠一，多得一份送朋友" : "Launch offer (until Jun 30): buy one, gift one free"}
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: "#5a7a5a" }}>
-              {zh
-                ? "不是星座，也不是你看腻了的标准化测试。生成一份关于你的性格内核、关系模式、事业卡点与人生方向的生命代码解析报告。"
-                : "Not horoscopes, not another standardized test. A full report on your personality kernel, relationship patterns, career blocks and direction."}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {startBtn(true)}
-              {ghostBtn(zh ? "查看报告示例" : "See a sample", "#preview")}
-            </div>
-            {promoActive && (
-              <div className="text-xs" style={{ color: "#fbbf24", fontFamily: mono }}>
-                🎁 {zh ? "首发活动（至6月30日）：买一赠一，多得一份送朋友" : "Launch offer (until Jun 30): buy one, gift one free"}
-              </div>
-            )}
+          )}
+
+          {/* 代码卡（居中） */}
+          <div className="space-y-2 text-sm p-6 text-left" style={{ background: "#0a150af2", fontFamily: mono, border: "1px solid #1f4a1f", borderRadius: "16px", boxShadow: "0 0 40px #00ff8818" }}>
+            <div style={{ color: "#2d5a2d" }}>// life_code.init</div>
+            <div style={{ color: "#00ff88" }}>LIFE&nbsp;&nbsp;&nbsp;&nbsp;= JOURNEY</div>
+            <div style={{ color: "#00ff88" }}>PATTERN&nbsp;= REPEATING</div>
+            <div style={{ color: "#fbbf24" }}>CORE_BUG = &quot;I am not enough&quot;</div>
+            <div style={{ color: "#7aba7a" }}>PATCH&nbsp;&nbsp;&nbsp;= &quot;Return to self&quot;</div>
+            <div style={{ color: "#2d5a2d" }}>VERSION&nbsp;= 2.6.1</div>
           </div>
 
-          {/* 发光圆环 + 代码卡 + 右侧能力胶囊 */}
-          <div className="relative flex items-center justify-center py-10">
-            <div aria-hidden className="absolute" style={{ width: "min(430px, 95%)", aspectRatio: "1", borderRadius: "50%", border: "1px solid #00ff8830", boxShadow: "0 0 90px #00ff8820, inset 0 0 70px #00ff8812", background: "radial-gradient(circle, #00ff8814 0%, transparent 62%)" }} />
-            <div aria-hidden className="absolute" style={{ width: "min(330px, 75%)", aspectRatio: "1", borderRadius: "50%", border: "1px dashed #00ff8825" }} />
-            <div className="relative space-y-2 text-sm p-6" style={{ background: "#0a150af2", fontFamily: mono, border: "1px solid #1f4a1f", borderRadius: "16px", boxShadow: "0 0 40px #00ff8818" }}>
-              <div style={{ color: "#2d5a2d" }}>// life_code.init</div>
-              <div style={{ color: "#00ff88" }}>LIFE&nbsp;&nbsp;&nbsp;&nbsp;= JOURNEY</div>
-              <div style={{ color: "#00ff88" }}>PATTERN&nbsp;= REPEATING</div>
-              <div style={{ color: "#fbbf24" }}>CORE_BUG = &quot;I am not enough&quot;</div>
-              <div style={{ color: "#7aba7a" }}>PATCH&nbsp;&nbsp;&nbsp;= &quot;Return to self&quot;</div>
-              <div style={{ color: "#2d5a2d" }}>VERSION&nbsp;= 2.6.1</div>
-            </div>
-            <div className="hidden xl:flex flex-col gap-3 absolute" style={{ right: "-92px", top: "50%", transform: "translateY(-50%)" }}>
-              {heroChips.map((c) => (
-                <div key={c.label} className="flex items-center gap-2 pl-1.5 pr-4 py-1.5" style={{ border: "1px solid #1f4a1f", borderRadius: "999px", background: "#0a150aee" }}>
-                  <NeonRing size={34}>{c.icon}</NeonRing>
-                  <div>
-                    <div className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</div>
-                    <div style={{ color: "#3d6a3d", fontSize: "10px" }}>{c.sub}</div>
-                  </div>
+          {/* 能力胶囊（横排居中） */}
+          <div className="flex justify-center gap-3 flex-wrap">
+            {heroChips.map((c) => (
+              <div key={c.label} className="flex items-center gap-2 pl-1.5 pr-4 py-1.5" style={{ border: "1px solid #1f4a1f", borderRadius: "999px", background: "#0a150aee" }}>
+                <NeonRing size={34}>{c.icon}</NeonRing>
+                <div className="text-left">
+                  <div className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</div>
+                  <div style={{ color: "#3d6a3d", fontSize: "10px" }}>{c.sub}</div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </section>
-
-        {/* 移动端能力胶囊（横排） */}
-        <div className="flex xl:hidden justify-center gap-2 flex-wrap pb-4">
-          {heroChips.map((c) => (
-            <div key={c.label} className="flex items-center gap-2 pl-1.5 pr-3 py-1" style={{ border: "1px solid #1f4a1f", borderRadius: "999px", background: "#0a150aee" }}>
-              <NeonRing size={26}>{c.icon}</NeonRing>
-              <span className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</span>
-            </div>
-          ))}
-        </div>
 
         {/* ───── 痛点 ───── */}
         <section id="pain" className="py-12 space-y-8">
