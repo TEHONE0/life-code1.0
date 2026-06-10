@@ -105,7 +105,7 @@ function parseMainWeight(md: string): string | null {
 }
 function parseBias(md: string): string | null {
   const m = md.match(/(自保|一对一|社交)偏置/)
-  return m ? `${m[1]}偏置` : null
+  return m ? m[1] : null
 }
 
 const LABELS = {
@@ -988,8 +988,8 @@ function ResultPage() {
               {[
                 { label: chrome.statBug, icon: IconWarning, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff", note: "", ring: bugScore },
                 { label: chrome.statHealth, icon: IconHeartPulse, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88", note: healthNote, ring: null },
-                { label: chrome.statWeight, icon: IconEnneagram, value: mainWeight ? `${mainWeight}权重` : "—", suffix: mainWeight ? "高" : "", color: "#00ff88", note: "", ring: null },
-                { label: chrome.statBias, icon: IconCube, value: bias ?? "—", suffix: "", color: "#00ff88", note: "", ring: null },
+                { label: chrome.statWeight, icon: IconEnneagram, value: mainWeight ? `${mainWeight}型` : "—", suffix: "", color: "#00ff88", note: "", ring: null },
+                { label: chrome.statBias, icon: IconCube, value: bias ? `${bias}型` : "—", suffix: "", color: "#00ff88", note: "", ring: null },
               ].map((s) => (
                 <div key={s.label} className="p-4" style={CARD}>
                   <div className="flex items-center gap-1.5 text-xs mb-1.5" style={{ color: "#7fc97f", fontFamily: mono }}>
