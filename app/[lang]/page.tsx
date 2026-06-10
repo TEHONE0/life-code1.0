@@ -200,6 +200,12 @@ export default function HomePage() {
     { src: "/preview/portrait.png", label: zh ? "觉醒画像" : "Awakening portrait" },
   ]
 
+  const heroChips = [
+    { icon: IconBirthCode, label: zh ? "生辰算法" : "Birth code", sub: zh ? "出生参数引擎" : "Birth engine" },
+    { icon: IconEnneagram, label: zh ? "九型人格" : "Enneagram", sub: zh ? "人格内核定位" : "Personality core" },
+    { icon: IconAI, label: zh ? "AI 引擎" : "AI engine", sub: zh ? "实时逐章生成" : "Generated live" },
+  ]
+
   const footChips = zh
     ? [["🔒", "传输加密"], ["👁", "仅本人可见"], ["♾", "报告永久保存"], ["⚡", "AI 实时生成"]]
     : [["🔒", "Encrypted"], ["👁", "Private to you"], ["♾", "Saved forever"], ["⚡", "Generated live"]]
@@ -240,8 +246,16 @@ export default function HomePage() {
           <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
             {zh ? <>用 <span style={{ fontFamily: scifi }}>AI</span> 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span></span></> : <>See the <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
           </h1>
-          <div className="text-sm md:text-base" style={{ color: "#4a8a4a", fontFamily: mono }}>
-            {zh ? "生辰代码算法 × 九型人格 × AI 引擎" : "Birth-code algorithm × Enneagram × AI engine"}
+          <div className="flex justify-center gap-3 flex-wrap">
+            {heroChips.map((c) => (
+              <div key={c.label} className="flex items-center gap-2 pl-1.5 pr-4 py-1.5" style={{ border: "1px solid #1f4a1f", borderRadius: "999px", background: "#0a150aee" }}>
+                <NeonRing size={34}>{c.icon}</NeonRing>
+                <div className="text-left">
+                  <div className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</div>
+                  <div style={{ color: "#3d6a3d", fontSize: "10px" }}>{c.sub}</div>
+                </div>
+              </div>
+            ))}
           </div>
           <p className="text-sm leading-relaxed max-w-xl" style={{ color: "#5a7a5a" }}>
             {zh
