@@ -987,19 +987,33 @@ function ResultPage() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff", note: "" },
-                { label: chrome.statHealth, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88", note: healthNote },
-                { label: chrome.statWeight, value: mainWeight ? `${mainWeight}权重` : "—", suffix: mainWeight ? "高" : "", color: "#00ff88", note: "" },
-                { label: chrome.statBias, value: bias ?? "—", suffix: "", color: "#00ff88", note: "" },
+                { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff", note: "", ring: bugScore },
+                { label: chrome.statHealth, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88", note: healthNote, ring: null },
+                { label: chrome.statWeight, value: mainWeight ? `${mainWeight}权重` : "—", suffix: mainWeight ? "高" : "", color: "#00ff88", note: "", ring: null },
+                { label: chrome.statBias, value: bias ?? "—", suffix: "", color: "#00ff88", note: "", ring: null },
               ].map((s) => (
                 <div key={s.label} className="p-4" style={CARD}>
-                  <div className="text-xs mb-1.5" style={{ color: "#2d5a2d", fontFamily: mono }}>{s.label}</div>
-                  <div className="truncate" style={{ color: s.color, fontFamily: scifi, fontSize: "1.15rem", fontWeight: 700, textShadow: `0 0 14px ${s.color}55` }}>
-                    {s.value}
-                    {s.suffix && <span style={{ fontSize: "0.7rem", color: "#4a7a4a", fontFamily: mono, fontWeight: 400 }}>{s.suffix}</span>}
+                  <div className="text-xs mb-1.5" style={{ color: "#7fc97f", fontFamily: mono }}>{s.label}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="truncate" style={{ color: s.color, fontFamily: scifi, fontSize: "1.15rem", fontWeight: 700, textShadow: `0 0 14px ${s.color}55` }}>
+                      {s.value}
+                      {s.suffix && <span style={{ fontSize: "0.7rem", color: "#8fbf8f", fontFamily: mono, fontWeight: 400 }}>{s.suffix}</span>}
+                    </div>
+                    {s.ring != null && (
+                      <svg width="44" height="44" viewBox="0 0 44 44" style={{ flexShrink: 0 }}>
+                        <circle cx="22" cy="22" r="18" fill="none" stroke="#0f1f0f" strokeWidth="5" />
+                        <circle
+                          cx="22" cy="22" r="18" fill="none" stroke="#4db8ff" strokeWidth="5" strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 18}
+                          strokeDashoffset={2 * Math.PI * 18 * (1 - s.ring / 100)}
+                          transform="rotate(-90 22 22)"
+                          style={{ filter: "drop-shadow(0 0 4px #4db8ff)", transition: "stroke-dashoffset 0.6s" }}
+                        />
+                      </svg>
+                    )}
                   </div>
                   {s.note && (
-                    <div className="text-xs mt-1.5 leading-relaxed" style={{ color: "#5a7a5a", fontFamily: mono }}>{s.note}</div>
+                    <div className="text-xs mt-1.5 leading-relaxed" style={{ color: "#a8d8a8", fontFamily: mono }}>{s.note}</div>
                   )}
                 </div>
               ))}
