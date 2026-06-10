@@ -3,6 +3,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Lang } from "@/lib/i18n";
 import UserMenu from "@/components/UserMenu";
+import { NeonRing, IconHeartPulse, IconHourglass, IconMismatch, IconBirthCode, IconEnneagram, IconAI, IconShield } from "@/components/neon";
 
 function MatrixRain({ side }: { side: 'left' | 'right' }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -76,68 +77,9 @@ const LANGS = [
 const mono = "Courier New, monospace";
 const scifi = "Orbitron, Courier New, monospace";
 const CARD = { border: "1px solid #1a3a1a", background: "#0a150a", borderRadius: "16px" } as const;
-const GLOW = "drop-shadow(0 0 5px #00ff8899)";
 
 // 真实用户评价截图：把图片放进 public/reviews/ 并在此登记文件名即可显示
 const REVIEW_IMAGES: string[] = [];
-
-/* ───── 霓虹线条图标（统一发光圆框） ───── */
-function NeonRing({ children, size = 64 }: { children: React.ReactNode; size?: number }) {
-  return (
-    <div
-      className="flex items-center justify-center mx-auto"
-      style={{ width: size, height: size, borderRadius: "50%", border: "1.5px solid #00ff8866", background: "#00ff880d", boxShadow: "0 0 18px #00ff8822, inset 0 0 12px #00ff8811" }}
-    >
-      {children}
-    </div>
-  )
-}
-
-const svgProps = { fill: "none", stroke: "#00ff88", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, style: { filter: GLOW } };
-
-const IconHeartPulse = (
-  <svg width="30" height="30" viewBox="0 0 24 24" {...svgProps}>
-    <path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6.3a5 5 0 1 1 7.5 6.3Z" />
-    <path d="M4 13h3l1.5-3 2.5 5 2-4 1.5 2H21" stroke="#ccffdd" strokeWidth="1.3" />
-  </svg>
-)
-const IconHourglass = (
-  <svg width="30" height="30" viewBox="0 0 24 24" {...svgProps}>
-    <path d="M6 3h12M6 21h12M7 3v3.5L12 12 7 17.5V21M17 3v3.5L12 12l5 5.5V21" />
-  </svg>
-)
-const IconMismatch = (
-  <svg width="30" height="30" viewBox="0 0 24 24" {...svgProps}>
-    <path d="M4 8h12M16 8l-3-3M16 8l-3 3" />
-    <path d="M20 16H8M8 16l3-3M8 16l3 3" stroke="#ccffdd" strokeWidth="1.3" />
-  </svg>
-)
-const IconBirthCode = (
-  <svg width="26" height="26" viewBox="0 0 24 24" {...svgProps}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
-    <circle cx="12" cy="12" r="2.5" stroke="#ccffdd" strokeWidth="1.3" />
-  </svg>
-)
-const IconEnneagram = (
-  <svg width="26" height="26" viewBox="0 0 24 24" {...svgProps}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 3l5.5 15.5L4.5 9h15L6.5 18.5 12 3Z" strokeWidth="1.1" />
-  </svg>
-)
-const IconAI = (
-  <svg width="26" height="26" viewBox="0 0 24 24" {...svgProps}>
-    <rect x="6" y="6" width="12" height="12" rx="2.5" />
-    <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4" />
-    <circle cx="12" cy="12" r="2" stroke="#ccffdd" strokeWidth="1.3" />
-  </svg>
-)
-const IconShield = (
-  <svg width="44" height="44" viewBox="0 0 24 24" {...svgProps}>
-    <path d="M12 2 4 5.5v5.2c0 5 3.4 9.2 8 10.8 4.6-1.6 8-5.8 8-10.8V5.5L12 2Z" />
-    <path d="M8.5 12l2.3 2.3 4.7-4.8" stroke="#ccffdd" strokeWidth="1.5" />
-  </svg>
-)
 
 export default function HomePage() {
   const params = useParams()
