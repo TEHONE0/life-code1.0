@@ -250,12 +250,9 @@ export default function HomePage() {
             {heroChips.map((c, i) => (
               <div key={c.label} className="flex items-center gap-3">
                 {i > 0 && <span className="text-lg font-bold" style={{ color: "#4db8ff", fontFamily: scifi, textShadow: "0 0 12px #4db8ff44" }}>×</span>}
-                <div className="flex items-center gap-2 pl-1.5 pr-4 py-1.5" style={{ border: "1px solid #1f4a1f", borderRadius: "999px", background: "#0a150aee" }}>
+                <div className="flex items-center gap-2">
                   <NeonRing size={34}>{c.icon}</NeonRing>
-                  <div className="text-left">
-                    <div className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</div>
-                    <div style={{ color: "#3d6a3d", fontSize: "10px" }}>{c.sub}</div>
-                  </div>
+                  <span className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</span>
                 </div>
               </div>
             ))}
