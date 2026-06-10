@@ -1,7 +1,6 @@
 "use client";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -11,7 +10,7 @@ import "katex/dist/katex.min.css";
 import { Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import UserMenu from "@/components/UserMenu";
-import { IconLock, IconScan, NeonRing } from "@/components/neon";
+import { IconLock, IconScan, IconWarning, IconHeartPulse, IconEnneagram, IconCube, NeonRing } from "@/components/neon";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -987,13 +986,16 @@ function ResultPage() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff", note: "", ring: bugScore },
-                { label: chrome.statHealth, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88", note: healthNote, ring: null },
-                { label: chrome.statWeight, value: mainWeight ? `${mainWeight}权重` : "—", suffix: mainWeight ? "高" : "", color: "#00ff88", note: "", ring: null },
-                { label: chrome.statBias, value: bias ?? "—", suffix: "", color: "#00ff88", note: "", ring: null },
+                { label: chrome.statBug, icon: IconWarning, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff", note: "", ring: bugScore },
+                { label: chrome.statHealth, icon: IconHeartPulse, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88", note: healthNote, ring: null },
+                { label: chrome.statWeight, icon: IconEnneagram, value: mainWeight ? `${mainWeight}权重` : "—", suffix: mainWeight ? "高" : "", color: "#00ff88", note: "", ring: null },
+                { label: chrome.statBias, icon: IconCube, value: bias ?? "—", suffix: "", color: "#00ff88", note: "", ring: null },
               ].map((s) => (
                 <div key={s.label} className="p-4" style={CARD}>
-                  <div className="text-xs mb-1.5" style={{ color: "#7fc97f", fontFamily: mono }}>{s.label}</div>
+                  <div className="flex items-center gap-1.5 text-xs mb-1.5" style={{ color: "#7fc97f", fontFamily: mono }}>
+                    {React.cloneElement(s.icon, { width: 14, height: 14 })}
+                    {s.label}
+                  </div>
                   <div className="flex items-center justify-between gap-2">
                     <div className="truncate" style={{ color: s.color, fontFamily: scifi, fontSize: "1.15rem", fontWeight: 700, textShadow: `0 0 14px ${s.color}55` }}>
                       {s.value}
