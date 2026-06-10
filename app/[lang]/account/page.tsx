@@ -53,6 +53,7 @@ function AccountPage() {
   const [list, setList] = useState<Submission[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [bloggerData, setBloggerData] = useState<BloggerData | null>(null);
+  const [giftCodes, setGiftCodes] = useState<{ code: string; used_count: number; max_uses: number | null; expires_at: string | null }[]>([]);
 
   const t = {
     titleForms: lang === "zh" ? "我的问卷" : lang === "ko" ? "내 설문" : "My Questionnaires",
@@ -92,6 +93,12 @@ function AccountPage() {
       });
       const inviteJson = await inviteRes.json();
       if (inviteJson.codes?.length > 0) setBloggerData(inviteJson);
+      // 我的赠礼码
+      const giftRes = await fetch("/api/my-gift-codes", {
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+      });
+      const giftJson = await giftRes.json();
+      setGiftCodes(giftJson.codes || []);
     })();
   }, [lang, router, view]);
 
@@ -191,6 +198,24 @@ function AccountPage() {
         {loading && (
           <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
             // Loading...
+          </div>
+        )}
+
+        {!loading && view === "reports" && giftCodes.length > 0 && (
+          <div className="space-y-1 p-3" style={{ border: "1px solid #1a3a1a", fontFamily: "Courier New, monospace" }}>
+            <div className="text-xs font-bold" style={{ color: "#fbbf24" }}>🎁 {lang === "zh" ? "我的赠礼码" : lang === "ko" ? "내 선물 코드" : "My gift codes"}</div>
+            {giftCodes.map((g) => {
+              const used = g.max_uses != null && g.used_count >= g.max_uses;
+              const expired = !used && g.expires_at != null && new Date(g.expires_at) < new Date();
+              return (
+                <div key={g.code} className="flex justify-between text-xs py-1" style={{ borderBottom: "1px solid #112811" }}>
+                  <span style={{ color: used || expired ? "#2d5a2d" : "#00ff88", letterSpacing: "0.1em", textDecoration: used || expired ? "line-through" : "none" }}>{g.code}</span>
+                  <span style={{ color: "#4a7a4a" }}>
+                    {used ? (lang === "zh" ? "已使用" : "used") : expired ? (lang === "zh" ? "已过期" : "expired") : g.expires_at ? `${lang === "zh" ? "有效至" : "until"} ${new Date(g.expires_at).toLocaleDateString()}` : ""}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
 

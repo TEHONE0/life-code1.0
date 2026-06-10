@@ -4,8 +4,8 @@ import crypto from "crypto";
 
 const ADMIN_EMAILS = ['theone208899@gmail.com'];
 // 免费码不再硬编码，统一以 invite_codes.free_access 字段为准（与 validate-invite 同源）
-const PRICE = "8.80";
-const DISCOUNT_PRICE = "6.80"; // 达人邀请码（lifecode01-10）专属价
+const PRICE = "18.80";
+const DISCOUNT_PRICE = "16.80"; // 达人邀请码（lifecode01-10）专属价
 
 function epaySign(params: Record<string, string>, key: string): string {
   const str =
@@ -66,15 +66,19 @@ export async function POST(req: NextRequest) {
       const normalized = inviteCode.trim().toUpperCase();
       const { data: invite } = await supabase
         .from("invite_codes")
-        .select("is_active, free_access, used_count")
+        .select("is_active, free_access, used_count, max_uses, expires_at")
         .eq("code", normalized)
         .single();
-      if (invite?.is_active && invite.free_access) {
+      // 赠礼码限次/限期：用满或过期视为无效
+      const exhausted = invite?.max_uses && (invite.used_count || 0) >= invite.max_uses;
+      const expired = invite?.expires_at && new Date(invite.expires_at) < new Date();
+      const usable = invite?.is_active && !exhausted && !expired;
+      if (usable && invite.free_access) {
         await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
         await supabase.from("invite_codes").update({ used_count: (invite.used_count || 0) + 1 }).eq("code", normalized);
         return NextResponse.json({ testMode: true, submissionId });
       }
-      if (invite?.is_active) price = DISCOUNT_PRICE;
+      if (usable) price = DISCOUNT_PRICE;
     }
 
     // 未配置 ZPay → 测试模式

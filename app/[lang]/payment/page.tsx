@@ -224,7 +224,7 @@ export default function PaymentPage() {
               ✓ {inviteLabel ? `[${inviteLabel}] ` : ''}
               {inviteFreeAccess
                 ? (lang === 'zh' ? '内测邀请码有效 · 免费解锁' : lang === 'ko' ? '베타 코드 유효 · 무료 이용' : 'Beta code valid · Free access')
-                : (lang === 'zh' ? '邀请码有效 · 8折已激活' : lang === 'ko' ? '초대 코드 유효 · 20% 할인 적용' : 'Code valid · 20% discount applied')
+                : (lang === 'zh' ? '邀请码有效 · 优惠价 ¥16.80 已激活' : lang === 'ko' ? '초대 코드 유효 · 할인가 ¥16.80 적용' : 'Code valid · discounted price ¥16.80 applied')
               }
             </div>
           )}
@@ -241,13 +241,18 @@ export default function PaymentPage() {
         >
           <div className="text-4xl font-bold" style={{ color: "#00ff88" }}>
             {inviteStatus === "valid" && inviteFreeAccess ? (
-              <span>免费 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥8.80</span></span>
+              <span>免费 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥18.80</span></span>
             ) : inviteStatus === "valid" ? (
-              <span>¥6.80 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥8.80</span></span>
+              <span>¥16.80 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥18.80</span></span>
             ) : (
-              <span>¥8.80</span>
+              <span>¥18.80</span>
             )}
           </div>
+          {new Date() <= new Date("2026-06-30T23:59:59+08:00") && (
+            <p className="text-xs" style={{ color: "#fbbf24", fontFamily: "Courier New, monospace" }}>
+              🎁 {lang === "zh" ? "首发活动（至6月30日）：买一赠一，支付成功自动获得一个可送朋友的免费测试码" : lang === "ko" ? "런칭 이벤트 (6/30까지): 1+1, 결제 시 친구에게 선물할 무료 코드 증정" : "Launch offer (until Jun 30): buy one gift one — get a free code for a friend after payment"}
+            </p>
+          )}
           <p className="text-xs" style={{ color: "#2d5a2d" }}>
             {t.paymentDesc}
           </p>

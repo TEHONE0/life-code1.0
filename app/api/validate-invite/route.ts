@@ -12,11 +12,14 @@ export async function POST(req: NextRequest) {
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data } = await supabase
     .from("invite_codes")
-    .select("code, label, commission_usd, is_active, free_access")
+    .select("code, label, commission_usd, is_active, free_access, used_count, max_uses, expires_at")
     .eq("code", normalized)
     .single();
 
   if (!data || !data.is_active) return NextResponse.json({ valid: false });
+  // 赠礼码限次/限期：用满或过期视为无效
+  if (data.max_uses && (data.used_count || 0) >= data.max_uses) return NextResponse.json({ valid: false });
+  if (data.expires_at && new Date(data.expires_at) < new Date()) return NextResponse.json({ valid: false });
   if (data.free_access) {
     return NextResponse.json({ valid: true, label: data.label, discount: 100, freeAccess: true });
   }

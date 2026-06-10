@@ -273,6 +273,44 @@ function ResultPage() {
   const [shared, setShared] = useState(false)
   const [shareModal, setShareModal] = useState(false)
   const [exportingPdf, setExportingPdf] = useState(false)
+  const [giftCodes, setGiftCodes] = useState<{ code: string; label: string | null; used_count: number; max_uses: number | null; expires_at: string | null }[]>([])
+  const [giftBuying, setGiftBuying] = useState(false)
+  const [copiedGift, setCopiedGift] = useState<string | null>(null)
+
+  // 我的赠礼码（买一赠一所得/单独购买）
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabaseBrowser.auth.getSession()
+      if (!data.session) return
+      const res = await fetch("/api/my-gift-codes", { headers: { Authorization: `Bearer ${data.session.access_token}` } })
+      const json = await res.json()
+      setGiftCodes(json.codes || [])
+    })()
+  }, [])
+
+  const handleBuyGift = async () => {
+    if (giftBuying) return
+    setGiftBuying(true)
+    try {
+      const { data } = await supabaseBrowser.auth.getSession()
+      if (!data.session) return
+      const res = await fetch("/api/create-gift-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
+        body: JSON.stringify({ lang }),
+      })
+      const json = await res.json()
+      if (json.url) window.location.href = json.url
+    } finally {
+      setGiftBuying(false)
+    }
+  }
+
+  const copyGiftCode = (code: string) => {
+    navigator.clipboard?.writeText(code).catch(() => {})
+    setCopiedGift(code)
+    setTimeout(() => setCopiedGift(null), 2000)
+  }
   const reportRef = useRef<HTMLDivElement>(null)
   const reportInnerRef = useRef<HTMLDivElement>(null)
   // Prevents double execution (StrictMode guard + re-render guard)
@@ -773,6 +811,50 @@ function ResultPage() {
                 {exportingPdf
                   ? (lang === 'zh' ? '[ 生成中... ]' : lang === 'ko' ? '[ 생성 중... ]' : '[ Generating... ]')
                   : (lang === 'zh' ? '[ 保存为PDF ]' : lang === 'ko' ? '[ PDF로 저장 ]' : '[ Save as PDF ]')}
+              </button>
+            </div>
+
+            {/* 赠礼码：买一赠一所得 + 单独购买 */}
+            <div className="space-y-2 p-4" style={{ border: "1px solid #3a6a3a", fontFamily: "Courier New, monospace" }}>
+              <div className="text-sm font-bold" style={{ color: "#fbbf24" }}>
+                🎁 {lang === 'zh' ? '送一份给你最想读懂的人' : lang === 'ko' ? '소중한 사람에게 선물하세요' : 'Gift one to someone you care about'}
+              </div>
+              {giftCodes.map((g) => {
+                const used = g.max_uses != null && g.used_count >= g.max_uses
+                const expired = !used && g.expires_at != null && new Date(g.expires_at) < new Date()
+                return (
+                  <div key={g.code} className="flex items-center justify-between text-xs py-1" style={{ borderBottom: "1px solid #112811" }}>
+                    <span style={{ color: used || expired ? "#2d5a2d" : "#00ff88", letterSpacing: "0.1em", textDecoration: used || expired ? "line-through" : "none" }}>{g.code}</span>
+                    <span style={{ color: "#4a7a4a" }}>
+                      {used
+                        ? (lang === 'zh' ? '已使用' : 'used')
+                        : expired
+                        ? (lang === 'zh' ? '已过期' : 'expired')
+                        : (
+                          <button onClick={() => copyGiftCode(g.code)} style={{ border: "1px solid #3a6a3a", color: copiedGift === g.code ? "#00ff88" : "#5a9a5a", background: "transparent", cursor: "pointer", padding: "2px 8px", fontFamily: "inherit" }}>
+                            {copiedGift === g.code ? (lang === 'zh' ? '✓ 已复制' : '✓ Copied') : (lang === 'zh' ? '复制' : 'Copy')}
+                          </button>
+                        )}
+                    </span>
+                  </div>
+                )
+              })}
+              {giftCodes.some((g) => !(g.max_uses != null && g.used_count >= g.max_uses) && !(g.expires_at != null && new Date(g.expires_at) < new Date())) && (
+                <div className="text-xs" style={{ color: "#4a7a4a" }}>
+                  {lang === 'zh' ? '把上面的码发给朋友，TA在支付页输入即可免费解锁（30天内有效）' : lang === 'ko' ? '코드를 친구에게 보내면 무료로 이용할 수 있습니다 (30일 유효)' : 'Send the code to a friend — they enter it at checkout to unlock for free (valid 30 days)'}
+                </div>
+              )}
+              <button
+                onClick={handleBuyGift}
+                disabled={giftBuying}
+                className="btn-result w-full py-3 text-sm font-bold tracking-wider"
+                style={{ ...btnBase, border: "1px solid #3a6a3a", color: "#5a9a5a", opacity: giftBuying ? 0.6 : 1, cursor: giftBuying ? "not-allowed" : "pointer" }}
+                onMouseEnter={(e) => { if (!giftBuying) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
+                onMouseLeave={(e) => { if (!giftBuying) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
+              >
+                {giftBuying
+                  ? (lang === 'zh' ? '[ 跳转支付中... ]' : '[ ... ]')
+                  : (lang === 'zh' ? '[ 再送一位朋友 ¥18.8 ]' : lang === 'ko' ? '[ 친구에게 선물 ¥18.8 ]' : '[ Gift a friend ¥18.8 ]')}
               </button>
             </div>
 
