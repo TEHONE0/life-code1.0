@@ -237,7 +237,7 @@ export default function HomePage() {
         {/* ───── Hero（整体居中） ───── */}
         <section className="py-14 md:py-20 flex flex-col items-center text-center space-y-7">
           <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
-            {zh ? <>用 AI 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#fbbf24", textShadow: "0 0 24px #fbbf2455" }}>Bug</span></span></> : <>See the <span style={{ color: "#fbbf24", textShadow: "0 0 24px #fbbf2455" }}>Bug</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
+            {zh ? <>用 AI 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55" }}>Bug</span></span></> : <>See the <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55" }}>Bug</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
           </h1>
           <div className="text-sm md:text-base" style={{ color: "#4a8a4a", fontFamily: mono }}>
             {zh ? "生辰代码算法 × 九型人格 × AI 引擎" : "Birth-code algorithm × Enneagram × AI engine"}
@@ -252,7 +252,7 @@ export default function HomePage() {
             {ghostBtn(zh ? "查看报告示例" : "See a sample", "#preview")}
           </div>
           {promoActive && (
-            <div className="text-xs" style={{ color: "#fbbf24", fontFamily: mono }}>
+            <div className="text-xs" style={{ color: "#4db8ff", fontFamily: mono }}>
               🎁 {zh ? "首发活动（至6月30日）：买一赠一，多得一份送朋友" : "Launch offer (until Jun 30): buy one, gift one free"}
             </div>
           )}
@@ -295,7 +295,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-6 items-start">
             <div className="space-y-2">
               {chapters.map((c, i) => (
-                <div key={c} className="flex items-center gap-3 text-xs py-2 px-4" style={{ border: "1px solid #112811", background: "#0a150a", fontFamily: mono, color: i === 0 || i === chapters.length - 1 ? "#fbbf24" : "#4a8a4a", borderRadius: "10px" }}>
+                <div key={c} className="flex items-center gap-3 text-xs py-2 px-4" style={{ border: "1px solid #112811", background: "#0a150a", fontFamily: mono, color: i === 0 || i === chapters.length - 1 ? "#4db8ff" : "#4a8a4a", borderRadius: "10px" }}>
                   <span style={{ color: "#2d5a2d" }}>{String(i).padStart(2, "0")}</span>
                   <span>{c}</span>
                 </div>
@@ -371,7 +371,7 @@ export default function HomePage() {
               <div>✓ {zh ? "报告永久保存，随时回看" : "Saved forever, revisit anytime"}</div>
             </div>
             {promoActive && (
-              <div className="text-xs" style={{ color: "#fbbf24", fontFamily: mono }}>
+              <div className="text-xs" style={{ color: "#4db8ff", fontFamily: mono }}>
                 🎁 {zh ? "活动期内付费即赠一份，送给你最想读懂的人" : "Buy one, gift one free during launch"}
               </div>
             )}
