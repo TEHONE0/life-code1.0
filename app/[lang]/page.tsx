@@ -249,7 +249,7 @@ export default function HomePage() {
           <div className="flex justify-center items-center gap-3 flex-wrap">
             {heroChips.map((c, i) => (
               <div key={c.label} className="flex items-center gap-3">
-                {i > 0 && <span className="text-lg font-bold" style={{ color: "#4db8ff", fontFamily: scifi, textShadow: "0 0 12px #4db8ff44" }}>×</span>}
+                {i > 0 && <span className="text-lg font-bold" style={{ color: "#5a7a5a", fontFamily: scifi }}>×</span>}
                 <div className="flex items-center gap-2">
                   <NeonRing size={34}>{c.icon}</NeonRing>
                   <span className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</span>
