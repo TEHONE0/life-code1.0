@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* 科幻英文标题字体（自托管，国内无依赖） */
+@font-face {
+  font-family: "Orbitron";
+  src: url("/fonts/orbitron-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 * { box-sizing: border-box; }
 
 body {

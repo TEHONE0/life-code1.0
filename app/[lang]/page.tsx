@@ -74,6 +74,7 @@ const LANGS = [
 ]
 
 const mono = "Courier New, monospace";
+const scifi = "Orbitron, Courier New, monospace";
 const CARD = { border: "1px solid #1a3a1a", background: "#0a150a", borderRadius: "16px" } as const;
 const GLOW = "drop-shadow(0 0 5px #00ff8899)";
 
@@ -212,7 +213,7 @@ export default function HomePage() {
       <nav className="sticky top-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between" style={{ background: "#050a05ee", borderBottom: "1px solid #112811", backdropFilter: "blur(6px)" }}>
         <div className="flex items-center gap-2" style={{ fontFamily: mono }}>
           <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
-          <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em" }}>LIFE CODE</span>
+          <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
         </div>
         <div className="hidden md:flex gap-6 text-xs" style={{ fontFamily: mono }}>
           {(zh ? [["#pain", "为什么测"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#about", "关于创作者"]] : [["#pain", "Why"], ["#how", "How"], ["#preview", "Sample"], ["#about", "About"]]).map(([href, label]) => (
@@ -237,7 +238,7 @@ export default function HomePage() {
         {/* ───── Hero（整体居中） ───── */}
         <section className="py-14 md:py-20 flex flex-col items-center text-center space-y-7">
           <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
-            {zh ? <>用 AI 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55" }}>Bug</span></span></> : <>See the <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55" }}>Bug</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
+            {zh ? <>用 <span style={{ fontFamily: scifi }}>AI</span> 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span></span></> : <>See the <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
           </h1>
           <div className="text-sm md:text-base" style={{ color: "#4a8a4a", fontFamily: mono }}>
             {zh ? "生辰代码算法 × 九型人格 × AI 引擎" : "Birth-code algorithm × Enneagram × AI engine"}
