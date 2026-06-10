@@ -1171,9 +1171,10 @@ function ResultPage() {
               </button>
             </div>
 
-            {/* 赠礼码：买一赠一所得 + 单独购买 */}
+            {/* 赠礼码卡：已有的码（资产展示，与购买动作分离） */}
+            {giftCodes.length > 0 && (
             <div className="space-y-2 p-5" style={{ ...CARD, fontFamily: "Courier New, monospace" }}>
-              <div className="text-sm font-bold" style={{ color: "#fbbf24" }}>
+              <div className="text-sm font-bold" style={{ color: "#4db8ff", textShadow: "0 0 14px #4db8ff44" }}>
                 🎁 {lang === 'zh' ? '送一份给你最想读懂的人' : lang === 'ko' ? '소중한 사람에게 선물하세요' : 'Gift one to someone you care about'}
               </div>
               {giftCodes.map((g) => {
@@ -1201,19 +1202,25 @@ function ResultPage() {
                   {lang === 'zh' ? '把上面的码发给朋友，TA在支付页输入即可免费解锁（30天内有效）' : lang === 'ko' ? '코드를 친구에게 보내면 무료로 이용할 수 있습니다 (30일 유효)' : 'Send the code to a friend — they enter it at checkout to unlock for free (valid 30 days)'}
                 </div>
               )}
-              <button
-                onClick={handleBuyGift}
-                disabled={giftBuying}
-                className="btn-result w-full py-3 text-sm font-bold tracking-wider"
-                style={{ ...btnBase, border: "1px solid #3a6a3a", color: "#5a9a5a", opacity: giftBuying ? 0.6 : 1, cursor: giftBuying ? "not-allowed" : "pointer" }}
-                onMouseEnter={(e) => { if (!giftBuying) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
-                onMouseLeave={(e) => { if (!giftBuying) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
-              >
-                {giftBuying
-                  ? (lang === 'zh' ? '[ 跳转支付中... ]' : '[ ... ]')
-                  : (lang === 'zh' ? '[ 再送一位朋友 ¥18.8 ]' : lang === 'ko' ? '[ 친구에게 선물 ¥18.8 ]' : '[ Gift a friend ¥18.8 ]')}
-              </button>
             </div>
+            )}
+
+            {/* 再送一位朋友：独立CTA（蓝色渐变，绿=为自己/蓝=为别人） */}
+            <button
+              onClick={handleBuyGift}
+              disabled={giftBuying}
+              className="w-full py-3.5 text-sm font-bold tracking-wider"
+              style={{
+                border: "none", borderRadius: "14px", fontFamily: "Courier New, monospace",
+                background: "linear-gradient(135deg, #2a7ab8 0%, #4db8ff 100%)", color: "#04101a",
+                boxShadow: "0 0 22px #4db8ff44, 0 2px 10px #00000066",
+                opacity: giftBuying ? 0.6 : 1, cursor: giftBuying ? "not-allowed" : "pointer",
+              }}
+            >
+              {giftBuying
+                ? (lang === 'zh' ? '跳转支付中...' : '...')
+                : (lang === 'zh' ? '🎁 再送一位朋友 ¥18.8' : lang === 'ko' ? '🎁 친구에게 선물 ¥18.8' : '🎁 Gift a friend ¥18.8')}
+            </button>
 
             {/* My Archive */}
             <button
