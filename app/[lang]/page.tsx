@@ -199,12 +199,6 @@ export default function HomePage() {
     { src: "/preview/portrait.png", label: zh ? "觉醒画像" : "Awakening portrait" },
   ]
 
-  const heroChips = [
-    { icon: IconBirthCode, label: zh ? "生辰算法" : "Birth code", sub: zh ? "出生参数引擎" : "Birth engine" },
-    { icon: IconEnneagram, label: zh ? "九型人格" : "Enneagram", sub: zh ? "人格内核定位" : "Personality core" },
-    { icon: IconAI, label: zh ? "AI 引擎" : "AI engine", sub: zh ? "实时逐章生成" : "Generated live" },
-  ]
-
   const footChips = zh
     ? [["🔒", "传输加密"], ["👁", "仅本人可见"], ["♾", "报告永久保存"], ["⚡", "AI 实时生成"]]
     : [["🔒", "Encrypted"], ["👁", "Private to you"], ["♾", "Saved forever"], ["⚡", "Generated live"]]
@@ -263,28 +257,6 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* 代码卡（居中） */}
-          <div className="space-y-2 text-sm p-6 text-left" style={{ background: "#0a150af2", fontFamily: mono, border: "1px solid #1f4a1f", borderRadius: "16px", boxShadow: "0 0 40px #00ff8818" }}>
-            <div style={{ color: "#2d5a2d" }}>// life_code.init</div>
-            <div style={{ color: "#00ff88" }}>LIFE&nbsp;&nbsp;&nbsp;&nbsp;= JOURNEY</div>
-            <div style={{ color: "#00ff88" }}>PATTERN&nbsp;= REPEATING</div>
-            <div style={{ color: "#fbbf24" }}>CORE_BUG = &quot;I am not enough&quot;</div>
-            <div style={{ color: "#7aba7a" }}>PATCH&nbsp;&nbsp;&nbsp;= &quot;Return to self&quot;</div>
-            <div style={{ color: "#2d5a2d" }}>VERSION&nbsp;= 2.6.1</div>
-          </div>
-
-          {/* 能力胶囊（横排居中） */}
-          <div className="flex justify-center gap-3 flex-wrap">
-            {heroChips.map((c) => (
-              <div key={c.label} className="flex items-center gap-2 pl-1.5 pr-4 py-1.5" style={{ border: "1px solid #1f4a1f", borderRadius: "999px", background: "#0a150aee" }}>
-                <NeonRing size={34}>{c.icon}</NeonRing>
-                <div className="text-left">
-                  <div className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</div>
-                  <div style={{ color: "#3d6a3d", fontSize: "10px" }}>{c.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
         </section>
 
         {/* ───── 痛点 ───── */}
