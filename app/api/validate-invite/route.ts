@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Free beta codes — full access, no payment required
-const FREE_ACCESS_CODES = ["FANDAO666","LCFREE01","LCFREE02","LCFREE03","LCFREE04","LCFREE05","LCFREE06","LCFREE07","LCFREE08","LCFREE09","LCFREE10","LCFREE11","LCFREE12","LCFREE13","LCFREE14","LCFREE15","LCFREE16","LCFREE17","LCFREE18","LCFREE19","LCFREE20"];
+// 免费码不再硬编码，统一以 invite_codes.free_access 字段为准（与 create-payment 同源）
 
 export async function POST(req: NextRequest) {
   const { code } = await req.json();
@@ -10,18 +9,16 @@ export async function POST(req: NextRequest) {
 
   const normalized = code.trim().toUpperCase();
 
-  // Check free-access codes first (no DB lookup needed)
-  if (FREE_ACCESS_CODES.includes(normalized)) {
-    return NextResponse.json({ valid: true, label: "内测邀请码", discount: 100, freeAccess: true });
-  }
-
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data } = await supabase
     .from("invite_codes")
-    .select("code, label, commission_usd, is_active")
+    .select("code, label, commission_usd, is_active, free_access")
     .eq("code", normalized)
     .single();
 
   if (!data || !data.is_active) return NextResponse.json({ valid: false });
+  if (data.free_access) {
+    return NextResponse.json({ valid: true, label: data.label, discount: 100, freeAccess: true });
+  }
   return NextResponse.json({ valid: true, label: data.label, discount: 20, freeAccess: false });
 }

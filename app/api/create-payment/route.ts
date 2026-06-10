@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
 const ADMIN_EMAILS = ['theone208899@gmail.com'];
-const FREE_ACCESS_CODES = ["FANDAO666","LCFREE01","LCFREE02","LCFREE03","LCFREE04","LCFREE05","LCFREE06","LCFREE07","LCFREE08","LCFREE09","LCFREE10","LCFREE11","LCFREE12","LCFREE13","LCFREE14","LCFREE15","LCFREE16","LCFREE17","LCFREE18","LCFREE19","LCFREE20"];
+// 免费码不再硬编码，统一以 invite_codes.free_access 字段为准（与 validate-invite 同源）
 const PRICE = "8.80";
 const DISCOUNT_PRICE = "6.80"; // 达人邀请码（lifecode01-10）专属价
 
@@ -64,15 +64,16 @@ export async function POST(req: NextRequest) {
     let price = PRICE;
     if (inviteCode) {
       const normalized = inviteCode.trim().toUpperCase();
-      if (FREE_ACCESS_CODES.includes(normalized)) {
+      const { data: invite } = await supabase
+        .from("invite_codes")
+        .select("is_active, free_access, used_count")
+        .eq("code", normalized)
+        .single();
+      if (invite?.is_active && invite.free_access) {
         await supabase.from("submissions").update({ paid: true }).eq("id", submissionId);
-        const { data: codeRow } = await supabase.from("invite_codes").select("used_count").eq("code", normalized).single();
-        if (codeRow) {
-          await supabase.from("invite_codes").update({ used_count: (codeRow.used_count || 0) + 1 }).eq("code", normalized);
-        }
+        await supabase.from("invite_codes").update({ used_count: (invite.used_count || 0) + 1 }).eq("code", normalized);
         return NextResponse.json({ testMode: true, submissionId });
       }
-      const { data: invite } = await supabase.from("invite_codes").select("is_active").eq("code", normalized).single();
       if (invite?.is_active) price = DISCOUNT_PRICE;
     }
 
