@@ -1019,26 +1019,9 @@ function ResultPage() {
               remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
               rehypePlugins={[rehypeKatex]}
               components={{
-                h1: ({ children }) => {
-                  const txt = flatText(children)
-                  const isMain = chapters.length > 0 && txt.trim() === chapters[0]
-                  return (
-                    <>
-                      <h1 id={chapterId(txt)} style={{ color: "#00ff88", fontSize: "1.4rem", marginBottom: "0.75rem", fontWeight: "bold", textShadow: "0 0 20px #00ff8844", scrollMarginTop: 90 }}>{children}</h1>
-                      {isMain && bugScore != null && (
-                        <div style={{ margin: "0.25rem 0 1.5rem" }}>
-                          <div className="flex justify-between items-center text-xs" style={{ fontFamily: "Courier New, monospace", marginBottom: 6 }}>
-                            <span style={{ color: "#4a7a4a" }}>{lang === "zh" ? "BUG 含量" : "BUG INDEX"}</span>
-                            <span style={{ color: "#4db8ff", fontWeight: 700, textShadow: "0 0 12px #4db8ff55" }}>{bugScore} / 100</span>
-                          </div>
-                          <div style={{ height: 8, borderRadius: 999, background: "#0f1f0f", border: "1px solid #1a3a1a", overflow: "hidden" }}>
-                            <div style={{ width: `${bugScore}%`, height: "100%", borderRadius: 999, background: "linear-gradient(90deg, #2a7ab8, #4db8ff)", boxShadow: "0 0 10px #4db8ff88", transition: "width 0.6s" }} />
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )
-                },
+                h1: ({ children }) => (
+                  <h1 id={chapterId(flatText(children))} style={{ color: "#00ff88", fontSize: "1.4rem", marginBottom: "0.75rem", fontWeight: "bold", textShadow: "0 0 20px #00ff8844", scrollMarginTop: 90 }}>{children}</h1>
+                ),
                 h2: ({ children }) => <h2 id={chapterId(flatText(children))} style={{ color: "#00ff88", fontSize: "1.1rem", marginTop: "2rem", marginBottom: "0.6rem", fontWeight: "bold", paddingBottom: "0.4rem", borderBottom: "1px solid #112811", scrollMarginTop: 90 }}>{children}</h2>,
                 h3: ({ children }) => <h3 style={{ color: "#00cc6a", fontSize: "0.95rem", marginTop: "1.2rem", marginBottom: "0.3rem", fontWeight: "bold" }}>{children}</h3>,
                 p: ({ children }) => <p style={{ color: "#94a3b8", marginBottom: "0.75rem", lineHeight: "1.9" }}>{children}</p>,
