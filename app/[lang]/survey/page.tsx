@@ -184,6 +184,7 @@ export default function SurveyPage() {
               cursor: "pointer",
               fontSize: "clamp(0.85rem, 4vw, 1rem)",
               WebkitTapHighlightColor: "transparent",
+              borderRadius: "14px",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "#00ff88"

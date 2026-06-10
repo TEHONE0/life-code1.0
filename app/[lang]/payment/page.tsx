@@ -212,7 +212,7 @@ export default function PaymentPage() {
             <button
               onClick={handleInviteCheck}
               className="px-4 py-2 text-xs font-bold"
-              style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace" }}
+              style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", borderRadius: "10px" }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}
             >
@@ -285,6 +285,7 @@ export default function PaymentPage() {
             cursor: loading ? "not-allowed" : "pointer",
             opacity: loading ? 0.8 : 1,
             WebkitTapHighlightColor: "transparent",
+            borderRadius: "14px",
           }}
           onMouseEnter={(e) => {
             if (loading) return

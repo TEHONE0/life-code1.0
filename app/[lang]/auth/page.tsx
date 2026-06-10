@@ -179,6 +179,7 @@ function AuthPage() {
               letterSpacing: "0.1em",
               cursor: loading ? "not-allowed" : "pointer",
               fontFamily: "Courier New, monospace",
+              borderRadius: "14px",
             }}
             onMouseEnter={(e) => {
               if (loading) return;

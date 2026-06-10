@@ -150,7 +150,7 @@ export default function HomePage() {
       onClick={() => router.push(`/${lang}/survey`)}
       className={big ? "px-8 py-4 text-base font-bold tracking-wider" : "px-5 py-2 text-xs font-bold tracking-wider"}
       style={{
-        border: "none", color: "#04140a", cursor: "pointer", fontFamily: mono, borderRadius: "999px",
+        border: "none", color: "#04140a", cursor: "pointer", fontFamily: mono, borderRadius: "14px",
         background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
         boxShadow: "0 0 22px #00ff8855, 0 2px 10px #00000066",
       }}
@@ -163,7 +163,7 @@ export default function HomePage() {
     <a
       href={href}
       className="px-8 py-4 text-base font-bold tracking-wider"
-      style={{ border: "1px solid #2a5a2a", color: "#5aba7a", textDecoration: "none", fontFamily: mono, borderRadius: "999px", background: "#0a150a88" }}
+      style={{ border: "1px solid #2a5a2a", color: "#5aba7a", textDecoration: "none", fontFamily: mono, borderRadius: "14px", background: "#0a150a88" }}
     >
       {label}
     </a>

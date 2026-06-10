@@ -658,6 +658,7 @@ function ResultPage() {
     cursor: "pointer",
     fontFamily: "Courier New, monospace",
     transition: "all 0.2s",
+    borderRadius: "12px",
   }
 
   return (
@@ -831,7 +832,7 @@ function ResultPage() {
                         : expired
                         ? (lang === 'zh' ? '已过期' : 'expired')
                         : (
-                          <button onClick={() => copyGiftCode(g.code)} style={{ border: "1px solid #3a6a3a", color: copiedGift === g.code ? "#00ff88" : "#5a9a5a", background: "transparent", cursor: "pointer", padding: "2px 8px", fontFamily: "inherit" }}>
+                          <button onClick={() => copyGiftCode(g.code)} style={{ border: "1px solid #3a6a3a", color: copiedGift === g.code ? "#00ff88" : "#5a9a5a", background: "transparent", cursor: "pointer", padding: "2px 8px", fontFamily: "inherit", borderRadius: "8px" }}>
                             {copiedGift === g.code ? (lang === 'zh' ? '✓ 已复制' : '✓ Copied') : (lang === 'zh' ? '复制' : 'Copy')}
                           </button>
                         )}

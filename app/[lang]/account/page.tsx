@@ -338,7 +338,7 @@ function AccountPage() {
           <button
             onClick={() => router.push(`/${lang}/survey`)}
             className="flex-1 py-3 text-sm font-bold"
-            style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer", letterSpacing: "0.05em" }}
+            style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer", letterSpacing: "0.05em", borderRadius: "12px" }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}
           >
@@ -347,7 +347,7 @@ function AccountPage() {
           <button
             onClick={() => router.push(`/${lang}`)}
             className="flex-1 py-3 text-sm font-bold"
-            style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer", letterSpacing: "0.05em" }}
+            style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer", letterSpacing: "0.05em", borderRadius: "12px" }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}
           >
