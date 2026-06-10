@@ -237,7 +237,7 @@ export default function HomePage() {
         {/* ───── Hero（整体居中） ───── */}
         <section className="py-14 md:py-20 flex flex-col items-center text-center space-y-7">
           <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
-            {zh ? <>用 AI 看见你<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>反复卡住的人生模式</span></> : <>See the life pattern<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>you keep getting stuck in</span></>}
+            {zh ? <>用 AI 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#fbbf24", textShadow: "0 0 24px #fbbf2455" }}>Bug</span></span></> : <>See the <span style={{ color: "#fbbf24", textShadow: "0 0 24px #fbbf2455" }}>Bug</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
           </h1>
           <div className="text-sm md:text-base" style={{ color: "#4a8a4a", fontFamily: mono }}>
             {zh ? "生辰代码算法 × 九型人格 × AI 引擎" : "Birth-code algorithm × Enneagram × AI engine"}
