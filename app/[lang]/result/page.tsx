@@ -66,17 +66,47 @@ function parseBugScore(raw: string): number | null {
   return m ? Math.min(100, parseInt(m[1], 10)) : null
 }
 
-// 系统版本：Runtime 表格中标了"（当前）/(current)"的 vN.0
-function parseRuntimeVersion(md: string): string | null {
-  const m = md.match(/v(\d+(?:\.\d+)?)\s*[（(]\s*(?:当前|current)/i)
-  return m ? `v${m[1]}` : null
+// 健康等级：Bug指数反查 Riso-Hudson Lv.1–9（enneagram_analysis_guide §6.1 区间，共用区间内二分）
+function bugToLevel(score: number): number {
+  if (score <= 10) return 1
+  if (score <= 23) return 2
+  if (score <= 35) return 3
+  if (score <= 50) return 4
+  if (score <= 60) return 5
+  if (score <= 70) return 6
+  if (score <= 80) return 7
+  if (score <= 90) return 8
+  return 9
 }
 
-const LEVEL_LABELS: Record<string, Record<string, string>> = {
-  LOWER_DIMENSION: { zh: "低维生物", en: "Lower Dimension", ko: "저차원 존재" },
-  SAPIENT_ENTITY: { zh: "智慧生物", en: "Sapient Entity", ko: "지적 존재" },
-  AWAKENED: { zh: "觉醒者", en: "Awakened", ko: "각성자" },
-  HIGH_DIMENSION: { zh: "高维存在", en: "High Dimension", ko: "고차원 존재" },
+// 三带命名（Lv.1–3 / 4–6 / 7–9）
+const BAND_LABELS: Record<string, [string, string, string]> = {
+  zh: ["运行流畅", "高负载运行", "亟需修复"],
+  en: ["Running smoothly", "High load", "Needs repair"],
+  ko: ["원활 작동", "고부하 작동", "수리 필요"],
+}
+
+// 型号×层级注解 81 条（F导 2026-06-10 确认版，系统语言转译，禁病理标签），仅中文报告显示
+const HEALTH_NOTES: Record<string, string[]> = {
+  完美: ["智慧已上线，接纳世界本来的样子", "理性清明，对错之外看见全局", "原则成为榜样，以身作则不说教", "改革者模式启动，总觉得世界欠修", "秩序强迫加载，细节失控即焦虑", "评判进程满载，对人对己零容错", "偏狭循环锁死，愤怒在找出口", "言行断裂报警，请先放过自己", "惩罚指向一切，急需外部支援"],
+  助人: ["爱不求回报，给予即自由", "真诚关怀，先照顾好自己再给", "扶持他人成长，不绑定不索取", "讨好模式启动，付出开始计数", "占有欲加载，“我对你最好”上线", "自我感动满载，回报未达即委屈", "付出变操控，先承认自己的需要", "控制循环锁死，放手是第一补丁", "身体在替你报警，请立即求助"],
+  成就: ["真实自我上线，价值无需证明", "自信由内而生，不靠掌声供电", "成为典范，成就开始照亮别人", "好胜模式启动，人生变成竞赛", "形象包装加载，真实感持续流失", "自我推销满载，害怕停下被看穿", "捷径诱惑出现，诚实是唯一补丁", "面具与本体断连，请先停演", "为赢不计代价，急需外部支援"],
+  独特: ["痛苦炼成作品，创造力全开", "直觉敏锐，情绪是导航不是风暴", "真实表达自我，独特变成礼物", "唯美滤镜加载，现实开始失焦", "幻想身份运行，等待被人发现", "“例外”特权启动，沉溺即放纵", "自我疏离循环，出口仍然存在", "情绪风暴满载，请抓住一个人", "自毁倾向报警，请立即寻求支援"],
+  思考: ["洞见开先河，思想照进现实", "观察入微，世界在你眼里透明", "专注创新，知识开始产出价值", "专家模式启动，准备永远差一步", "理论囤积加载，行动持续延期", "挑衅模式满载，用观点筑墙", "断连警报响起，虚无不是真相", "现实接口失效，请重建一条连接", "系统深度隔离，急需外部支援"],
+  警觉: ["勇气上线，恐惧成为前进燃料", "值得信赖，安全感由内生成", "忠诚可靠，成为他人的定海针", "尽责模式启动，开始向外找靠山", "悲观扫描加载，凡事先想最坏", "反叛与依赖打架，立场反复横跳", "焦虑过载报警，先找一个安全锚点", "怀疑指向一切，请先相信一个人", "自我攻击循环，请立即寻求支援"],
+  体验: ["喜悦深入骨髓，当下即满足", "热情感染世界，快乐有了根", "多才落地，体验转化为产出", "选项囤积启动，承诺开始过敏", "日程塞满加载，安静即恐慌", "享乐过载满载，快感阈值飙升", "逃避进程失控，痛苦需要被看见", "冲动循环锁死，先停下一件事", "系统失速报警，请立即寻求支援"],
+  力量: ["力量化为胸怀，强者懂得温柔", "自信笃定，不靠压人证明自己", "建设性挑战，为弱者撑起屋顶", "冒险模式启动，凡事必争主导", "控制欲加载，谈判变成博弈", "对抗模式满载，示弱等于死亡", "规则失去约束，先放下一件武器", "全能幻觉报警，世界不是敌人", "破坏指向一切，急需外部支援"],
+  和平: ["平静而有力，在场即是力量", "感受力全开，温和中有自己", "缔造和平，冲突在你面前化解", "迁就模式启动，自己的事永远排后", "置身事外加载，麻痹当成平静", "宿命论满载，“算了”成为口头禅", "逃避循环锁死，你的声音还在", "抽离警报响起，请回到身体里", "存在感接近休眠，请立即寻求支援"],
+}
+
+// W主权重 / b偏置：解析第零章参数表（非中文报告解析不到则显示"—"）
+function parseMainWeight(md: string): string | null {
+  const m = md.match(/(完美|助人|成就|独特|思考|警觉|体验|力量|和平)权重高/)
+  return m ? m[1] : null
+}
+function parseBias(md: string): string | null {
+  const m = md.match(/(自保|一对一|社交)偏置/)
+  return m ? `${m[1]}偏置` : null
 }
 
 const LABELS = {
@@ -108,10 +138,9 @@ const CHROME = {
     chapterNav: "章节导航",
     statsTitle: "报告核心读数",
     statBug: "BUG 指数",
-    statItems: "检测条目",
-    statVersion: "系统版本",
-    statLevel: "觉醒层级",
-    itemsUnit: "项",
+    statHealth: "健康等级",
+    statWeight: "权重",
+    statBias: "偏置",
     security: "数据安全保护",
     securityNote: "报告仅你本人登录可见，不会出现在任何公开页面。",
   },
@@ -129,10 +158,9 @@ const CHROME = {
     chapterNav: "Chapters",
     statsTitle: "Core readings",
     statBug: "BUG INDEX",
-    statItems: "Items found",
-    statVersion: "Runtime",
-    statLevel: "Level",
-    itemsUnit: "",
+    statHealth: "Health level",
+    statWeight: "Weight",
+    statBias: "Bias",
     security: "Data protection",
     securityNote: "Your report is visible only to you and never appears on any public page.",
   },
@@ -150,10 +178,9 @@ const CHROME = {
     chapterNav: "챕터",
     statsTitle: "핵심 수치",
     statBug: "BUG 지수",
-    statItems: "검출 항목",
-    statVersion: "시스템 버전",
-    statLevel: "각성 단계",
-    itemsUnit: "개",
+    statHealth: "건강 레벨",
+    statWeight: "가중치",
+    statBias: "편향",
     security: "데이터 보호",
     securityNote: "리포트는 본인 로그인 시에만 볼 수 있으며 공개 페이지에 노출되지 않습니다.",
   },
@@ -785,12 +812,16 @@ function ResultPage() {
     .filter(Boolean)
   const strikeFirst = strikeLines[0] || ""
 
-  // 报告核心读数（全部从报告文本解析）
-  const bugCount = (report.match(/###\s*Bug\s*\d+/gi) || []).length
-  const runtimeVersion = parseRuntimeVersion(report)
-  const levelLabel = dimensionLevel
-    ? (LEVEL_LABELS[dimensionLevel]?.[lang] ?? LEVEL_LABELS[dimensionLevel]?.en ?? dimensionLevel)
-    : null
+  // 报告核心读数（全部从报告文本解析，与Bug指数同源）
+  const healthLv = bugScore != null ? bugToLevel(bugScore) : null
+  const healthBand = healthLv != null
+    ? (BAND_LABELS[lang] ?? BAND_LABELS.en)[healthLv <= 3 ? 0 : healthLv <= 6 ? 1 : 2]
+    : ""
+  const mainWeight = parseMainWeight(report)
+  const bias = parseBias(report)
+  const healthNote = lang === "zh" && healthLv != null && mainWeight
+    ? HEALTH_NOTES[mainWeight]?.[healthLv - 1] ?? ""
+    : ""
 
   if (!report && !streaming) return (
     <main className="min-h-screen flex flex-col items-center justify-center" style={{ background: "radial-gradient(ellipse at top, #061206 0%, #050a05 60%)" }}>
@@ -949,17 +980,17 @@ function ResultPage() {
         </div>
 
         {/* 报告核心读数 */}
-        {(bugScore != null || levelLabel) && (
+        {(bugScore != null || mainWeight) && (
           <div className={`transition-opacity duration-700 delay-150 ${visible ? "opacity-100" : "opacity-0"}`}>
             <div className="text-xs mb-2" style={{ color: "#2d5a2d", fontFamily: mono, letterSpacing: "0.08em" }}>
               ◇ {chrome.statsTitle}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff" },
-                { label: chrome.statItems, value: bugCount > 0 ? `${bugCount}` : "—", suffix: bugCount > 0 ? ` ${chrome.itemsUnit}`.trimEnd() : "", color: "#00ff88" },
-                { label: chrome.statVersion, value: runtimeVersion ?? "—", suffix: "", color: "#00ff88" },
-                { label: chrome.statLevel, value: levelLabel ?? "—", suffix: "", color: "#00ff88" },
+                { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff", note: "" },
+                { label: chrome.statHealth, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88", note: healthNote },
+                { label: chrome.statWeight, value: mainWeight ? `${mainWeight}权重` : "—", suffix: mainWeight ? "高" : "", color: "#00ff88", note: "" },
+                { label: chrome.statBias, value: bias ?? "—", suffix: "", color: "#00ff88", note: "" },
               ].map((s) => (
                 <div key={s.label} className="p-4" style={CARD}>
                   <div className="text-xs mb-1.5" style={{ color: "#2d5a2d", fontFamily: mono }}>{s.label}</div>
@@ -967,6 +998,9 @@ function ResultPage() {
                     {s.value}
                     {s.suffix && <span style={{ fontSize: "0.7rem", color: "#4a7a4a", fontFamily: mono, fontWeight: 400 }}>{s.suffix}</span>}
                   </div>
+                  {s.note && (
+                    <div className="text-xs mt-1.5 leading-relaxed" style={{ color: "#5a7a5a", fontFamily: mono }}>{s.note}</div>
+                  )}
                 </div>
               ))}
             </div>
