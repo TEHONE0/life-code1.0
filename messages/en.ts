@@ -70,20 +70,20 @@ export const en = {
   authCheckEmail: "Check your inbox to confirm your email",
   questions: [
     {
-      id: "enneagram",
-      code: "Q00 · ENNEAGRAM_SCAN",
-      comment: "// Select 1–2 options that most accurately reflect your inner core logic (choose the most honest, not the most flattering):",
-      label: "1. I must do things right and well — or I don't deserve to be accepted\n2. I must be useful and needed. Giving is the only way I know how to feel loved\n3. I must succeed and be seen. Otherwise I don't exist\n4. I'm different. I feel more deeply than others — and I'm lonelier for it\n5. I need to understand everything. Knowledge and information are my only real safety\n6. I need certainty. I distrust by default and need to verify before I can relax\n7. Pain can't stay too long. Life is about experience and possibility\n8. I must stay strong. The weak get consumed. I refuse to be controlled\n9. I avoid conflict. I want everyone comfortable — including myself",
-      placeholder: "e.g. 4, 5",
-      multiline: false,
-    },
-    {
       id: "basic_info",
-      code: "Q01 · BASIC_INFO",
+      code: "Q00 · BASIC_INFO",
       comment: "// Write down your factory settings and coordinates — they shaped how you run",
       label: "Name / Gender / Date of birth (solar or lunar) / Birth time / City of birth / Cities for elementary · middle · high school · university / Work city / Current city (just write freely — the system will organize it)",
       placeholder: "e.g. Alex / male / solar, Mar 20 1991 / 8:00am / born Chicago / school Chicago·Chicago·NYC·Boston / work NYC / now SF",
       multiline: true,
+    },
+    {
+      id: "enneagram",
+      code: "Q01 · ENNEAGRAM_SCAN",
+      comment: "// Select 1–2 options that most accurately reflect your inner core logic (choose the most honest, not the most flattering):",
+      label: "1. I must do things right and well — or I don't deserve to be accepted\n2. I must be useful and needed. Giving is the only way I know how to feel loved\n3. I must succeed and be seen. Otherwise I don't exist\n4. I'm different. I feel more deeply than others — and I'm lonelier for it\n5. I need to understand everything. Knowledge and information are my only real safety\n6. I need certainty. I distrust by default and need to verify before I can relax\n7. Pain can't stay too long. Life is about experience and possibility\n8. I must stay strong. The weak get consumed. I refuse to be controlled\n9. I avoid conflict. I want everyone comfortable — including myself",
+      placeholder: "e.g. 4, 5",
+      multiline: false,
     },
     {
       id: "origin",

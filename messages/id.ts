@@ -72,20 +72,20 @@ export const id: typeof en = {
   authCheckEmail: "Cek kotak masukmu untuk mengonfirmasi emailmu",
   questions: [
     {
-      id: "enneagram",
-      code: "Q00 · ENNEAGRAM_SCAN",
-      comment: "// Pilih 1–2 opsi yang paling akurat mencerminkan logika inti batinmu (pilih yang paling jujur, bukan yang paling menarik):",
-      label: "1. Aku harus melakukan segalanya dengan benar dan baik — atau aku tidak layak diterima\n2. Aku harus berguna dan dibutuhkan. Memberi adalah satu-satunya cara aku merasa dicintai\n3. Aku harus sukses dan terlihat. Jika tidak, aku seperti tidak ada\n4. Aku berbeda. Aku merasakan segalanya lebih dalam dari orang lain — dan karenanya aku lebih kesepian\n5. Aku perlu memahami segalanya. Pengetahuan dan informasi adalah satu-satunya keamananku\n6. Aku butuh kepastian. Aku tidak percaya secara default dan perlu memverifikasi sebelum bisa tenang\n7. Rasa sakit tidak boleh bertahan lama. Hidup adalah tentang pengalaman dan kemungkinan\n8. Aku harus tetap kuat. Yang lemah akan ditelan. Aku menolak untuk dikontrol\n9. Aku menghindari konflik. Aku ingin semua orang nyaman — termasuk diriku sendiri",
-      placeholder: "cth. 4, 5",
-      multiline: false,
-    },
-    {
       id: "basic_info",
-      code: "Q01 · BASIC_INFO",
+      code: "Q00 · BASIC_INFO",
       comment: "// Koordinat geografismu menentukan versi lingkungan mana yang kamu jalankan",
       label: "Nama / Jenis kelamin / Tanggal lahir (cth. 20 Maret 1991) + waktu lahir jika diketahui (cth. 08.00) / Kota kelahiran / Kota SD · SMP · SMA · universitas / Kota saat ini",
       placeholder: "cth. Budi, laki-laki, 20 Mar 1991, 08.00, lahir Jakarta / Jakarta·Bandung·Surabaya·Yogyakarta / sekarang Jakarta",
       multiline: true,
+    },
+    {
+      id: "enneagram",
+      code: "Q01 · ENNEAGRAM_SCAN",
+      comment: "// Pilih 1–2 opsi yang paling akurat mencerminkan logika inti batinmu (pilih yang paling jujur, bukan yang paling menarik):",
+      label: "1. Aku harus melakukan segalanya dengan benar dan baik — atau aku tidak layak diterima\n2. Aku harus berguna dan dibutuhkan. Memberi adalah satu-satunya cara aku merasa dicintai\n3. Aku harus sukses dan terlihat. Jika tidak, aku seperti tidak ada\n4. Aku berbeda. Aku merasakan segalanya lebih dalam dari orang lain — dan karenanya aku lebih kesepian\n5. Aku perlu memahami segalanya. Pengetahuan dan informasi adalah satu-satunya keamananku\n6. Aku butuh kepastian. Aku tidak percaya secara default dan perlu memverifikasi sebelum bisa tenang\n7. Rasa sakit tidak boleh bertahan lama. Hidup adalah tentang pengalaman dan kemungkinan\n8. Aku harus tetap kuat. Yang lemah akan ditelan. Aku menolak untuk dikontrol\n9. Aku menghindari konflik. Aku ingin semua orang nyaman — termasuk diriku sendiri",
+      placeholder: "cth. 4, 5",
+      multiline: false,
     },
     {
       id: "origin",
