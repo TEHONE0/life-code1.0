@@ -11,6 +11,7 @@ import "katex/dist/katex.min.css";
 import { Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import UserMenu from "@/components/UserMenu";
+import { IconLock, IconScan, NeonRing } from "@/components/neon";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -59,6 +60,25 @@ function extractName(basicInfo: string): string {
   return (basicInfo || '').split(/[，,、\/\s]/)[0].trim() || ''
 }
 
+// Bug 含量：必须从原始报告解析（cleanReport 会把含 N/100 的 ╔═ ASCII 框删掉）
+function parseBugScore(raw: string): number | null {
+  const m = raw.match(/Bug[\s\S]{0,200}?(\d{1,3})\s*\/\s*100/i)
+  return m ? Math.min(100, parseInt(m[1], 10)) : null
+}
+
+// 系统版本：Runtime 表格中标了"（当前）/(current)"的 vN.0
+function parseRuntimeVersion(md: string): string | null {
+  const m = md.match(/v(\d+(?:\.\d+)?)\s*[（(]\s*(?:当前|current)/i)
+  return m ? `v${m[1]}` : null
+}
+
+const LEVEL_LABELS: Record<string, Record<string, string>> = {
+  LOWER_DIMENSION: { zh: "低维生物", en: "Lower Dimension", ko: "저차원 존재" },
+  SAPIENT_ENTITY: { zh: "智慧生物", en: "Sapient Entity", ko: "지적 존재" },
+  AWAKENED: { zh: "觉醒者", en: "Awakened", ko: "각성자" },
+  HIGH_DIMENSION: { zh: "高维存在", en: "High Dimension", ko: "고차원 존재" },
+}
+
 const LABELS = {
   en: { rescan: "Scan again", home: "Back to home", generated: "LIFE CODE REPORT GENERATED" },
   zh: { rescan: "重新扫描", home: "返回首页", generated: "生命代码解析报告已生成" },
@@ -66,6 +86,96 @@ const LABELS = {
   ja: { rescan: "再スキャン", home: "ホームに戻る", generated: "ライフコードレポート生成完了" },
   th: { rescan: "สแกนใหม่", home: "กลับหน้าหลัก", generated: "รายงาน LIFE CODE ถูกสร้างแล้ว" },
   id: { rescan: "Scan ulang", home: "Kembali ke beranda", generated: "LAPORAN LIFE CODE TELAH DIBUAT" },
+}
+
+const mono = "Courier New, monospace";
+const scifi = "Orbitron, Courier New, monospace";
+const CARD = { border: "1px solid #1a3a1a", background: "#0a150a", borderRadius: "16px" } as const;
+
+// 页面级 UI 文案（导航/侧边栏等界面文字）
+const CHROME = {
+  zh: {
+    navLinks: [["", "首页"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#about", "关于作者"]],
+    navCta: "再测一位 →",
+    sidebarTitle: "生命代码解析报告",
+    sidebarSub: "LIFE CODE REPORT",
+    metaName: "姓名",
+    metaDate: "生成时间",
+    metaId: "报告编号",
+    metaStatus: "状态",
+    statusDone: "已完成",
+    statusGen: "生成中…",
+    chapterNav: "章节导航",
+    statsTitle: "报告核心读数",
+    statBug: "BUG 指数",
+    statItems: "检测条目",
+    statVersion: "系统版本",
+    statLevel: "觉醒层级",
+    itemsUnit: "项",
+    security: "数据安全保护",
+    securityNote: "报告仅你本人登录可见，不会出现在任何公开页面。",
+  },
+  en: {
+    navLinks: [["", "Home"], ["#how", "How"], ["#preview", "Sample"], ["#about", "About"]],
+    navCta: "Scan another →",
+    sidebarTitle: "Life Code Report",
+    sidebarSub: "LIFE CODE REPORT",
+    metaName: "Name",
+    metaDate: "Generated",
+    metaId: "Report ID",
+    metaStatus: "Status",
+    statusDone: "Complete",
+    statusGen: "Generating…",
+    chapterNav: "Chapters",
+    statsTitle: "Core readings",
+    statBug: "BUG INDEX",
+    statItems: "Items found",
+    statVersion: "Runtime",
+    statLevel: "Level",
+    itemsUnit: "",
+    security: "Data protection",
+    securityNote: "Your report is visible only to you and never appears on any public page.",
+  },
+  ko: {
+    navLinks: [["", "홈"], ["#how", "생성 방식"], ["#preview", "리포트 예시"], ["#about", "제작자"]],
+    navCta: "한 명 더 →",
+    sidebarTitle: "라이프 코드 리포트",
+    sidebarSub: "LIFE CODE REPORT",
+    metaName: "이름",
+    metaDate: "생성 시간",
+    metaId: "리포트 번호",
+    metaStatus: "상태",
+    statusDone: "완료",
+    statusGen: "생성 중…",
+    chapterNav: "챕터",
+    statsTitle: "핵심 수치",
+    statBug: "BUG 지수",
+    statItems: "검출 항목",
+    statVersion: "시스템 버전",
+    statLevel: "각성 단계",
+    itemsUnit: "개",
+    security: "데이터 보호",
+    securityNote: "리포트는 본인 로그인 시에만 볼 수 있으며 공개 페이지에 노출되지 않습니다.",
+  },
+};
+
+const RESULT_LANGS = [
+  { code: "en", label: "EN" },
+  { code: "zh", label: "中文" },
+  { code: "ko", label: "한국어" },
+];
+
+// 章节锚点：从 markdown 标题文本生成稳定 id（侧边栏与正文标题共用）
+function chapterId(text: string): string {
+  return "ch-" + text.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 50);
+}
+// ReactMarkdown children 拍平成纯文本
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function flatText(c: any): string {
+  if (c == null) return "";
+  if (Array.isArray(c)) return c.map(flatText).join("");
+  if (typeof c === "object" && c.props?.children != null) return flatText(c.props.children);
+  return String(c);
 }
 
 const PORTRAIT_DATA: Record<string, {
@@ -276,6 +386,10 @@ function ResultPage() {
   const [giftCodes, setGiftCodes] = useState<{ code: string; label: string | null; used_count: number; max_uses: number | null; expires_at: string | null }[]>([])
   const [giftBuying, setGiftBuying] = useState(false)
   const [copiedGift, setCopiedGift] = useState<string | null>(null)
+  const [userName, setUserName] = useState("")
+  const [createdAt, setCreatedAt] = useState("")
+  const [activeCh, setActiveCh] = useState("")
+  const [bugScore, setBugScore] = useState<number | null>(null)
 
   // 我的赠礼码（买一赠一所得/单独购买）
   useEffect(() => {
@@ -451,6 +565,8 @@ function ResultPage() {
 
   const streamFromAnswers = async (answers: Record<string, string>, surveyLang: string, submissionId: string | null) => {
     const userName = extractName(answers.basic_info)
+    setUserName(userName)
+    setCreatedAt(new Date().toISOString().slice(0, 10))
     let accumulated = ""
     setReport("")
     setDimensionLevel("")
@@ -479,6 +595,8 @@ function ResultPage() {
         accumulated += chunk
         const clean = cleanReport(accumulated, userName)
         setReport(clean)
+        const b = parseBugScore(accumulated)
+        if (b != null) setBugScore(b)
       }
       const lvl = accumulated.match(/DIMENSION_LEVEL\s*[:：]\s*\[?(\w+)/)
       if (lvl && ['LOWER_DIMENSION','SAPIENT_ENTITY','AWAKENED','HIGH_DIMENSION'].includes(lvl[1])) {
@@ -556,6 +674,8 @@ function ResultPage() {
         const reportComplete = submission.report && /DIMENSION_LEVEL/.test(submission.report)
         if (reportComplete && !rescan) {
           const userName = extractName(submission.basic_info)
+          setUserName(userName)
+          setCreatedAt((submission.created_at || "").slice(0, 10))
           const lvl = submission.report.match(/DIMENSION_LEVEL\s*[:：]\s*\[?(\w+)/)
           if (lvl && ['LOWER_DIMENSION','SAPIENT_ENTITY','AWAKENED','HIGH_DIMENSION'].includes(lvl[1])) {
             setDimensionLevel(lvl[1])
@@ -569,6 +689,7 @@ function ResultPage() {
             const pair = MARKERS.find(([marker]) => submission.report.includes(marker))
             if (pair) setDimensionLevel(pair[1])
           }
+          setBugScore(parseBugScore(submission.report))
           setReport(cleanReport(submission.report, userName))
           setTimeout(() => setVisible(true), 300)
           setStreamDone(true)
@@ -606,6 +727,8 @@ function ResultPage() {
     if (legacy) {
       const savedAnswers = JSON.parse(sessionStorage.getItem("survey_answers") ?? "{}")
       const savedUserName = extractName(savedAnswers.basic_info)
+      setUserName(savedUserName)
+      setCreatedAt(new Date().toISOString().slice(0, 10))
       const lvl = legacy.match(/DIMENSION_LEVEL\s*[:：]\s*\[?(\w+)/)
       if (lvl && ['LOWER_DIMENSION','SAPIENT_ENTITY','AWAKENED','HIGH_DIMENSION'].includes(lvl[1])) {
         setDimensionLevel(lvl[1])
@@ -619,6 +742,7 @@ function ResultPage() {
         const pair = MARKERS.find(([marker]) => legacy.includes(marker))
         if (pair) setDimensionLevel(pair[1])
       }
+      setBugScore(parseBugScore(legacy))
       setReport(cleanReport(legacy, savedUserName))
       setTimeout(() => setVisible(true), 300)
       setStreamDone(true)
@@ -627,6 +751,46 @@ function ResultPage() {
 
     router.replace(`/${lang}`)
   }, [router, lang, sidParam])
+
+  // 章节导航：从报告 markdown 的 h1/h2 标题提取（流式生成中会逐步增多）
+  const chapters = report
+    .split("\n")
+    .filter((l) => /^#{1,2}\s+\S/.test(l))
+    .map((l) => l.replace(/^#+\s*/, "").replace(/\*\*/g, "").trim())
+
+  useEffect(() => {
+    const ids = chapters.map(chapterId)
+    const onScroll = () => {
+      let cur = ids[0] || ""
+      for (const id of ids) {
+        const el = document.getElementById(id)
+        if (el && el.getBoundingClientRect().top <= 180) cur = id
+      }
+      setActiveCh(cur)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener("scroll", onScroll)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapters.join("|")])
+
+  const goChapter = (title: string) => {
+    document.getElementById(chapterId(title))?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
+  // 破防句卡片：报告 h1 后的第一个引用块（> 开头的连续行）
+  const strikeLines = (report.match(/^>\s?.*(?:\n>\s?.*)*/m)?.[0] || "")
+    .split("\n")
+    .map((l) => l.replace(/^>\s?/, "").replace(/`/g, "").trim())
+    .filter(Boolean)
+  const strikeFirst = strikeLines[0] || ""
+
+  // 报告核心读数（全部从报告文本解析）
+  const bugCount = (report.match(/###\s*Bug\s*\d+/gi) || []).length
+  const runtimeVersion = parseRuntimeVersion(report)
+  const levelLabel = dimensionLevel
+    ? (LEVEL_LABELS[dimensionLevel]?.[lang] ?? LEVEL_LABELS[dimensionLevel]?.en ?? dimensionLevel)
+    : null
 
   if (!report && !streaming) return (
     <main className="min-h-screen flex flex-col items-center justify-center" style={{ background: "radial-gradient(ellipse at top, #061206 0%, #050a05 60%)" }}>
@@ -661,44 +825,159 @@ function ResultPage() {
     borderRadius: "12px",
   }
 
+  const chrome = CHROME[lang as keyof typeof CHROME] ?? CHROME.en
+
   return (
     <main
-      className="min-h-screen px-4 py-12"
+      className="min-h-screen"
       style={{ background: "radial-gradient(ellipse at top, #061206 0%, #050a05 60%)" }}
     >
-      {/* Top-right user menu */}
-      <div className="fixed top-4 right-4 z-50">
-        <UserMenu lang={lang} />
-      </div>
+      {/* ───── 顶栏（与问卷页同构） ───── */}
+      <nav className="sticky top-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between" style={{ background: "#050a05ee", borderBottom: "1px solid #112811", backdropFilter: "blur(6px)" }}>
+        <button onClick={() => router.push(`/${lang}`)} className="flex items-center gap-2" style={{ fontFamily: mono, background: "transparent", border: "none", cursor: "pointer" }}>
+          <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
+          <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
+        </button>
+        <div className="hidden md:flex gap-6 text-xs" style={{ fontFamily: mono }}>
+          {chrome.navLinks.map(([anchor, label]) => (
+            <a key={label} href={`/${lang}${anchor}`} style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex gap-1.5">
+            {RESULT_LANGS.map((l) => (
+              <button key={l.code} onClick={() => router.push(`/${l.code}/result${sidParam ? `?sid=${sidParam}` : ""}`)} className="text-xs px-1.5 py-0.5" style={{ background: "transparent", border: "none", color: l.code === lang ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono }}>
+                {l.label}
+              </button>
+            ))}
+          </div>
+          <UserMenu lang={lang} />
+          <button
+            onClick={() => { sessionStorage.removeItem("life_code_result"); router.push(`/${lang}/survey`) }}
+            className="hidden sm:block px-5 py-2 text-xs font-bold tracking-wider"
+            style={{ border: "none", color: "#04140a", cursor: "pointer", fontFamily: mono, borderRadius: "14px", background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)", boxShadow: "0 0 22px #00ff8855, 0 2px 10px #00000066" }}
+          >
+            {chrome.navCta}
+          </button>
+        </div>
+      </nav>
 
-      <div className="max-w-2xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 grid gap-6 items-start lg:grid-cols-[260px_1fr]">
+
+        {/* ───── 左侧边栏 ───── */}
+        <aside className="hidden lg:flex flex-col gap-4 sticky top-20">
+          <div className="p-5 space-y-4" style={CARD}>
+            <div>
+              <div className="text-sm font-bold" style={{ color: "#e2e8f0", fontFamily: mono }}>{chrome.sidebarTitle}</div>
+              <div className="text-xs mt-1" style={{ color: "#2d5a2d", fontFamily: mono, letterSpacing: "0.12em" }}>{chrome.sidebarSub}</div>
+            </div>
+            <div className="space-y-2 text-xs" style={{ fontFamily: mono }}>
+              {[
+                [chrome.metaName, userName || "—"],
+                [chrome.metaDate, createdAt || "—"],
+                [chrome.metaId, sidParam ? sidParam.slice(0, 8).toUpperCase() : "—"],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-2">
+                  <span style={{ color: "#2d5a2d" }}>{k}</span>
+                  <span className="truncate" style={{ color: "#6fae6f" }}>{v}</span>
+                </div>
+              ))}
+              <div className="flex justify-between gap-2">
+                <span style={{ color: "#2d5a2d" }}>{chrome.metaStatus}</span>
+                <span style={{ color: streaming ? "#4db8ff" : "#00ff88" }}>{streaming ? chrome.statusGen : chrome.statusDone}</span>
+              </div>
+            </div>
+          </div>
+
+          {chapters.length > 0 && (
+            <div className="p-2 space-y-1" style={CARD}>
+              <div className="px-3 pt-2 pb-1 text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>{chrome.chapterNav}</div>
+              {chapters.map((c) => {
+                const isActive = chapterId(c) === activeCh
+                return (
+                  <button
+                    key={c}
+                    onClick={() => goChapter(c)}
+                    className="w-full px-3 py-2 text-left text-xs truncate"
+                    style={{
+                      background: isActive ? "#00ff8814" : "transparent",
+                      border: `1px solid ${isActive ? "#00ff8855" : "transparent"}`,
+                      borderRadius: "10px", cursor: "pointer", fontFamily: mono,
+                      color: isActive ? "#00ff88" : "#4a7a4a",
+                      transition: "background 0.15s, border-color 0.15s",
+                    }}
+                  >
+                    {c}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          <div className="p-5 space-y-2" style={CARD}>
+            <div className="flex items-center gap-2">
+              {IconLock}
+              <span className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{chrome.security}</span>
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>{chrome.securityNote}</p>
+          </div>
+        </aside>
+
+        {/* ───── 主内容 ───── */}
+        <div className="space-y-6 min-w-0">
 
         {/* Header */}
         <div className={`space-y-2 transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`}>
-          <div className="text-xs" style={{ color: "#1e4a1e" }}>
-            LIFE_CODE_SCANNER · {streaming ? "SCANNING..." : "REPORT GENERATED"}
+          <div className="flex justify-between items-center text-xs" style={{ fontFamily: mono }}>
+            <span style={{ color: "#2d5a2d", letterSpacing: "0.08em" }}>LIFE_CODE_SCANNER · {streaming ? "SCANNING..." : "REPORT GENERATED"}</span>
+            <span style={{ color: streaming ? "#4db8ff" : "#00ff88" }}>{streaming ? "SCANNING..." : "✓ COMPLETE"}</span>
           </div>
           <div
-            className="text-xs px-3 py-2 border"
-            style={{ borderColor: "#1a3a1a", background: "#0a150a", color: "#00ff8877" }}
+            className="text-xs px-4 py-3"
+            style={{ border: "1px solid #1a3a1a", background: "#0a150a88", borderRadius: "10px", color: "#6fae6f", fontFamily: mono }}
           >
-            <span style={{ color: "#1e4a1e" }}>&gt; </span>
+            <span style={{ color: "#2d5a2d" }}>&gt; </span>
             {streaming
               ? (lang === 'zh' ? '正在生成报告，由于算法复杂，要消耗大量token，请耐心等待...' : 'Generating report — this involves heavy computation and may take a while, please be patient...')
               : `SCANNING COMPLETE · ${labels.generated}`}
           </div>
           {streaming && (
-            <div className="text-xs animate-glow-pulse" style={{ color: "#00ff8855", fontFamily: "Courier New, monospace" }}>
+            <div className="text-xs animate-glow-pulse" style={{ color: "#00ff8855", fontFamily: mono }}>
               // WRITING YOUR LIFE CODE<span className="cursor" />
             </div>
           )}
         </div>
 
+        {/* 报告核心读数 */}
+        {(bugScore != null || levelLabel) && (
+          <div className={`transition-opacity duration-700 delay-150 ${visible ? "opacity-100" : "opacity-0"}`}>
+            <div className="text-xs mb-2" style={{ color: "#2d5a2d", fontFamily: mono, letterSpacing: "0.08em" }}>
+              ◇ {chrome.statsTitle}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff" },
+                { label: chrome.statItems, value: bugCount > 0 ? `${bugCount}` : "—", suffix: bugCount > 0 ? ` ${chrome.itemsUnit}`.trimEnd() : "", color: "#00ff88" },
+                { label: chrome.statVersion, value: runtimeVersion ?? "—", suffix: "", color: "#00ff88" },
+                { label: chrome.statLevel, value: levelLabel ?? "—", suffix: "", color: "#00ff88" },
+              ].map((s) => (
+                <div key={s.label} className="p-4" style={CARD}>
+                  <div className="text-xs mb-1.5" style={{ color: "#2d5a2d", fontFamily: mono }}>{s.label}</div>
+                  <div className="truncate" style={{ color: s.color, fontFamily: scifi, fontSize: "1.15rem", fontWeight: 700, textShadow: `0 0 14px ${s.color}55` }}>
+                    {s.value}
+                    {s.suffix && <span style={{ fontSize: "0.7rem", color: "#4a7a4a", fontFamily: mono, fontWeight: 400 }}>{s.suffix}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Report */}
         <div
           ref={reportRef}
           className={`transition-opacity duration-700 delay-300 ${visible ? "opacity-100" : "opacity-0"}`}
-          style={{ background: "#080e08", border: "1px solid #0f2a0f", borderRadius: "4px", padding: "1.5rem" }}
+          style={{ background: "#080e08", border: "1px solid #1a3a1a", borderRadius: "16px", padding: "1.5rem" }}
         >
           <div ref={reportInnerRef}>
           <div className="prose prose-invert max-w-none text-sm leading-relaxed" style={{ fontFamily: "Courier New, monospace" }}>
@@ -706,33 +985,73 @@ function ResultPage() {
               remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
               rehypePlugins={[rehypeKatex]}
               components={{
-                h1: ({ children }) => <h1 style={{ color: "#00ff88", fontSize: "1.25rem", marginBottom: "0.5rem", fontWeight: "bold" }}>{children}</h1>,
-                h2: ({ children }) => <h2 style={{ color: "#00ff88", fontSize: "1rem", marginTop: "1.5rem", marginBottom: "0.5rem", fontWeight: "bold" }}>{children}</h2>,
-                h3: ({ children }) => <h3 style={{ color: "#00cc6a", fontSize: "0.9rem", marginTop: "1rem", marginBottom: "0.25rem" }}>{children}</h3>,
-                p: ({ children }) => <p style={{ color: "#94a3b8", marginBottom: "0.75rem", lineHeight: "1.8" }}>{children}</p>,
+                h1: ({ children }) => {
+                  const txt = flatText(children)
+                  const isMain = chapters.length > 0 && txt.trim() === chapters[0]
+                  return (
+                    <>
+                      <h1 id={chapterId(txt)} style={{ color: "#00ff88", fontSize: "1.4rem", marginBottom: "0.75rem", fontWeight: "bold", textShadow: "0 0 20px #00ff8844", scrollMarginTop: 90 }}>{children}</h1>
+                      {isMain && bugScore != null && (
+                        <div style={{ margin: "0.25rem 0 1.5rem" }}>
+                          <div className="flex justify-between items-center text-xs" style={{ fontFamily: "Courier New, monospace", marginBottom: 6 }}>
+                            <span style={{ color: "#4a7a4a" }}>{lang === "zh" ? "BUG 含量" : "BUG INDEX"}</span>
+                            <span style={{ color: "#4db8ff", fontWeight: 700, textShadow: "0 0 12px #4db8ff55" }}>{bugScore} / 100</span>
+                          </div>
+                          <div style={{ height: 8, borderRadius: 999, background: "#0f1f0f", border: "1px solid #1a3a1a", overflow: "hidden" }}>
+                            <div style={{ width: `${bugScore}%`, height: "100%", borderRadius: 999, background: "linear-gradient(90deg, #2a7ab8, #4db8ff)", boxShadow: "0 0 10px #4db8ff88", transition: "width 0.6s" }} />
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )
+                },
+                h2: ({ children }) => <h2 id={chapterId(flatText(children))} style={{ color: "#00ff88", fontSize: "1.1rem", marginTop: "2rem", marginBottom: "0.6rem", fontWeight: "bold", paddingBottom: "0.4rem", borderBottom: "1px solid #112811", scrollMarginTop: 90 }}>{children}</h2>,
+                h3: ({ children }) => <h3 style={{ color: "#00cc6a", fontSize: "0.95rem", marginTop: "1.2rem", marginBottom: "0.3rem", fontWeight: "bold" }}>{children}</h3>,
+                p: ({ children }) => <p style={{ color: "#94a3b8", marginBottom: "0.75rem", lineHeight: "1.9" }}>{children}</p>,
                 strong: ({ children }) => <strong style={{ color: "#e2e8f0" }}>{children}</strong>,
-                code: ({ children }) => <code style={{ color: "#00ff88", background: "#0a1a0a", padding: "0 4px", borderRadius: "2px", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{children}</code>,
-                blockquote: ({ children }) => <blockquote style={{ borderLeft: "2px solid #00ff8833", paddingLeft: "1rem", color: "#4a7a4a", fontStyle: "italic" }}>{children}</blockquote>,
-                hr: () => <hr style={{ borderColor: "#0f2a0f", margin: "1.5rem 0" }} />,
+                code: ({ children }) => <code style={{ color: "#00ff88", background: "#0a1a0a", padding: "0 4px", borderRadius: "4px", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{children}</code>,
+                blockquote: ({ children }) => {
+                  // 开头的破防句引用块 → 醒目卡片（图标 + 高亮首句）
+                  const txt = flatText(children).replace(/\s+/g, " ").trim()
+                  if (strikeFirst.length > 5 && txt.startsWith(strikeFirst.slice(0, 12))) {
+                    return (
+                      <>
+                        <div className="flex items-center justify-center gap-3 px-5 py-2.5" style={{ background: "#0a1f0a", border: "1px solid #00ff8855", borderRadius: "14px", boxShadow: "0 0 35px #00ff8815", margin: "1rem 0 0.75rem" }}>
+                          <div style={{ flexShrink: 0 }}><NeonRing size={36}>{IconScan}</NeonRing></div>
+                          <div className="min-w-0 text-center" style={{ color: "#00ff88", fontWeight: 700, fontSize: "1.02rem", lineHeight: 1.7, textShadow: "0 0 16px #00ff8844" }}>{strikeLines[0]}</div>
+                        </div>
+                        {strikeLines.length > 1 && (
+                          <div style={{ borderLeft: "3px solid #00ff8833", padding: "0.5rem 1rem", margin: "0 0 1rem" }}>
+                            {strikeLines.slice(1).map((l, i) => (
+                              <div key={i} style={{ color: "#5a7a5a", fontFamily: "Courier New, monospace", fontSize: "0.78rem", lineHeight: 1.8 }}>{l}</div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )
+                  }
+                  return <blockquote style={{ borderLeft: "3px solid #00ff88", background: "#0a1f0a66", padding: "0.75rem 1rem", borderRadius: "0 10px 10px 0", color: "#8fbf8f", margin: "1rem 0" }}>{children}</blockquote>
+                },
+                hr: () => <hr style={{ borderColor: "#112811", margin: "1.5rem 0" }} />,
                 li: ({ children }) => <li style={{ color: "#94a3b8", marginBottom: "0.25rem" }}>{children}</li>,
                 table: ({ children }) => (
-                  <div style={{ overflowX: "auto", marginBottom: "1rem" }}>
+                  <div style={{ overflowX: "auto", marginBottom: "1rem", border: "1px solid #1a3a1a", borderRadius: "10px" }}>
                     <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.8rem" }}>{children}</table>
                   </div>
                 ),
                 thead: ({ children }) => <thead>{children}</thead>,
                 th: ({ children }) => (
-                  <th style={{ border: "1px solid #1a3a1a", padding: "6px 12px", color: "#00ff88", textAlign: "left", background: "#0a150a" }}>{children}</th>
+                  <th style={{ borderBottom: "1px solid #1a3a1a", padding: "8px 12px", color: "#00ff88", textAlign: "left", background: "#0a150a" }}>{children}</th>
                 ),
                 td: ({ children }) => (
-                  <td style={{ border: "1px solid #0f2a0f", padding: "6px 12px", color: "#94a3b8" }}>{children}</td>
+                  <td style={{ borderBottom: "1px solid #0f2a0f", padding: "8px 12px", color: "#94a3b8" }}>{children}</td>
                 ),
-                tr: ({ children }) => <tr style={{ borderBottom: "1px solid #0f2a0f" }}>{children}</tr>,
+                tr: ({ children }) => <tr>{children}</tr>,
                 pre: ({ children }) => (
                   <pre style={{
                     background: "#0a1a0a",
                     border: "1px solid #1a3a1a",
-                    borderRadius: "4px",
+                    borderRadius: "10px",
                     padding: "0.75rem 1rem",
                     overflowX: "auto",
                     whiteSpace: "pre-wrap",
@@ -759,7 +1078,8 @@ function ResultPage() {
                 lineHeight: "1.45",
                 background: "#080e08",
                 border: `1px solid ${portrait.color}33`,
-                borderRadius: "4px",
+                borderRadius: "12px",
+                boxShadow: `0 0 30px ${portrait.color}15`,
                 padding: "1rem",
                 overflowX: "auto",
                 margin: 0,
@@ -816,7 +1136,7 @@ function ResultPage() {
             </div>
 
             {/* 赠礼码：买一赠一所得 + 单独购买 */}
-            <div className="space-y-2 p-4" style={{ border: "1px solid #3a6a3a", fontFamily: "Courier New, monospace" }}>
+            <div className="space-y-2 p-5" style={{ ...CARD, fontFamily: "Courier New, monospace" }}>
               <div className="text-sm font-bold" style={{ color: "#fbbf24" }}>
                 🎁 {lang === 'zh' ? '送一份给你最想读懂的人' : lang === 'ko' ? '소중한 사람에게 선물하세요' : 'Gift one to someone you care about'}
               </div>
@@ -877,8 +1197,8 @@ function ResultPage() {
                 onClick={() => setShareModal(false)}
               >
                 <div
-                  className="space-y-4 p-6 border"
-                  style={{ borderColor: "#2a5a2a", background: "#080e08", fontFamily: "Courier New, monospace", maxWidth: "360px", width: "90%" }}
+                  className="space-y-4 p-6"
+                  style={{ border: "1px solid #2a5a2a", borderRadius: "16px", background: "#080e08", fontFamily: "Courier New, monospace", maxWidth: "360px", width: "90%" }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="text-sm font-bold" style={{ color: "#00ff88" }}>
@@ -953,6 +1273,7 @@ function ResultPage() {
           >
             {labels.home}
           </button>
+        </div>
         </div>
       </div>
 
