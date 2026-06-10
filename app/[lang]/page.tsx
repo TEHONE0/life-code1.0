@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Lang } from "@/lib/i18n";
 import UserMenu from "@/components/UserMenu";
 import { NeonRing, IconHeartPulse, IconHourglass, IconMismatch, IconBirthCode, IconEnneagram, IconAI, IconShield } from "@/components/neon";
@@ -88,17 +88,45 @@ export default function HomePage() {
   const router = useRouter()
   const promoActive = new Date() <= new Date("2026-06-30T23:59:59+08:00")
 
+  // Hero 代码块：逐字打字动画（打完后光标在结尾持续闪烁）
+  const codeLines: [string, string][] = zh
+    ? [
+        ["// init", "这是一款用 AI 代码推演出的心理测试"],
+        ["> scan", "看清人生中反复出现的卡点"],
+        ["> debug", "找到生命系统里那些悄悄运行的 Bug"],
+        ["> rebuild", "让你有机会重新选择怎么活"],
+      ]
+    : [
+        ["// init", "A psychological assessment inferred by AI code"],
+        ["> scan", "See the blocks that keep recurring in your life"],
+        ["> debug", "Find the bugs quietly running in your system"],
+        ["> rebuild", "Get a chance to choose how to live"],
+      ]
+  const codeTotal = codeLines.reduce((n, [, t]) => n + t.length, 0)
+  const [typed, setTyped] = useState(0)
+  useEffect(() => {
+    setTyped(0)
+    const id = setInterval(() => {
+      setTyped((n) => {
+        if (n >= codeTotal) { clearInterval(id); return n }
+        return n + 1
+      })
+    }, 55)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang])
+
   const startBtn = (big = false) => (
     <button
       onClick={() => router.push(`/${lang}/survey`)}
-      className={big ? "px-8 py-4 text-base font-bold tracking-wider" : "px-5 py-2 text-xs font-bold tracking-wider"}
+      className={big ? "w-full max-w-4xl px-10 py-4 text-base font-bold tracking-wider" : "px-5 py-2 text-xs font-bold tracking-wider"}
       style={{
         border: "none", color: "#04140a", cursor: "pointer", fontFamily: mono, borderRadius: "14px",
         background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
         boxShadow: "0 0 22px #00ff8855, 0 2px 10px #00000066",
       }}
     >
-      {zh ? "开始生成我的报告 →" : "Generate my report →"}
+      {zh ? "解析我的生命代码 →" : "Generate my report →"}
     </button>
   )
 
@@ -143,9 +171,9 @@ export default function HomePage() {
   ]
 
   const heroChips = [
-    { icon: IconBirthCode, label: zh ? "生辰算法" : "Birth code", sub: zh ? "出生参数引擎" : "Birth engine" },
+    { icon: IconAI, label: zh ? "AI算法" : "AI engine", sub: zh ? "生命运行的底层逻辑" : "Generated live" },
     { icon: IconEnneagram, label: zh ? "九型人格" : "Enneagram", sub: zh ? "人格内核定位" : "Personality core" },
-    { icon: IconAI, label: zh ? "AI 引擎" : "AI engine", sub: zh ? "实时逐章生成" : "Generated live" },
+    { icon: IconBirthCode, label: zh ? "生辰代码" : "Birth code", sub: zh ? "出生参数引擎" : "Birth engine" },
   ]
 
   const footChips = zh
@@ -188,25 +216,50 @@ export default function HomePage() {
           <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
             {zh ? <>用 <span style={{ fontFamily: scifi }}>AI</span> 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span></span></> : <>See the <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
           </h1>
-          <div className="flex justify-center items-center gap-3 flex-wrap">
-            {heroChips.map((c, i) => (
-              <div key={c.label} className="flex items-center gap-3">
-                {i > 0 && <span className="text-lg font-bold" style={{ color: "#5a7a5a", fontFamily: scifi }}>×</span>}
-                <div className="flex items-center gap-2">
-                  <NeonRing size={34}>{c.icon}</NeonRing>
+          <div className="grid grid-cols-3 gap-3 w-full max-w-md">
+            {heroChips.map((c) => (
+              <div key={c.label} className="p-3 text-center" style={CARD}>
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  {React.cloneElement(c.icon, { width: 16, height: 16 })}
                   <span className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</span>
                 </div>
+                <div className="text-xs" style={{ color: "#5a7a5a" }}>{c.sub}</div>
               </div>
             ))}
           </div>
-          <p className="text-sm leading-relaxed max-w-xl" style={{ color: "#5a7a5a" }}>
-            {zh
-              ? "不是星座，也不是你看腻了的标准化测试。生成一份关于你的性格内核、关系模式、事业卡点与人生方向的生命代码解析报告。"
-              : "Not horoscopes, not another standardized test. A full report on your personality kernel, relationship patterns, career blocks and direction."}
-          </p>
+          <div
+            className="max-w-xl w-full px-6 py-5 text-left"
+            style={{
+              border: "1px solid #1f4a6b",
+              background: "#081420",
+              borderRadius: "14px",
+              boxShadow: "0 0 24px #4db8ff22, inset 0 0 30px #4db8ff0a",
+            }}
+          >
+            {/* 标题行：生命代码 + LIFE CODE，细线隔开 */}
+            <div className="flex items-baseline gap-2 pb-2.5 mb-3" style={{ borderBottom: "1px solid #14304a" }}>
+              <span className="text-sm font-bold" style={{ color: "#4db8ff", fontFamily: mono, textShadow: "0 0 12px #4db8ff55" }}>生命代码</span>
+              <span className="text-xs" style={{ color: "#3a6a8a", fontFamily: scifi, letterSpacing: "0.15em" }}>LIFE CODE</span>
+            </div>
+            {codeLines.map(([tag, text], i) => {
+              const before = codeLines.slice(0, i).reduce((n, [, t]) => n + t.length, 0)
+              const shown = Math.max(0, Math.min(text.length, typed - before))
+              const started = typed >= before
+              // 当前正在打字的行（光标所在行）；全部打完后光标固定在最后一行结尾
+              const active = (typed < before + text.length && typed >= before) || (typed >= codeTotal && i === codeLines.length - 1)
+              return (
+                <div key={tag} className="flex items-baseline gap-2.5 leading-relaxed py-0.5">
+                  <span className="text-xs shrink-0" style={{ color: "#2a6a99", fontFamily: scifi, minWidth: "62px", visibility: started ? "visible" : "hidden" }}>{tag}</span>
+                  <span className="text-sm md:text-base font-medium" style={{ color: "#4db8ff", textShadow: "0 0 12px #4db8ff33" }}>
+                    {text.slice(0, shown)}
+                    {active && <span style={{ animation: "blink 1s step-end infinite", color: "#4db8ff", marginLeft: "1px" }}>▌</span>}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
           <div className="flex flex-wrap gap-3 justify-center">
             {startBtn(true)}
-            {ghostBtn(zh ? "查看报告示例" : "See a sample", "#preview")}
           </div>
           {promoActive && (
             <div className="text-xs" style={{ color: "#4db8ff", fontFamily: mono }}>
