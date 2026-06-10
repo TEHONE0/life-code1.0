@@ -246,13 +246,16 @@ export default function HomePage() {
           <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
             {zh ? <>用 <span style={{ fontFamily: scifi }}>AI</span> 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span></span></> : <>See the <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
           </h1>
-          <div className="flex justify-center gap-3 flex-wrap">
-            {heroChips.map((c) => (
-              <div key={c.label} className="flex items-center gap-2 pl-1.5 pr-4 py-1.5" style={{ border: "1px solid #1f4a1f", borderRadius: "999px", background: "#0a150aee" }}>
-                <NeonRing size={34}>{c.icon}</NeonRing>
-                <div className="text-left">
-                  <div className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</div>
-                  <div style={{ color: "#3d6a3d", fontSize: "10px" }}>{c.sub}</div>
+          <div className="flex justify-center items-center gap-3 flex-wrap">
+            {heroChips.map((c, i) => (
+              <div key={c.label} className="flex items-center gap-3">
+                {i > 0 && <span className="text-lg font-bold" style={{ color: "#4db8ff", fontFamily: scifi, textShadow: "0 0 12px #4db8ff44" }}>×</span>}
+                <div className="flex items-center gap-2 pl-1.5 pr-4 py-1.5" style={{ border: "1px solid #1f4a1f", borderRadius: "999px", background: "#0a150aee" }}>
+                  <NeonRing size={34}>{c.icon}</NeonRing>
+                  <div className="text-left">
+                    <div className="text-xs font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</div>
+                    <div style={{ color: "#3d6a3d", fontSize: "10px" }}>{c.sub}</div>
+                  </div>
                 </div>
               </div>
             ))}
