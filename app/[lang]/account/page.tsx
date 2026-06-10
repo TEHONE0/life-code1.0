@@ -25,6 +25,12 @@ type Submission = {
   };
 };
 
+type BloggerData = {
+  codes: { code: string; label: string | null; used_count: number; is_active: boolean; commission_usd: number | null }[];
+  commissions: { invite_code: string; amount_usd: number; status: string; created_at: string }[];
+  settlements: { invite_code: string | null; order_count: number; amount_usd: number; note: string | null; created_at: string }[];
+};
+
 export default function AccountPageWrapper() {
   return (
     <Suspense fallback={<main className="min-h-screen" style={{ background: "#050a05" }} />}>
@@ -39,13 +45,14 @@ function AccountPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const viewParam = searchParams.get("view");
-  const view = (viewParam === "forms" || viewParam === "reports" || viewParam === "admin" ? viewParam : "reports") as "forms" | "reports" | "admin";
+  const view = (viewParam === "forms" || viewParam === "reports" || viewParam === "admin" || viewParam === "blogger" ? viewParam : "reports") as "forms" | "reports" | "admin" | "blogger";
 
   const ADMIN_EMAIL = "theone208899@gmail.com";
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [list, setList] = useState<Submission[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [bloggerData, setBloggerData] = useState<BloggerData | null>(null);
 
   const t = {
     titleForms: lang === "zh" ? "我的问卷" : lang === "ko" ? "내 설문" : "My Questionnaires",
@@ -79,6 +86,12 @@ function AccountPage() {
       const json = await res.json();
       setList(json.submissions || []);
       setLoading(false);
+      // 博主视图：登录邮箱名下挂了邀请码才显示"我的邀请码"标签
+      const inviteRes = await fetch("/api/my-invite", {
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+      });
+      const inviteJson = await inviteRes.json();
+      if (inviteJson.codes?.length > 0) setBloggerData(inviteJson);
     })();
   }, [lang, router, view]);
 
@@ -99,7 +112,7 @@ function AccountPage() {
     }
   };
 
-  const switchView = (v: "forms" | "reports" | "admin") => {
+  const switchView = (v: "forms" | "reports" | "admin" | "blogger") => {
     setExpandedId(null);
     router.push(`/${lang}/account?view=${v}`);
   };
@@ -136,13 +149,13 @@ function AccountPage() {
         <div className="space-y-2">
           <div className="text-xs" style={{ color: "#1e4a1e" }}>// ACCOUNT · {email}</div>
           <h1 className="text-2xl font-bold" style={{ color: "#00ff88" }}>
-            {view === "forms" ? t.titleForms : t.titleReports}
+            {view === "forms" ? t.titleForms : view === "blogger" ? (lang === "zh" ? "我的邀请码" : lang === "ko" ? "내 초대 코드" : "My Invite Codes") : t.titleReports}
           </h1>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2" style={{ borderBottom: "1px solid #1a3a1a" }}>
-          {(["forms", "reports", ...(email === ADMIN_EMAIL ? ["admin"] : [])] as ("forms" | "reports" | "admin")[]).map((v, i) => (
+          {(["forms", "reports", ...(bloggerData ? ["blogger"] : []), ...(email === ADMIN_EMAIL ? ["admin"] : [])] as ("forms" | "reports" | "admin" | "blogger")[]).map((v, i) => (
             <button
               key={v}
               onClick={() => switchView(v)}
@@ -169,7 +182,7 @@ function AccountPage() {
                   animation: `breathe 2s ease-in-out infinite ${i * 0.5}s`,
                   flexShrink: 0,
                 }} />
-                {v === "forms" ? t.tabForms : v === "reports" ? t.tabReports : (lang === "zh" ? "管理" : lang === "ko" ? "관리자" : "Admin")}
+                {v === "forms" ? t.tabForms : v === "reports" ? t.tabReports : v === "blogger" ? (lang === "zh" ? "我的邀请码" : lang === "ko" ? "내 코드" : "My Codes") : (lang === "zh" ? "管理" : lang === "ko" ? "관리자" : "Admin")}
               </span>
             </button>
           ))}
@@ -181,7 +194,7 @@ function AccountPage() {
           </div>
         )}
 
-        {!loading && list.length === 0 && view !== "admin" && (
+        {!loading && list.length === 0 && view !== "admin" && view !== "blogger" && (
           <div className="text-center space-y-4 py-12">
             <p className="text-sm" style={{ color: "#2d5a2d" }}>
               {view === "forms" ? t.emptyForms : t.emptyReports}
@@ -205,7 +218,7 @@ function AccountPage() {
           </div>
         )}
 
-        {!loading && view !== "admin" && list.map((s) => {
+        {!loading && view !== "admin" && view !== "blogger" && list.map((s) => {
           const _dt = new Date(s.created_at);
           const date = `${_dt.toLocaleDateString()} ${_dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
           const statusColor = s.paid ? "#00ff88" : "#ff6b6b";
@@ -292,6 +305,10 @@ function AccountPage() {
           <AdminInlinePanel lang={lang} />
         )}
 
+        {view === "blogger" && bloggerData && (
+          <BloggerInlinePanel lang={lang} data={bloggerData} />
+        )}
+
         <div className="flex gap-3 pt-2" style={{ fontFamily: "Courier New, monospace" }}>
           <button
             onClick={() => router.push(`/${lang}/survey`)}
@@ -314,6 +331,59 @@ function AccountPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+// 博主只读视图：自己的邀请码使用/待结算/已结算/结算流水，无任何操作按钮
+function BloggerInlinePanel({ lang, data }: { lang: Lang; data: BloggerData }) {
+  const mono = "Courier New, monospace";
+  const zh = lang === "zh";
+  const pending = data.commissions.filter((c) => c.status === "pending");
+  const settled = data.commissions.filter((c) => c.status === "settled");
+  const pendingTotal = pending.reduce((s, c) => s + Number(c.amount_usd || 0), 0);
+  const settledTotal = settled.reduce((s, c) => s + Number(c.amount_usd || 0), 0);
+
+  return (
+    <div className="space-y-4" style={{ fontFamily: mono }}>
+      {data.codes.map((c) => (
+        <div key={c.code} className="p-3" style={{ border: "1px solid #1a3a1a" }}>
+          <div className="text-sm font-bold" style={{ color: "#00ff88" }}>
+            {c.code}{c.label ? ` · ${c.label}` : ""}{!c.is_active && <span style={{ color: "#8a2d2d" }}> · {zh ? "已停用" : "inactive"}</span>}
+          </div>
+          <div className="text-xs" style={{ color: "#4a7a4a", marginTop: "4px" }}>
+            {zh ? "已使用" : "Used"} {c.used_count} {zh ? "次" : "times"}
+            {c.commission_usd ? <span> · {zh ? "每单分成" : "per order"} ¥{Number(c.commission_usd).toFixed(2)}</span> : null}
+          </div>
+        </div>
+      ))}
+
+      <div className="text-xs" style={{ color: "#fbbf24" }}>
+        // {zh ? "待结算" : "Pending"}: ¥{pendingTotal.toFixed(2)} ({pending.length}{zh ? "单" : ""})
+      </div>
+      <div className="text-xs" style={{ color: "#4a7a4a" }}>
+        // {zh ? "已结算" : "Settled"}: ¥{settledTotal.toFixed(2)} ({settled.length}{zh ? "单" : ""})
+      </div>
+
+      <div className="text-xs font-bold" style={{ color: "#2d5a2d", marginTop: "14px" }}>// {zh ? "结算流水" : "Settlement records"}</div>
+      {data.settlements.map((s, i) => (
+        <div key={i} className="flex justify-between text-xs py-1" style={{ borderBottom: "1px solid #112811", color: "#4a7a4a" }}>
+          <span>{new Date(s.created_at).toLocaleDateString()} · {s.order_count}{zh ? "单" : " orders"}{s.note ? ` · ${s.note}` : ""}</span>
+          <span style={{ color: "#00ff88" }}>¥{Number(s.amount_usd).toFixed(2)}</span>
+        </div>
+      ))}
+      {data.settlements.length === 0 && <div className="text-xs py-2" style={{ color: "#2d5a2d" }}>// {zh ? "暂无结算记录" : "No settlements yet"}</div>}
+
+      <div className="text-xs font-bold" style={{ color: "#2d5a2d", marginTop: "14px" }}>// {zh ? "佣金明细" : "Commission details"}</div>
+      {data.commissions.map((c, i) => (
+        <div key={i} className="flex justify-between text-xs py-1" style={{ borderBottom: "1px solid #112811", color: "#4a7a4a" }}>
+          <span>{new Date(c.created_at).toLocaleDateString()} · {c.invite_code}</span>
+          <span style={{ color: c.status === "pending" ? "#fbbf24" : "#4a7a4a" }}>
+            ¥{Number(c.amount_usd).toFixed(2)} · {zh ? (c.status === "pending" ? "待结算" : "已结算") : c.status}
+          </span>
+        </div>
+      ))}
+      {data.commissions.length === 0 && <div className="text-xs py-2" style={{ color: "#2d5a2d" }}>// {zh ? "暂无佣金记录" : "No commissions yet"}</div>}
+    </div>
   );
 }
 
