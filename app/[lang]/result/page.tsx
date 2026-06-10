@@ -99,12 +99,15 @@ const HEALTH_NOTES: Record<string, string[]> = {
 }
 
 // W主权重 / b偏置：解析第零章参数表（非中文报告解析不到则显示"—"）
+// 新格式（2026-06-10起）值为"XX型"，锚定参数表行；旧报告退回"XX权重高/XX偏置"匹配
 function parseMainWeight(md: string): string | null {
-  const m = md.match(/(完美|助人|成就|独特|思考|警觉|体验|力量|和平)权重高/)
+  const m = md.match(/W主权重[^\n]*?(完美|助人|成就|独特|思考|警觉|体验|力量|和平)/)
+    ?? md.match(/(完美|助人|成就|独特|思考|警觉|体验|力量|和平)权重高/)
   return m ? m[1] : null
 }
 function parseBias(md: string): string | null {
-  const m = md.match(/(自保|一对一|社交)偏置/)
+  const m = md.match(/b偏置[^\n]*?(自保|一对一|社交)/)
+    ?? md.match(/(自保|一对一|社交)偏置/)
   return m ? m[1] : null
 }
 

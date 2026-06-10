@@ -175,19 +175,19 @@ Q08 data is used in two places: Bug index calculation + Dimension level determin
 
 ## ⑤ Q00 Enneagram Rules (report output layer)
 
-⚠️ All Enneagram type numbers must be replaced with weight parameter names — never write "Type X":
+⚠️ All Enneagram type numbers must be replaced with weight parameter names — never write "Type X". The value is the trait name alone ("weight" is already in the field name, do not append "weight high/elevated"):
 
-| Type | Primary weight | Secondary weight |
-|---|---|---|
-| Type 1 | Perfectionism weight high | Perfectionism weight elevated |
-| Type 2 | Helping weight high | Helping weight elevated |
-| Type 3 | Achievement weight high | Achievement weight elevated |
-| Type 4 | Uniqueness weight high | Uniqueness weight elevated |
-| Type 5 | Thinking weight high | Thinking weight elevated |
-| Type 6 | Vigilance weight high | Vigilance weight elevated |
-| Type 7 | Experience weight high | Experience weight elevated |
-| Type 8 | Strength weight high | Strength weight elevated |
-| Type 9 | Peace weight high | Peace weight elevated |
+| Type | Value (primary & secondary) |
+|---|---|
+| Type 1 | Perfectionism |
+| Type 2 | Helping |
+| Type 3 | Achievement |
+| Type 4 | Uniqueness |
+| Type 5 | Thinking |
+| Type 6 | Vigilance |
+| Type 7 | Experience |
+| Type 8 | Strength |
+| Type 9 | Peace |
 
 Secondary weight display rule: If Q00 has only 1 type → omit W secondary weight row. If 2 types → show both.
 
@@ -243,9 +243,9 @@ Use Q00 + Q02–Q07 cross-validation to confirm true type, then output table:
 If Q00 has 2 types selected:
 | Parameter | Content |
 |---|---|
-| W primary weight | [XXX] weight high |
-| W secondary weight | [XXX] weight elevated |
-| b bias | Social bias / One-on-one bias / Self-preservation bias (choose one) |
+| W primary weight | [XXX] |
+| W secondary weight | [XXX] |
+| b bias | Social / One-on-one / Self-preservation (choose one) |
 | Core drive | One sentence |
 | Core fear | One sentence |
 | Defense mechanism | One sentence |
@@ -253,8 +253,8 @@ If Q00 has 2 types selected:
 If Q00 has only 1 type, omit secondary weight row:
 | Parameter | Content |
 |---|---|
-| W primary weight | [XXX] weight high |
-| b bias | Social bias / One-on-one bias / Self-preservation bias (choose one) |
+| W primary weight | [XXX] |
+| b bias | Social / One-on-one / Self-preservation (choose one) |
 | Core drive | One sentence |
 | Core fear | One sentence |
 | Defense mechanism | One sentence |
@@ -263,7 +263,7 @@ If Q00 has only 1 type, omit secondary weight row:
 
 **W Weight Interpretation**: Immediately after parameter interpretation, output weight description for the identified type. Format:
 
-> **W Primary Weight · [XXX weight high]**
+> **W Primary Weight · [XXX]**
 >
 > **Desire trait**: [type's desire trait]
 > **Key characteristics**: [type's main characteristics]
@@ -271,7 +271,7 @@ If Q00 has only 1 type, omit secondary weight row:
 > **Basic desire**: [type's basic desire]
 > **Basic fear**: [type's basic fear]
 
-> **W Secondary Weight · [XXX weight elevated]** (only if Q00 has 2 types)
+> **W Secondary Weight · [XXX]** (only if Q00 has 2 types)
 >
 > **Desire trait**: …
 > **Key characteristics**: …
