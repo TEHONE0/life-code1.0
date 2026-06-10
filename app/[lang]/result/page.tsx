@@ -344,12 +344,18 @@ function ResultPage() {
     // 整个报告一次性截成大canvas，html2canvas克隆超高DOM时会被截断（手机上只渲染到一半就停）
     // 改法：每次只让html2canvas克隆"一屏"高度的内容——把外层裁成固定高度窗口，
     // 内层用 translateY 把对应分段移到窗口里，逐段截图后拼成多页PDF
-    const origNodeStyle = { height: node.style.height, overflow: node.style.overflow }
+    const origNodeStyle = { height: node.style.height, overflow: node.style.overflow, width: node.style.width }
     const origInnerTransform = inner.style.transform
     try {
+      // 宽内容（长ASCII画/宽表格）会横向溢出可视宽度，只按 clientWidth 截图右边会被切。
+      // 导出前把窗口临时加宽到完整内容宽度，截完在 finally 里恢复
+      if (node.scrollWidth > node.clientWidth) {
+        node.style.width = `${node.scrollWidth}px`
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      }
       // +32px缓冲：避免最后一个区块（如画像边框）因取整误差被切掉底边
       const totalHeight = inner.scrollHeight + 32
-      const totalWidth = node.clientWidth
+      const totalWidth = Math.max(node.clientWidth, node.scrollWidth)
       const sliceHeight = 1000 // 窗口高度（px），保持较小，确保每次克隆的DOM体积可控
       const scale = 1.5
       let pdf: jsPDF | null = null
@@ -399,6 +405,7 @@ function ResultPage() {
     } finally {
       node.style.height = origNodeStyle.height
       node.style.overflow = origNodeStyle.overflow
+      node.style.width = origNodeStyle.width
       inner.style.transform = origInnerTransform
       setExportingPdf(false)
     }

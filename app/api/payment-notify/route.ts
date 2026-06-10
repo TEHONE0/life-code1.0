@@ -22,6 +22,8 @@ async function handle(req: NextRequest) {
       for (const [k, v] of new URLSearchParams(body)) params[k] = v;
     }
 
+    console.log("[payment-notify] 收到回调", { order: params.out_trade_no, status: params.trade_status, money: params.money });
+
     const zkey = process.env.ZPAY_KEY!;
     const expected = epaySign(params, zkey);
     if (params.sign !== expected) {
@@ -62,6 +64,10 @@ async function handle(req: NextRequest) {
           }
         }
       }
+      console.log("[payment-notify] 已解锁", { order: params.out_trade_no, submission: submission.id });
+    } else {
+      // 用户已付款但找不到订单记录 = 最严重的静默失败，必须留痕便于人工补单
+      console.error("[payment-notify] ⚠️ 付款成功但找不到对应订单", { order: params.out_trade_no, money: params.money });
     }
 
     return new NextResponse("success");
