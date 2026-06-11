@@ -3,6 +3,8 @@ import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { Lang } from "@/lib/i18n";
 import UserMenu from "@/components/UserMenu";
+import NavEntries from "@/components/NavEntries";
+import LangSwitch from "@/components/LangSwitch";
 import { NeonRing, IconHeartPulse, IconHourglass, IconMismatch, IconBirthCode, IconEnneagram, IconAI, IconShield } from "@/components/neon";
 
 function MatrixRain({ side }: { side: 'left' | 'right' }) {
@@ -68,11 +70,6 @@ function MatrixRain({ side }: { side: 'left' | 'right' }) {
   )
 }
 
-const LANGS = [
-  { code: 'en', label: 'EN' },
-  { code: 'zh', label: '中文' },
-  { code: 'ko', label: '한국어' },
-]
 
 const mono = "Courier New, monospace";
 const scifi = "Orbitron, Courier New, monospace";
@@ -119,7 +116,7 @@ export default function HomePage() {
         ["> scan", "看清人生中反复出现的卡点"],
         ["> debug", "找到生命系统里那些悄悄运行的 Bug"],
         ["> rebuild", "让你有机会重新选择怎么活"],
-        ["> heal", "看见自己，疗愈自己"],
+        ["> heal", "看见自己，治愈自己"],
       ]
     : [
         ["// init", "A psychological assessment inferred by AI code"],
@@ -201,10 +198,13 @@ export default function HomePage() {
 
       {/* ───── 顶栏 ───── */}
       <nav className="sticky top-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between" style={{ background: "#050a05ee", borderBottom: "1px solid #112811", backdropFilter: "blur(6px)" }}>
-        <div className="flex items-center gap-2" style={{ fontFamily: mono }}>
-          <img src="/dna-logo.png" alt="生命代码 LOGO" width={20} height={30} style={{ flexShrink: 0, filter: "drop-shadow(0 0 6px #00ff8855)" }} />
-          <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
-          <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2" style={{ fontFamily: mono }}>
+            <img src="/dna-logo.png" alt="生命代码 LOGO" width={20} height={30} style={{ flexShrink: 0, filter: "drop-shadow(0 0 6px #00ff8855)" }} />
+            <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
+            <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
+          </div>
+          <LangSwitch lang={lang} onPick={(c) => router.push(`/${c}`)} />
         </div>
         <div className="hidden md:flex gap-6 text-xs" style={{ fontFamily: mono }}>
           {(zh ? [["#pain", "为什么测"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#about", "关于创作者"]] : [["#pain", "Why"], ["#how", "How"], ["#preview", "Sample"], ["#about", "About"]]).map(([href, label]) => (
@@ -212,13 +212,7 @@ export default function HomePage() {
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex gap-1.5">
-            {LANGS.map((l) => (
-              <button key={l.code} onClick={() => router.push(`/${l.code}`)} className="nav-link text-xs px-1.5 py-0.5" style={{ background: "transparent", border: "none", color: l.code === lang ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono }}>
-                {l.label}
-              </button>
-            ))}
-          </div>
+          <div className="hidden md:flex items-center gap-2"><NavEntries lang={lang} /></div>
           <UserMenu lang={lang} />
           <div className="hidden sm:block">{startBtn(false)}</div>
         </div>
@@ -274,7 +268,7 @@ export default function HomePage() {
                 <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
                 <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
               </svg>
-              {zh ? "首发活动（至6月30日）：买一赠一，送一份疗愈你在意的人" : "Launch offer (until Jun 30): buy one, gift one to heal someone you care about"}
+              {zh ? "首发活动（至6月30日）：买一赠一，送给你最想读懂的人" : "Launch offer (until Jun 30): buy one, gift one to someone you most want to understand"}
             </div>
           )}
 
@@ -381,7 +375,7 @@ export default function HomePage() {
               </div>
               <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
                 {zh
-                  ? "喜欢研究心理学、九型人格、AI技术，用代码理解命运，看见自己，疗愈众生。"
+                  ? "喜欢研究心理学、九型人格、AI技术，用代码理解命运，看见自己，治愈众生。"
                   : "Fascinated by psychology, the Enneagram and AI. I use code to understand fate — to see myself, and to heal all beings."}
               </p>
             </div>
@@ -403,8 +397,15 @@ export default function HomePage() {
               <div>✓ {zh ? "报告永久保存，随时回看" : "Saved forever, revisit anytime"}</div>
             </div>
             {promoActive && (
-              <div className="text-xs" style={{ color: "#4db8ff", fontFamily: mono }}>
-                🎁 {zh ? "活动期内付费即赠一份，送给你最想读懂的人" : "Buy one, gift one free during launch"}
+              <div className="text-xs flex items-center justify-center gap-1.5" style={{ color: "#4db8ff", fontFamily: mono }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, filter: "drop-shadow(0 0 4px #FFC93C88)" }}>
+                  <rect x="3" y="8" width="18" height="4" rx="1" />
+                  <path d="M5 12 v8 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1 -1 v-8" />
+                  <line x1="12" y1="8" x2="12" y2="21" />
+                  <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
+                  <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
+                </svg>
+                {zh ? "活动期内付费即赠一份，送给你最想读懂的人" : "Buy one, gift one free during launch"}
               </div>
             )}
             <div className="w-full flex justify-center">{startBtn(true)}</div>

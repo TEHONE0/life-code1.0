@@ -4,6 +4,8 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import UserMenu from "@/components/UserMenu";
+import NavEntries from "@/components/NavEntries";
+import LangSwitch from "@/components/LangSwitch";
 
 type Submission = {
   id: string;
@@ -60,8 +62,8 @@ function AccountPage() {
     titleReports: lang === "zh" ? "我的报告" : lang === "ko" ? "내 보고서" : "My Reports",
     tabForms: lang === "zh" ? "问卷" : lang === "ko" ? "설문" : "Forms",
     tabReports: lang === "zh" ? "报告" : lang === "ko" ? "보고서" : "Reports",
-    emptyForms: lang === "zh" ? "暂无问卷记录" : lang === "ko" ? "설문 기록이 없습니다" : "No questionnaires yet",
-    emptyReports: lang === "zh" ? "暂无报告记录" : lang === "ko" ? "보고서 기록이 없습니다" : "No reports yet",
+    emptyForms: lang === "zh" ? "您还没有测评问卷记录，完成一次测评后将自动归档在此。" : lang === "ko" ? "아직 설문 기록이 없습니다. 검사를 완료하면 여기에 보관됩니다." : "You don't have any questionnaires yet — complete an assessment and it will be saved here.",
+    emptyReports: lang === "zh" ? "您还没有解析报告，完成测评问卷并生成报告后即可在此查阅。" : lang === "ko" ? "아직 분석 보고서가 없습니다. 설문을 완료하고 보고서를 생성하면 여기에서 확인할 수 있습니다." : "You don't have any reports yet — complete a questionnaire and generate a report to view it here.",
     createOne: lang === "zh" ? "去填问卷 →" : lang === "ko" ? "설문 시작 →" : "Start a survey →",
     paid: lang === "zh" ? "已解锁" : lang === "ko" ? "잠금 해제됨" : "Unlocked",
     unpaid: lang === "zh" ? "未付款" : lang === "ko" ? "미결제" : "Unpaid",
@@ -144,15 +146,39 @@ function AccountPage() {
 
   return (
     <main
-      className="min-h-screen px-4 py-8"
+      className="min-h-screen"
       style={{ background: "radial-gradient(ellipse at top, #061206 0%, #050a05 60%)" }}
     >
       <style>{`@keyframes breathe { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.6} }`}</style>
-      <div className="fixed top-4 right-4 z-50">
-        <UserMenu lang={lang} />
-      </div>
+      <nav className="sticky top-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between" style={{ background: "#050a05ee", borderBottom: "1px solid #112811", backdropFilter: "blur(6px)" }}>
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push(`/${lang}`)} className="flex items-center gap-2" style={{ fontFamily: "Courier New, monospace", background: "transparent", border: "none", cursor: "pointer" }}>
+            <img src="/dna-logo.png" alt="生命代码 LOGO" width={20} height={30} style={{ flexShrink: 0, filter: "drop-shadow(0 0 6px #00ff8855)" }} />
+            <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
+            <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: "Orbitron, Courier New, monospace" }}>LIFE CODE</span>
+          </button>
+          <LangSwitch lang={lang} onPick={(c) => router.push(`/${c}/account?view=${view}`)} />
+        </div>
+        <div className="hidden md:flex gap-6 text-xs" style={{ fontFamily: "Courier New, monospace" }}>
+          {(lang === "zh"
+            ? [["", "首页"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#about", "关于作者"]]
+            : lang === "ko"
+            ? [["", "홈"], ["#how", "생성 방식"], ["#preview", "리포트 예시"], ["#about", "제작자"]]
+            : [["", "Home"], ["#how", "How"], ["#preview", "Sample"], ["#about", "About"]]
+          ).map(([anchor, label]) => (
+            <a key={label} href={`/${lang}${anchor}`} className="nav-link" style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2"><NavEntries lang={lang} /></div>
+          <UserMenu lang={lang} />
+          <button onClick={() => router.push(`/${lang}/survey`)} className="hidden sm:block px-5 py-2 text-xs font-bold tracking-wider" style={{ border: "none", color: "#04140a", cursor: "pointer", fontFamily: "Courier New, monospace", borderRadius: "14px", background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)", boxShadow: "0 0 22px #00ff8855, 0 2px 10px #00000066" }}>
+            {lang === "zh" ? "再测一位 →" : lang === "ko" ? "한 명 더 →" : "Scan another →"}
+          </button>
+        </div>
+      </nav>
 
-      <div className="max-w-2xl mx-auto space-y-6 pt-10">
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         <div className="space-y-2">
           <div className="text-xs" style={{ color: "#1e4a1e" }}>// ACCOUNT · {email}</div>
           <h1 className="text-2xl font-bold" style={{ color: "#00ff88" }}>

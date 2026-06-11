@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { getT, Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import UserMenu from "@/components/UserMenu";
+import NavEntries from "@/components/NavEntries";
+import LangSwitch from "@/components/LangSwitch";
 import {
   NeonRing, IconEnneagram, IconPerson, IconHome, IconWarning, IconLoop,
   IconShieldSm, IconPulse, IconStar, IconCube, IconLock,
@@ -21,12 +23,6 @@ const INPUT = {
   outline: "none",
   transition: "border-color 0.2s, box-shadow 0.2s",
 } as const;
-
-const LANGS = [
-  { code: "en", label: "EN" },
-  { code: "zh", label: "中文" },
-  { code: "ko", label: "한국어" },
-];
 
 const QUESTION_ICONS: Record<string, React.ReactNode> = {
   enneagram: IconEnneagram,
@@ -622,23 +618,20 @@ export default function SurveyPage() {
     <main className="min-h-screen" style={{ background: "radial-gradient(ellipse at top, #061206 0%, #050a05 60%)" }}>
       {/* ───── 顶栏 ───── */}
       <nav className="sticky top-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between" style={{ background: "#050a05ee", borderBottom: "1px solid #112811", backdropFilter: "blur(6px)" }}>
-        <button onClick={() => router.push(`/${lang}`)} className="flex items-center gap-2" style={{ fontFamily: mono, background: "transparent", border: "none", cursor: "pointer" }}>
-          <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
-          <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push(`/${lang}`)} className="flex items-center gap-2" style={{ fontFamily: mono, background: "transparent", border: "none", cursor: "pointer" }}>
+            <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
+            <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
+          </button>
+          <LangSwitch lang={lang} onPick={(c) => router.push(`/${c}/survey`)} />
+        </div>
         <div className="hidden md:flex gap-6 text-xs" style={{ fontFamily: mono }}>
           {ui.navLinks.map(([anchor, label]) => (
-            <a key={label} href={`/${lang}${anchor}`} style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
+            <a key={label} href={`/${lang}${anchor}`} className="nav-link" style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex gap-1.5">
-            {LANGS.map((l) => (
-              <button key={l.code} onClick={() => router.push(`/${l.code}/survey`)} className="text-xs px-1.5 py-0.5" style={{ background: "transparent", border: "none", color: l.code === lang ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono }}>
-                {l.label}
-              </button>
-            ))}
-          </div>
+          <div className="hidden md:flex items-center gap-2"><NavEntries lang={lang} /></div>
           <UserMenu lang={lang} />
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}

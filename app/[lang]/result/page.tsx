@@ -10,6 +10,8 @@ import "katex/dist/katex.min.css";
 import { Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import UserMenu from "@/components/UserMenu";
+import NavEntries from "@/components/NavEntries";
+import LangSwitch from "@/components/LangSwitch";
 import { IconLock, IconScan, IconWarning, IconHeartPulse, IconEnneagram, IconCube, NeonRing } from "@/components/neon";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -187,12 +189,6 @@ const CHROME = {
     securityNote: "리포트는 본인 로그인 시에만 볼 수 있으며 공개 페이지에 노출되지 않습니다.",
   },
 };
-
-const RESULT_LANGS = [
-  { code: "en", label: "EN" },
-  { code: "zh", label: "中文" },
-  { code: "ko", label: "한국어" },
-];
 
 // 章节锚点：从 markdown 标题文本生成稳定 id（侧边栏与正文标题共用）
 function chapterId(text: string): string {
@@ -818,23 +814,21 @@ function ResultPage() {
     >
       {/* ───── 顶栏（与问卷页同构） ───── */}
       <nav className="sticky top-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between" style={{ background: "#050a05ee", borderBottom: "1px solid #112811", backdropFilter: "blur(6px)" }}>
-        <button onClick={() => router.push(`/${lang}`)} className="flex items-center gap-2" style={{ fontFamily: mono, background: "transparent", border: "none", cursor: "pointer" }}>
-          <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
-          <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push(`/${lang}`)} className="flex items-center gap-2" style={{ fontFamily: mono, background: "transparent", border: "none", cursor: "pointer" }}>
+            <img src="/dna-logo.png" alt="生命代码 LOGO" width={20} height={30} style={{ flexShrink: 0, filter: "drop-shadow(0 0 6px #00ff8855)" }} />
+            <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
+            <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
+          </button>
+          <LangSwitch lang={lang} onPick={(c) => router.push(`/${c}/result${sidParam ? `?sid=${sidParam}` : ""}`)} />
+        </div>
         <div className="hidden md:flex gap-6 text-xs" style={{ fontFamily: mono }}>
           {chrome.navLinks.map(([anchor, label]) => (
-            <a key={label} href={`/${lang}${anchor}`} style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
+            <a key={label} href={`/${lang}${anchor}`} className="nav-link" style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex gap-1.5">
-            {RESULT_LANGS.map((l) => (
-              <button key={l.code} onClick={() => router.push(`/${l.code}/result${sidParam ? `?sid=${sidParam}` : ""}`)} className="text-xs px-1.5 py-0.5" style={{ background: "transparent", border: "none", color: l.code === lang ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono }}>
-                {l.label}
-              </button>
-            ))}
-          </div>
+          <div className="hidden md:flex items-center gap-2"><NavEntries lang={lang} /></div>
           <UserMenu lang={lang} />
           <button
             onClick={() => { sessionStorage.removeItem("life_code_result"); router.push(`/${lang}/survey`) }}
