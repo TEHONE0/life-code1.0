@@ -207,185 +207,136 @@ function flatText(c: any): string {
   return String(c);
 }
 
-const PORTRAIT_DATA: Record<string, {
-  color: string
-  art: Record<string, string>
-}> = {
+const PORTRAIT_DATA: Record<string, { color: string; face: string; name: { zh: string; en: string }; code: string; caption: { zh: string; en: string } }> = {
   LOWER_DIMENSION: {
-    color: "#888888",
-    art: {
-      zh: String.raw`╔══════════════════════════════════╗
-║                                   ║
-║          .-----------.            ║
-║         /  ~       ~  \           ║
-║        /   /\     /\   \          ║
-║       |   / ×\   /× \   |         ║
-║       |   \  /   \  /   |         ║
-║       |    \/     \/    |         ║
-║       |                 |         ║
-║       |   ___________   |         ║
-║       |  /           \  |         ║
-║        \               /          ║
-║         '.___________.'           ║
-║                                   ║
-╠══════════════════════════════════╣
-║     ──────  低 维 生 物  ──────     ║
-║     LOWER_DIMENSION  ·  Lv.1/4    ║
-║     系统尚未自我觉察               ║
-╚══════════════════════════════════╝`,
-      en: String.raw`╔══════════════════════════════════╗
-║                                   ║
-║          .-----------.            ║
-║         /  ~       ~  \           ║
-║        /   /\     /\   \          ║
-║       |   / ×\   /× \   |         ║
-║       |   \  /   \  /   |         ║
-║       |    \/     \/    |         ║
-║       |                 |         ║
-║       |   ___________   |         ║
-║       |  /           \  |         ║
-║        \               /          ║
-║         '.___________.'           ║
-║                                   ║
-╠══════════════════════════════════╣
-║     ──  LOWER DIMENSION  ──       ║
-║     LOWER_DIMENSION  ·  Lv.1/4   ║
-║     System has not yet self-aware ║
-╚══════════════════════════════════╝`,
-    },
+    color: "#9aa0a0",
+    face: String.raw`
+         .-----------.
+        /  ~       ~  \
+       /   /\     /\   \
+      |   / ×\   /× \   |
+      |   \  /   \  /   |
+      |    \/     \/    |
+      |                 |
+      |   ___________   |
+      |  /           \  |
+       \               /
+        '.___________.'
+`,
+    name: { zh: "低维生物", en: "LOWER DIMENSION" },
+    code: "LOWER_DIMENSION · Lv.1/4",
+    caption: { zh: "系统尚未自我觉察", en: "System has not yet self-aware" },
   },
   SAPIENT_ENTITY: {
-    color: "#4488ff",
-    art: {
-      zh: String.raw`╔══════════════════════════════════╗
-║                                   ║
-║     .-~~-._.-~~-._.-~~-.          ║
-║    (   ~~  ~~  ~~  ~~   )         ║
-║     (  ~ ( ) ( ) ( ) ~ )          ║
-║     '-~~~~-\    /~~~-~~'          ║
-║              ...                  ║
-║           .---------.             ║
-║          /           \            ║
-║         |  ──      ──   |         ║
-║         |      ∧       |          ║
-║         |    '---'    |           ║
-║          \           /            ║
-║           '---------'             ║
-╠══════════════════════════════════╣
-║     ──────  智 慧 生 物  ──────     ║
-║     SAPIENT_ENTITY  ·  Lv.2/4     ║
-║     开始观察自身代码               ║
-╚══════════════════════════════════╝`,
-      en: String.raw`╔══════════════════════════════════╗
-║                                   ║
-║     .-~~-._.-~~-._.-~~-.          ║
-║    (   ~~  ~~  ~~  ~~   )         ║
-║     (  ~ ( ) ( ) ( ) ~ )          ║
-║     '-~~~~-\    /~~~-~~'          ║
-║              ...                  ║
-║           .---------.             ║
-║          /           \            ║
-║         |  ──      ──   |         ║
-║         |      ∧       |          ║
-║         |    '---'    |           ║
-║          \           /            ║
-║           '---------'             ║
-╠══════════════════════════════════╣
-║     ────  SAPIENT ENTITY  ────    ║
-║     SAPIENT_ENTITY  ·  Lv.2/4    ║
-║     Beginning to read own code    ║
-╚══════════════════════════════════╝`,
-    },
+    color: "#4db8ff",
+    face: String.raw`
+    .-~~-._.-~~-._.-~~-.
+   (   ~~  ~~  ~~  ~~   )
+    (  ~ ( ) ( ) ( ) ~ )
+    '-~~~~-\    /~~~-~~'
+             ...
+          .---------.
+         /           \
+        |  ──     ──  |
+        |      ∧      |
+        |    '---'    |
+         \           /
+          '---------'
+`,
+    name: { zh: "智慧生物", en: "SAPIENT ENTITY" },
+    code: "SAPIENT_ENTITY · Lv.2/4",
+    caption: { zh: "开始观察自身代码", en: "Beginning to read own code" },
   },
   AWAKENED: {
     color: "#00ff88",
-    art: {
-      zh: String.raw`╔══════════════════════════════════╗
-║                  |                ║
-║              ----+----            ║
-║             /  · | ·  \           ║
-║            / ·  |||  · \          ║
-║             \  · | ·  /           ║
-║              ----+----            ║
-║                  |                ║
-║   ) ) )    .-----------.   ( ( (  ║
-║  ) ) )    |             |   ( ( ( ║
-║ ) ) )     (  ◉        ◉   )   ( ( (║
-║  ) ) )    |      △       |    ( ( (║
-║   ) ) )   |    \___/    |   ( ( ( ║
-║            \__________ /          ║
-╠══════════════════════════════════╣
-║     ──────  觉 醒 者  ──────       ║
-║     AWAKENED  ·  Lv.3/4           ║
-║     你看见了矩阵                   ║
-╚══════════════════════════════════╝`,
-      en: String.raw`╔══════════════════════════════════╗
-║                  |                ║
-║              ----+----            ║
-║             /  · | ·  \           ║
-║            / ·  |||  · \          ║
-║             \  · | ·  /           ║
-║              ----+----            ║
-║                  |                ║
-║   ) ) )    .-----------.   ( ( (  ║
-║  ) ) )    |             |   ( ( ( ║
-║ ) ) )     (  ◉        ◉   )   ( ( (║
-║  ) ) )    |      △       |    ( ( (║
-║   ) ) )   |    \___/    |   ( ( ( ║
-║            \__________ /          ║
-╠══════════════════════════════════╣
-║     ─────────  AWAKENED  ───────  ║
-║     AWAKENED  ·  Lv.3/4           ║
-║     You have seen the matrix      ║
-╚══════════════════════════════════╝`,
-    },
+    face: String.raw`
+                 |
+             ----+----
+            /  · | ·  \
+           / ·  |||  · \
+            \  · | ·  /
+             ----+----
+                 |
+  ) ) )    .-----------.   ( ( (
+ ) ) )    |             |   ( ( (
+) ) )     (  ◉       ◉  )    ( ( (
+ ) ) )    |      △      |    ( ( (
+  ) ) )   |    \___/    |   ( ( (
+           \__________ /
+`,
+    name: { zh: "觉醒者", en: "AWAKENED" },
+    code: "AWAKENED · Lv.3/4",
+    caption: { zh: "你看见了矩阵", en: "You have seen the matrix" },
   },
   HIGH_DIMENSION: {
-    color: "#ffd700",
-    art: {
-      zh: String.raw`╔══════════════════════════════════╗
-║                                  ║
-║      ✦   ·  ✦     |   ✦   ·  ✦   ║
-║     ✦   ·   \   |   /   ·  ✦     ║
-║    ·  ·  \  ·  |  ·  /  ·  ·     ║
-║    *  \  · -------- ·  /   *     ║
-║     ─  ─  ( ✦         ✦  )  ─  ─  ║
-║    *  /  · -------- ·  \   *     ║
-║    ·  ·  /  ·  |  ·  \  ·  ·     ║
-║     ✦   ·   /   |   \   ·  ✦     ║
-║      ✦   ·  ✦   |   ✦   ·  ✦     ║
-║                                  ║
-╠══════════════════════════════════╣
-║     ──────  高 维 生 物  ──────    ║
-║     HIGH_DIMENSION  ·  Lv.4/4    ║
-║     已脱离原始程序                 ║
-╚══════════════════════════════════╝`,
-      en: String.raw`╔══════════════════════════════════╗
-║                                  ║
-║      ✦   ·  ✦     |   ✦   ·  ✦   ║
-║     ✦   ·   \   |   /   ·  ✦     ║
-║    ·  ·  \  ·  |  ·  /  ·  ·     ║
-║    *  \  · -------- ·  /   *     ║
-║     ─  ─  ( ✦         ✦  )  ─  ─  ║
-║    *  /  · -------- ·  \   *     ║
-║    ·  ·  /  ·  |  ·  \  ·  ·     ║
-║     ✦   ·   /   |   \   ·  ✦     ║
-║      ✦   ·  ✦   |   ✦   ·  ✦     ║
-║                                  ║
-╠══════════════════════════════════╣
-║     ───  HIGH DIMENSION  ───      ║
-║     HIGH_DIMENSION  ·  Lv.4/4    ║
-║     Beyond the original program   ║
-╚══════════════════════════════════╝`,
-    },
+    color: "#FFC93C",
+    face: String.raw`
+     ✦  ·  ✦    |   ✦  ·  ✦
+    ✦  ·   \   |   /   ·  ✦
+   ·  ·  \  ·  |  ·  /  ·  ·
+   *  \  · -------- ·  /   *
+    ─ ─ ( ✦        ✦ )  ─ ─
+   *  /  · -------- ·  \   *
+   ·  ·  /  ·  |  ·  \  ·  ·
+    ✦  ·   /   |   \   ·  ✦
+     ✦  ·  ✦   |   ✦  ·  ✦
+`,
+    name: { zh: "高维生物", en: "HIGH DIMENSION" },
+    code: "HIGH_DIMENSION · Lv.4/4",
+    caption: { zh: "已脱离原始程序", en: "Beyond the original program" },
   },
 }
 
-function getPortrait(level: string, lang: string): { color: string; art: string } | null {
+function AsciiPortraitSVG({ face, name, code, caption, color }: { face: string; name: string; code: string; caption: string; color: string }) {
+  const raw = face.split("\n")
+  while (raw.length && raw[0].trim() === "") raw.shift()
+  while (raw.length && raw[raw.length - 1].trim() === "") raw.pop()
+  const lineArr = raw.map((l) => Array.from(l))
+  let minCol = Infinity, maxCol = 0
+  lineArr.forEach((chs) => chs.forEach((ch, j) => { if (ch !== " ") { if (j < minCol) minCol = j; if (j > maxCol) maxCol = j } }))
+  if (!isFinite(minCol)) minCol = 0
+  const CW = 8, LH = 15, FS = 13
+  const W = 300
+  const TOP = 34
+  const FACE_ROWS = 13
+  const MAX_FACE_W = 252
+  const faceAreaH = FACE_ROWS * LH
+  const contentCols = maxCol - minCol + 1
+  const localFaceW = contentCols * CW
+  const localFaceH = lineArr.length * LH
+  const s = Math.min(1, MAX_FACE_W / localFaceW)
+  const gx = (W - localFaceW * s) / 2
+  const gy = TOP + (faceAreaH - localFaceH * s) / 2
+  const dividerY = TOP + faceAreaH + 18
+  const nameY = dividerY + 30
+  const codeY = nameY + 20
+  const capY = codeY + 20
+  const H = capY + 30
+  const cx = W / 2
+  const cells: JSX.Element[] = []
+  lineArr.forEach((chs, i) => chs.forEach((ch, j) => {
+    if (ch === " ") return
+    cells.push(<text key={i + "-" + j} x={(j - minCol) * CW + CW / 2} y={(i + 0.78) * LH} textAnchor="middle" fill={color} fontFamily="'Courier New', monospace" fontSize={FS}>{ch}</text>)
+  }))
+  return (
+    <svg viewBox={"0 0 " + W + " " + H} width="100%" style={{ maxWidth: W, display: "block", margin: "0 auto" }} role="img" aria-label={name + " " + code}>
+      <rect x={1} y={1} width={W - 2} height={H - 2} rx={12} fill="#080e08" stroke={color} strokeOpacity={0.45} strokeWidth={1.5} />
+      <path d={"M16 16 h12 M16 16 v12"} fill="none" stroke={color} strokeOpacity={0.6} strokeWidth={1.4} />
+      <path d={"M" + (W - 16) + " " + (H - 16) + " h-12 M" + (W - 16) + " " + (H - 16) + " v-12"} fill="none" stroke={color} strokeOpacity={0.6} strokeWidth={1.4} />
+      <g transform={"translate(" + gx + " " + gy + ") scale(" + s + ")"}>{cells}</g>
+      <line x1={40} y1={dividerY} x2={W - 40} y2={dividerY} stroke={color} strokeOpacity={0.25} strokeWidth={1} />
+      <text x={cx} y={nameY} textAnchor="middle" fill={color} fontFamily="'Courier New', monospace" fontSize={15} fontWeight={700} letterSpacing={1}>{"\u2500\u2500  " + name + "  \u2500\u2500"}</text>
+      <text x={cx} y={codeY} textAnchor="middle" fill={color} fillOpacity={0.85} fontFamily="'Courier New', monospace" fontSize={12}>{code}</text>
+      <text x={cx} y={capY} textAnchor="middle" fill={color} fillOpacity={0.6} fontFamily="'Courier New', monospace" fontSize={12}>{caption}</text>
+    </svg>
+  )
+}
+
+function getPortrait(level: string, lang: string) {
   const data = PORTRAIT_DATA[level]
   if (!data) return null
-  const artLang = lang === 'zh' ? 'zh' : 'en'
-  return { color: data.color, art: data.art[artLang] }
+  const l = lang === "zh" ? "zh" : "en"
+  return { color: data.color, face: data.face, name: data.name[l], code: data.code, caption: data.caption[l] }
 }
 
 export default function ResultPageWrapper() {
@@ -1106,23 +1057,8 @@ function ResultPage() {
 
           {/* Dimension Portrait — only shown after stream completes. 放在 reportRef 容器内，导出PDF时才能截到 */}
           {portrait && streamDone && (
-            <div className={`transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`} style={{ marginTop: "1.5rem" }}>
-              <pre style={{
-                color: portrait.color,
-                fontFamily: "Courier New, monospace",
-                fontSize: "0.7rem",
-                lineHeight: "1.45",
-                background: "#080e08",
-                border: `1px solid ${portrait.color}33`,
-                borderRadius: "12px",
-                boxShadow: `0 0 30px ${portrait.color}15`,
-                padding: "1rem",
-                overflowX: "auto",
-                margin: 0,
-                textAlign: "left",
-              }}>
-                {portrait.art}
-              </pre>
+            <div className={`transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`} style={{ marginTop: "1.5rem", filter: `drop-shadow(0 0 22px ${portrait.color}22)` }}>
+              <AsciiPortraitSVG {...portrait} />
             </div>
           )}
           </div>
@@ -1181,19 +1117,18 @@ function ResultPage() {
                 const used = g.max_uses != null && g.used_count >= g.max_uses
                 const expired = !used && g.expires_at != null && new Date(g.expires_at) < new Date()
                 return (
-                  <div key={g.code} className="flex items-center justify-between text-xs py-1" style={{ borderBottom: "1px solid #112811" }}>
+                  <div key={g.code} className="flex items-center gap-2 text-xs py-1" style={{ borderBottom: "1px solid #112811" }}>
+                    <span style={{ color: "#4a7a4a", flexShrink: 0 }}>{lang === 'zh' ? '邀请码' : lang === 'ko' ? '초대 코드' : 'Invite code'}</span>
                     <span style={{ color: used || expired ? "#2d5a2d" : "#00ff88", letterSpacing: "0.1em", textDecoration: used || expired ? "line-through" : "none" }}>{g.code}</span>
-                    <span style={{ color: "#4a7a4a" }}>
-                      {used
-                        ? (lang === 'zh' ? '已使用' : 'used')
-                        : expired
-                        ? (lang === 'zh' ? '已过期' : 'expired')
-                        : (
-                          <button onClick={() => copyGiftCode(g.code)} style={{ border: "1px solid #3a6a3a", color: copiedGift === g.code ? "#00ff88" : "#5a9a5a", background: "transparent", cursor: "pointer", padding: "2px 8px", fontFamily: "inherit", borderRadius: "8px" }}>
-                            {copiedGift === g.code ? (lang === 'zh' ? '✓ 已复制' : '✓ Copied') : (lang === 'zh' ? '复制' : 'Copy')}
-                          </button>
-                        )}
-                    </span>
+                    {used
+                      ? <span style={{ color: "#4a7a4a" }}>{lang === 'zh' ? '已使用' : 'used'}</span>
+                      : expired
+                      ? <span style={{ color: "#4a7a4a" }}>{lang === 'zh' ? '已过期' : 'expired'}</span>
+                      : (
+                        <button onClick={() => copyGiftCode(g.code)} style={{ border: "1px solid #3a6a3a", color: copiedGift === g.code ? "#00ff88" : "#5a9a5a", background: "transparent", cursor: "pointer", padding: "2px 8px", fontFamily: "inherit", borderRadius: "8px" }}>
+                          {copiedGift === g.code ? (lang === 'zh' ? '✓ 已复制' : '✓ Copied') : (lang === 'zh' ? '复制' : 'Copy')}
+                        </button>
+                      )}
                   </div>
                 )
               })}

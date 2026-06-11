@@ -81,6 +81,30 @@ const CARD = { border: "1px solid #1a3a1a", background: "#0a150a", borderRadius:
 // 真实用户评价截图：把图片放进 public/reviews/ 并在此登记文件名即可显示
 const REVIEW_IMAGES: string[] = [];
 
+// 主 CTA 按钮：鼠标悬浮放大 + 发光（内联样式，hover 状态独立）
+function CtaButton({ big, onClick, label }: { big: boolean; onClick: () => void; label: string }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className={big ? "w-full max-w-md px-10 py-4 text-base font-bold tracking-wider" : "px-5 py-2 text-xs font-bold tracking-wider"}
+      style={{
+        border: "none", color: "#04140a", cursor: "pointer", fontFamily: mono, borderRadius: "14px",
+        background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
+        transform: hover ? "scale(1.04)" : "scale(1)",
+        boxShadow: hover
+          ? "0 0 26px #00ff8866, 0 0 44px #00ff8833, 0 2px 10px #00000066"
+          : "0 0 22px #00ff8855, 0 2px 10px #00000066",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
 export default function HomePage() {
   const params = useParams()
   const lang = (params.lang as Lang) ?? 'en'
@@ -95,12 +119,14 @@ export default function HomePage() {
         ["> scan", "看清人生中反复出现的卡点"],
         ["> debug", "找到生命系统里那些悄悄运行的 Bug"],
         ["> rebuild", "让你有机会重新选择怎么活"],
+        ["> heal", "看见自己，疗愈自己"],
       ]
     : [
         ["// init", "A psychological assessment inferred by AI code"],
         ["> scan", "See the blocks that keep recurring in your life"],
         ["> debug", "Find the bugs quietly running in your system"],
         ["> rebuild", "Get a chance to choose how to live"],
+        ["> heal", "See yourself, heal yourself"],
       ]
   const codeTotal = codeLines.reduce((n, [, t]) => n + t.length, 0)
   const [typed, setTyped] = useState(0)
@@ -117,17 +143,11 @@ export default function HomePage() {
   }, [lang])
 
   const startBtn = (big = false) => (
-    <button
+    <CtaButton
+      big={big}
       onClick={() => router.push(`/${lang}/survey`)}
-      className={big ? "w-full max-w-4xl px-10 py-4 text-base font-bold tracking-wider" : "px-5 py-2 text-xs font-bold tracking-wider"}
-      style={{
-        border: "none", color: "#04140a", cursor: "pointer", fontFamily: mono, borderRadius: "14px",
-        background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
-        boxShadow: "0 0 22px #00ff8855, 0 2px 10px #00000066",
-      }}
-    >
-      {zh ? "解析我的生命代码 →" : "Generate my report →"}
-    </button>
+      label={zh ? "解析我的生命代码 →" : "Generate my report →"}
+    />
   )
 
   const ghostBtn = (label: string, href: string) => (
@@ -153,9 +173,9 @@ export default function HomePage() {
   ]
 
   const steps = [
-    { num: "1", icon: IconBirthCode, title: zh ? "生辰代码算法" : "Birth-code algorithm", desc: zh ? "你的出生时间被转译成一组初始参数——能量结构、底层倾向、运行节律" : "Your birth time becomes initial parameters — energy structure, tendencies, rhythm" },
-    { num: "2", icon: IconEnneagram, title: zh ? "九型人格" : "Enneagram", desc: zh ? "9道深度问题定位你的人格内核与防御模式，找到反复出现的那个循环" : "9 deep questions locate your personality core and repeating loop" },
-    { num: "3", icon: IconAI, title: zh ? "AI 引擎" : "AI engine", desc: zh ? "AI 交叉比对两套数据，逐章生成只属于你的系统解析报告" : "AI cross-references both datasets and writes your report chapter by chapter" },
+    { icon: IconAI, title: zh ? "AI算法" : "AI engine", desc: zh ? "AI 算法解析人格心理的底层逻辑，交叉比对模型，生成只属于你的系统解析报告" : "The AI algorithm decodes the underlying logic of your personality and psychology, cross-referencing models to generate a system analysis that's uniquely yours" },
+    { icon: IconEnneagram, title: zh ? "九型人格" : "Enneagram", desc: zh ? "9道深度问题定位你的人格内核与防御模式，找到反复出现的那个循环" : "9 deep questions locate your personality core and repeating loop" },
+    { icon: IconBirthCode, title: zh ? "生辰代码" : "Birth code", desc: zh ? "你的出生时间被转译成一组初始参数——能量结构、底层倾向、运行节律" : "Your birth time becomes initial parameters — energy structure, tendencies, rhythm" },
   ]
 
   const chapters = zh
@@ -170,12 +190,6 @@ export default function HomePage() {
     { src: "/preview/portrait.png", label: zh ? "觉醒画像" : "Awakening portrait" },
   ]
 
-  const heroChips = [
-    { icon: IconAI, label: zh ? "AI算法" : "AI engine", sub: zh ? "生命运行的底层逻辑" : "Generated live" },
-    { icon: IconEnneagram, label: zh ? "九型人格" : "Enneagram", sub: zh ? "人格内核定位" : "Personality core" },
-    { icon: IconBirthCode, label: zh ? "生辰代码" : "Birth code", sub: zh ? "出生参数引擎" : "Birth engine" },
-  ]
-
   const footChips = zh
     ? [["🔒", "传输加密"], ["👁", "仅本人可见"], ["♾", "报告永久保存"], ["⚡", "AI 实时生成"]]
     : [["🔒", "Encrypted"], ["👁", "Private to you"], ["♾", "Saved forever"], ["⚡", "Generated live"]]
@@ -188,18 +202,19 @@ export default function HomePage() {
       {/* ───── 顶栏 ───── */}
       <nav className="sticky top-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between" style={{ background: "#050a05ee", borderBottom: "1px solid #112811", backdropFilter: "blur(6px)" }}>
         <div className="flex items-center gap-2" style={{ fontFamily: mono }}>
+          <img src="/dna-logo.png" alt="生命代码 LOGO" width={20} height={30} style={{ flexShrink: 0, filter: "drop-shadow(0 0 6px #00ff8855)" }} />
           <span className="text-base font-bold" style={{ color: "#00ff88", textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
           <span className="text-xs" style={{ color: "#2d5a2d", letterSpacing: "0.15em", fontFamily: scifi }}>LIFE CODE</span>
         </div>
         <div className="hidden md:flex gap-6 text-xs" style={{ fontFamily: mono }}>
           {(zh ? [["#pain", "为什么测"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#about", "关于创作者"]] : [["#pain", "Why"], ["#how", "How"], ["#preview", "Sample"], ["#about", "About"]]).map(([href, label]) => (
-            <a key={href} href={href} style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
+            <a key={href} href={href} className="nav-link" style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
           ))}
         </div>
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex gap-1.5">
             {LANGS.map((l) => (
-              <button key={l.code} onClick={() => router.push(`/${l.code}`)} className="text-xs px-1.5 py-0.5" style={{ background: "transparent", border: "none", color: l.code === lang ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono }}>
+              <button key={l.code} onClick={() => router.push(`/${l.code}`)} className="nav-link text-xs px-1.5 py-0.5" style={{ background: "transparent", border: "none", color: l.code === lang ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono }}>
                 {l.label}
               </button>
             ))}
@@ -212,21 +227,10 @@ export default function HomePage() {
       <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-8">
 
         {/* ───── Hero（整体居中） ───── */}
-        <section className="py-14 md:py-20 flex flex-col items-center text-center space-y-7">
+        <section className="pt-5 pb-14 md:pt-7 md:pb-20 flex flex-col items-center text-center space-y-7">
           <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
             {zh ? <>用 <span style={{ fontFamily: scifi }}>AI</span> 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span></span></> : <>See the <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
           </h1>
-          <div className="grid grid-cols-3 gap-3 w-full max-w-md">
-            {heroChips.map((c) => (
-              <div key={c.label} className="p-3 text-center" style={CARD}>
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  {React.cloneElement(c.icon, { width: 16, height: 16 })}
-                  <span className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{c.label}</span>
-                </div>
-                <div className="text-xs" style={{ color: "#5a7a5a" }}>{c.sub}</div>
-              </div>
-            ))}
-          </div>
           <div
             className="max-w-xl w-full px-6 py-5 text-left"
             style={{
@@ -258,12 +262,19 @@ export default function HomePage() {
               )
             })}
           </div>
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="w-full flex flex-wrap gap-3 justify-center">
             {startBtn(true)}
           </div>
           {promoActive && (
-            <div className="text-xs" style={{ color: "#4db8ff", fontFamily: mono }}>
-              🎁 {zh ? "首发活动（至6月30日）：买一赠一，多得一份送朋友" : "Launch offer (until Jun 30): buy one, gift one free"}
+            <div className="text-sm font-bold flex items-center justify-center gap-2" style={{ color: "#FFC93C", textShadow: "0 0 10px #FFC93C55", fontFamily: mono }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, filter: "drop-shadow(0 0 5px #FFC93C88)" }}>
+                <rect x="3" y="8" width="18" height="4" rx="1" />
+                <path d="M5 12 v8 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1 -1 v-8" />
+                <line x1="12" y1="8" x2="12" y2="21" />
+                <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
+                <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
+              </svg>
+              {zh ? "首发活动（至6月30日）：买一赠一，送一份疗愈你在意的人" : "Launch offer (until Jun 30): buy one, gift one to heal someone you care about"}
             </div>
           )}
 
@@ -288,9 +299,9 @@ export default function HomePage() {
           {sectionTitle(zh ? "生命代码如何生成？" : "How is your Life Code generated?")}
           <div className="grid md:grid-cols-3 gap-4">
             {steps.map((s) => (
-              <div key={s.num} className="p-6 space-y-4" style={CARD}>
+              <div key={s.title} className="p-6 space-y-4" style={CARD}>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center text-sm font-bold" style={{ width: 32, height: 32, borderRadius: "50%", border: "1.5px solid #00ff88", color: "#00ff88", fontFamily: mono, boxShadow: "0 0 12px #00ff8833" }}>{s.num}</div>
+                  <div className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: "50%", border: "1.5px solid #00ff88", boxShadow: "0 0 12px #00ff8833" }}>{React.cloneElement(s.icon, { width: 18, height: 18 })}</div>
                   <div className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>{s.title}</div>
                 </div>
                 <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>{s.desc}</p>
@@ -358,20 +369,31 @@ export default function HomePage() {
 
         {/* ───── 创作者 + 价格 ───── */}
         <section id="about" className="py-12 grid md:grid-cols-2 gap-4">
-          <div className="p-6 space-y-3" style={CARD}>
-            <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {zh ? "关于创作者" : "About the creator"}</div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center text-lg font-bold" style={{ width: 52, height: 52, border: "1.5px solid #00ff88", color: "#00ff88", fontFamily: mono, borderRadius: "50%", boxShadow: "0 0 16px #00ff8833" }}>T1</div>
-              <div>
-                <div className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>THEONE</div>
-                <div className="text-xs" style={{ color: "#4a7a4a" }}>{zh ? "导演 · AI 创作者" : "Film director · AI creator"}</div>
+          <div className="space-y-4">
+            <div className="p-6 space-y-3" style={CARD}>
+              <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {zh ? "关于创作者" : "About the creator"}</div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center text-lg font-bold" style={{ width: 52, height: 52, border: "1.5px solid #00ff88", color: "#00ff88", fontFamily: mono, borderRadius: "50%", boxShadow: "0 0 16px #00ff8833" }}>T1</div>
+                <div>
+                  <div className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>THEONE</div>
+                  <div className="text-xs" style={{ color: "#4a7a4a" }}>{zh ? "AI架构师 · AI艺术家" : "AI architect · AI artist"}</div>
+                </div>
               </div>
+              <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
+                {zh
+                  ? "喜欢研究心理学、九型人格、AI技术，用代码理解命运，看见自己，疗愈众生。"
+                  : "Fascinated by psychology, the Enneagram and AI. I use code to understand fate — to see myself, and to heal all beings."}
+              </p>
             </div>
-            <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
-              {zh
-                ? "十年影像叙事，习惯把镜头对准人。生命代码是另一种镜头——不预测命运，只帮你把自己的系统看清楚。"
-                : "Ten years of visual storytelling, always pointing the camera at people. Life Code is another kind of lens — it doesn't predict fate, it helps you see your own system clearly."}
-            </p>
+            <div className="p-6 space-y-2" style={CARD}>
+              <p className="text-base leading-relaxed" style={{ color: "#4db8ff", fontFamily: scifi, textShadow: "0 0 12px #4db8ff44" }}>
+                &ldquo;There&rsquo;s a one in billions chance we&rsquo;re in base reality.&rdquo;
+              </p>
+              <p className="text-xs" style={{ color: "#4a7a4a", fontFamily: mono }}>— Elon Musk, Code Conference, 2016</p>
+              {zh && (
+                <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>「我们生活在真实世界中的概率，只有十亿分之一。」—埃隆·马斯克</p>
+              )}
+            </div>
           </div>
           <div className="p-6 space-y-4 text-center flex flex-col justify-center" style={{ border: "1px solid #00ff8855", background: "#0a1f0a", borderRadius: "16px", boxShadow: "0 0 50px #00ff8814" }}>
             <div className="text-4xl font-bold" style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>¥18.8</div>
@@ -385,7 +407,7 @@ export default function HomePage() {
                 🎁 {zh ? "活动期内付费即赠一份，送给你最想读懂的人" : "Buy one, gift one free during launch"}
               </div>
             )}
-            <div className="flex justify-center">{startBtn(true)}</div>
+            <div className="w-full flex justify-center">{startBtn(true)}</div>
           </div>
         </section>
 

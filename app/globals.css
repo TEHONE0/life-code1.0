@@ -80,6 +80,14 @@ body {
   color: #00ff88 !important;
 }
 
+.nav-link {
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+.nav-link:hover {
+  color: #00ff88 !important;
+  text-shadow: 0 0 10px #00ff8855;
+}
+
 .btn-result:hover {
   border-color: #00ff88 !important;
   color: #00ff88 !important;

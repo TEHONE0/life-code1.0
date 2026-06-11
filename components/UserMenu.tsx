@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Lang } from "@/lib/i18n";
@@ -10,6 +10,16 @@ export default function UserMenu({ lang }: { lang: Lang }) {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
 
   useEffect(() => {
     supabaseBrowser.auth.getSession().then(({ data }) => {
@@ -44,6 +54,7 @@ export default function UserMenu({ lang }: { lang: Lang }) {
           background: "transparent",
           cursor: "pointer",
           fontFamily: "Courier New, monospace",
+          borderRadius: "14px",
           display: "inline-flex",
           alignItems: "center",
           gap: "6px",
@@ -56,7 +67,7 @@ export default function UserMenu({ lang }: { lang: Lang }) {
   }
 
   return (
-    <div style={{ position: "relative" }}>
+    <div ref={menuRef} style={{ position: "relative" }}>
       <button
         onClick={() => setOpen(!open)}
         className="btn-lang-glow text-xs px-2 py-1 sm:text-sm sm:px-4 sm:py-2 font-bold"
@@ -66,6 +77,7 @@ export default function UserMenu({ lang }: { lang: Lang }) {
           background: "#0a150a",
           cursor: "pointer",
           fontFamily: "Courier New, monospace",
+          borderRadius: "14px",
           display: "inline-flex",
           alignItems: "center",
           gap: "6px",
@@ -86,6 +98,8 @@ export default function UserMenu({ lang }: { lang: Lang }) {
             border: "1px solid #1e5a1e",
             background: "#080e08",
             fontFamily: "Courier New, monospace",
+            borderRadius: "12px",
+            overflow: "hidden",
             zIndex: 100,
           }}
         >
