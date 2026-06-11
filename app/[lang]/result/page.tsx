@@ -1028,10 +1028,10 @@ function ResultPage() {
                 ),
                 thead: ({ children }) => <thead>{children}</thead>,
                 th: ({ children }) => (
-                  <th style={{ borderBottom: "1px solid #1a3a1a", padding: "8px 12px", color: "#00ff88", textAlign: "left", background: "#0a150a" }}>{children}</th>
+                  <th style={{ borderBottom: "1px solid #1a3a1a", borderRight: "1px solid #1a3a1a", padding: "8px 12px", color: "#00ff88", textAlign: "left", background: "#0a150a" }}>{children}</th>
                 ),
                 td: ({ children }) => (
-                  <td style={{ borderBottom: "1px solid #0f2a0f", padding: "8px 12px", color: "#94a3b8" }}>{children}</td>
+                  <td style={{ borderBottom: "1px solid #0f2a0f", borderRight: "1px solid #16321680", padding: "8px 12px", color: "#94a3b8" }}>{children}</td>
                 ),
                 tr: ({ children }) => <tr>{children}</tr>,
                 pre: ({ children }) => (
@@ -1082,7 +1082,7 @@ function ResultPage() {
                 onMouseEnter={(e) => { if (!shared) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
                 onMouseLeave={(e) => { if (!shared) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
               >
-                {shared ? (lang === 'zh' ? '✓ 链接已复制' : lang === 'ko' ? '✓ 복사됨' : '✓ Copied') : (lang === 'zh' ? '[ 分享给朋友 ]' : lang === 'ko' ? '[ 친구에게 공유 ]' : '[ Share ]')}
+                {shared ? (lang === 'zh' ? '✓ 链接已复制' : lang === 'ko' ? '✓ 복사됨' : '✓ Copied') : (lang === 'zh' ? '分享给朋友' : lang === 'ko' ? '친구에게 공유' : 'Share')}
               </button>
               <button
                 onClick={handleCopy}
@@ -1091,7 +1091,7 @@ function ResultPage() {
                 onMouseEnter={(e) => { if (!copied) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
                 onMouseLeave={(e) => { if (!copied) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
               >
-                {copied ? (lang === 'zh' ? '✓ 已复制' : lang === 'ko' ? '✓ 복사됨' : '✓ Copied') : (lang === 'zh' ? '[ 复制报告 ]' : lang === 'ko' ? '[ 보고서 복사 ]' : '[ Copy ]')}
+                {copied ? (lang === 'zh' ? '✓ 已复制' : lang === 'ko' ? '✓ 복사됨' : '✓ Copied') : (lang === 'zh' ? '复制报告' : lang === 'ko' ? '보고서 복사' : 'Copy')}
               </button>
               <button
                 onClick={handleExportPdf}
@@ -1102,10 +1102,21 @@ function ResultPage() {
                 onMouseLeave={(e) => { if (!exportingPdf) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
               >
                 {exportingPdf
-                  ? (lang === 'zh' ? '[ 生成中... ]' : lang === 'ko' ? '[ 생성 중... ]' : '[ Generating... ]')
-                  : (lang === 'zh' ? '[ 保存为PDF ]' : lang === 'ko' ? '[ PDF로 저장 ]' : '[ Save as PDF ]')}
+                  ? (lang === 'zh' ? '生成中...' : lang === 'ko' ? '생성 중...' : 'Generating...')
+                  : (lang === 'zh' ? '保存为PDF' : lang === 'ko' ? 'PDF로 저장' : 'Save as PDF')}
               </button>
             </div>
+
+            {/* My Archive */}
+            <button
+              onClick={() => router.push(`/${lang}/account`)}
+              className="btn-result w-full py-3 text-sm font-bold tracking-wider"
+              style={{ ...btnBase, border: "1px solid #3a6a3a", color: "#5a9a5a" }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" }}
+            >
+              {lang === 'zh' ? '我的档案' : lang === 'ko' ? '내 보관함' : 'My Archive'}
+            </button>
 
             {/* 赠礼码卡：已有的码（资产展示，与购买动作分离） */}
             {giftCodes.length > 0 && (
@@ -1155,17 +1166,6 @@ function ResultPage() {
               {giftBuying
                 ? (lang === 'zh' ? '跳转支付中...' : '...')
                 : (lang === 'zh' ? '🎁 再送一位朋友 ¥18.8' : lang === 'ko' ? '🎁 친구에게 선물 ¥18.8' : '🎁 Gift a friend ¥18.8')}
-            </button>
-
-            {/* My Archive */}
-            <button
-              onClick={() => router.push(`/${lang}/account`)}
-              className="btn-result w-full py-3 text-sm font-bold tracking-wider"
-              style={{ ...btnBase, border: "1px solid #3a6a3a", color: "#5a9a5a" }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" }}
-            >
-              {lang === 'zh' ? '[ 我的档案 ]' : lang === 'ko' ? '[ 내 보관함 ]' : '[ My Archive ]'}
             </button>
 
             {/* Share modal */}

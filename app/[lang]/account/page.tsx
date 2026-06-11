@@ -202,7 +202,7 @@ function AccountPage() {
         )}
 
         {!loading && view === "reports" && giftCodes.length > 0 && (
-          <div className="space-y-1 p-3" style={{ border: "1px solid #1a3a1a", fontFamily: "Courier New, monospace" }}>
+          <div className="space-y-1 p-3" style={{ border: "1px solid #1a3a1a", borderRadius: "12px", fontFamily: "Courier New, monospace" }}>
             <div className="text-xs font-bold" style={{ color: "#fbbf24" }}>🎁 {lang === "zh" ? "我的赠礼码" : lang === "ko" ? "내 선물 코드" : "My gift codes"}</div>
             {giftCodes.map((g) => {
               const used = g.max_uses != null && g.used_count >= g.max_uses;
@@ -371,7 +371,7 @@ function BloggerInlinePanel({ lang, data }: { lang: Lang; data: BloggerData }) {
   return (
     <div className="space-y-4" style={{ fontFamily: mono }}>
       {data.codes.map((c) => (
-        <div key={c.code} className="p-3" style={{ border: "1px solid #1a3a1a" }}>
+        <div key={c.code} className="p-3" style={{ border: "1px solid #1a3a1a", borderRadius: "12px" }}>
           <div className="text-sm font-bold" style={{ color: "#00ff88" }}>
             {c.code}{c.label ? ` · ${c.label}` : ""}{!c.is_active && <span style={{ color: "#8a2d2d" }}> · {zh ? "已停用" : "inactive"}</span>}
           </div>
@@ -577,11 +577,11 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             <div className="text-xs" style={{ color: "#2d5a2d" }}>// {lang === "zh" ? "生成邀请码" : "Create code"}</div>
             <div className="flex gap-2 flex-wrap">
               <input placeholder="CODE" value={newCode} onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "100px", letterSpacing: "0.1em" }} />
+                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "100px", letterSpacing: "0.1em" }} />
               <input placeholder={lang === "zh" ? "博主名" : "Label"} value={newLabel} onChange={(e) => setNewLabel(e.target.value)}
-                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "80px" }} />
+                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "80px" }} />
               <input placeholder={lang === "zh" ? "博主邮箱" : "Email"} value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
-                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
+                className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
               <button onClick={handleCreate} disabled={creating || !newCode.trim()}
                 className="px-4 py-1 text-xs font-bold"
                 style={{ border: "1px solid #00ff88", color: "#00ff88", background: "transparent", cursor: "pointer", fontFamily: mono, opacity: creating ? 0.5 : 1 }}>
@@ -608,7 +608,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                       onChange={(e) => handleNameChange(c.code, e.target.value)}
                       onBlur={(e) => handleSaveName(c.code, e.target.value)}
                       className="px-1.5 py-0.5 text-xs"
-                      style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "100px" }}
+                      style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "100px" }}
                     />
                     <span>· {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</span>
                     {tab === "blogger" && (
@@ -619,19 +619,19 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-xs" style={{ color: c.is_active ? "#00ff88" : "#ff6b6b" }}>{c.is_active ? "● 有效" : "○ 停用"}</span>
                   <button onClick={() => editingCode === c.code ? setEditingCode(null) : handleEdit(c)} className="text-xs px-2 py-1"
-                    style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                    style={{ border: "1px solid #1a3a1a", borderRadius: "12px", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
                     {editingCode === c.code ? (lang === "zh" ? "取消" : "Cancel") : (lang === "zh" ? "编辑" : "Edit")}
                   </button>
                   <button onClick={() => handleToggle(c.code, c.is_active)} className="text-xs px-2 py-1"
-                    style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                    style={{ border: "1px solid #1a3a1a", borderRadius: "12px", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
                     {c.is_active ? (lang === "zh" ? "停用" : "Disable") : (lang === "zh" ? "启用" : "Enable")}
                   </button>
                   <button onClick={() => handleExpandUsage(c.code)} className="text-xs px-2 py-1"
-                    style={{ border: "1px solid #1a3a1a", color: expandedCode === c.code ? "#00ff88" : "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                    style={{ border: "1px solid #1a3a1a", borderRadius: "12px", color: expandedCode === c.code ? "#00ff88" : "#2d5a2d", background: "transparent", cursor: "pointer" }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#00ff88" }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = expandedCode === c.code ? "#00ff88" : "#2d5a2d" }}>
                     {expandedCode === c.code ? "▲" : "▼"} {lang === "zh" ? "用户" : "Users"}
@@ -669,9 +669,9 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
               {editingCode === c.code && (
                 <div className="px-3 pb-3 flex gap-2 flex-wrap" style={{ borderTop: "1px solid #1a3a1a", paddingTop: "10px" }}>
                   <input placeholder={lang === "zh" ? "博主名" : "Label"} value={editLabel} onChange={(e) => setEditLabel(e.target.value)}
-                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "80px" }} />
+                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "80px" }} />
                   <input placeholder={lang === "zh" ? "博主邮箱" : "Email"} value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
-                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "150px" }} />
+                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "150px" }} />
                   <button onClick={handleSaveEdit} className="px-4 py-1 text-xs font-bold"
                     style={{ border: "1px solid #00ff88", color: "#00ff88", background: "transparent", cursor: "pointer", fontFamily: mono }}>
                     {lang === "zh" ? "保存" : "Save"}
@@ -682,7 +682,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                 <div className="px-3 pb-3 flex gap-2 flex-wrap items-center" style={{ borderTop: "1px solid #1a3a1a", paddingTop: "10px" }}>
                   <span className="text-xs" style={{ color: "#8a7a2d", fontFamily: mono }}>{lang === "zh" ? `结算单数（待结算 ${pendingCountFor(c.code)} 单）` : `Orders to settle (pending ${pendingCountFor(c.code)})`}</span>
                   <input type="number" min="1" max={pendingCountFor(c.code)} placeholder={lang === "zh" ? "单数" : "count"} value={settleCount} onChange={(e) => setSettleCount(e.target.value)}
-                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "80px" }} />
+                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "80px" }} />
                   {(() => {
                     const unit = Number(commissions.find((x) => x.invite_code === c.code && x.status === "pending")?.amount_usd ?? 3);
                     const amt = (parseInt(settleCount, 10) || 0) * unit;
@@ -693,7 +693,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                     );
                   })()}
                   <input placeholder={lang === "zh" ? "打款备注（选填）" : "note"} value={settleNote} onChange={(e) => setSettleNote(e.target.value)}
-                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
+                    className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
                   <button onClick={() => handleSettle(c.code)} className="px-4 py-1 text-xs font-bold"
                     style={{ border: "1px solid #fbbf24", color: "#fbbf24", background: "transparent", cursor: "pointer", fontFamily: mono }}>
                     {lang === "zh" ? "确认结算" : "Confirm"}
@@ -735,7 +735,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                 <div className="text-xs" style={{ color: "#2d5a2d" }}>{new Date(s.created_at).toLocaleString(lang === "zh" ? "zh-CN" : undefined)}</div>
               </div>
               <button onClick={() => handleUnsettle(s.id)} className="text-xs px-2 py-1 flex-shrink-0"
-                style={{ border: "1px solid #1a3a1a", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
+                style={{ border: "1px solid #1a3a1a", borderRadius: "12px", color: "#2d5a2d", background: "transparent", cursor: "pointer" }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#ff6b6b66"; e.currentTarget.style.color = "#ff6b6b" }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}>
                 {lang === "zh" ? "撤销" : "Undo"}

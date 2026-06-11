@@ -102,6 +102,12 @@ body {
   margin-left: 2px;
 }
 
+/* ── 全站统一视觉（首页风格）：按钮圆角 + 悬浮反馈 + 输入框圆角，不改排版/文字/结构 ── */
+button { border-radius: 12px; transition: filter 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, color 0.18s ease; }
+button:not(:disabled):hover { filter: brightness(1.15); }
+button:not(:disabled):active { transform: translateY(1px); }
+input, select, textarea { border-radius: 10px; }
+
 /* 滚轮选择器：隐藏滚动条 */
 .no-scrollbar {
   -ms-overflow-style: none;

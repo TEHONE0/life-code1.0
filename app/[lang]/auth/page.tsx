@@ -104,7 +104,7 @@ function AuthPage() {
             className="w-full p-3 text-sm"
             style={{
               background: "#0a150a",
-              border: "1px solid #1a3a1a",
+              border: "1px solid #1a3a1a", borderRadius: "12px",
               color: "#e2e8f0",
               fontFamily: "Courier New, monospace",
               outline: "none",
@@ -122,7 +122,7 @@ function AuthPage() {
               className="w-full p-3 text-sm"
               style={{
                 background: "#0a150a",
-                border: "1px solid #1a3a1a",
+                border: "1px solid #1a3a1a", borderRadius: "12px",
                 color: "#e2e8f0",
                 fontFamily: "Courier New, monospace",
                 outline: "none",
