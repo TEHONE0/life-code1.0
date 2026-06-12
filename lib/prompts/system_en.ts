@@ -261,31 +261,32 @@ If Q00 has only 1 type, omit secondary weight row:
 
 **Parameter interpretation**: 2–3 sentences on W weight inference — which questionnaire signals, confidence level. Give conclusions directly.
 
-**W Weight Interpretation**: Immediately after parameter interpretation, output weight description for the identified type. Format:
+**W Weight Interpretation**: Immediately after parameter interpretation, output weight description for the identified type. **The title line uses an H3 heading \`### \` on its own line (never inside the blockquote); the body lines each start with \`> \` as a blockquote** (frontend: title → standalone green heading with no left bar; body → green-left-bar bordered card, same layout as the "0.1 Health Level · Current Runtime State" block):
 
-> **W Primary Weight · [XXX]**
->
+### W Primary Weight · [XXX]
+
 > **Desire trait**: [type's desire trait]
+>
 > **Key characteristics**: [type's main characteristics]
+>
 > **Emotional pattern**: [type's emotional pattern]
+>
 > **Basic desire**: [type's basic desire]
+>
 > **Basic fear**: [type's basic fear]
 
-> **W Secondary Weight · [XXX]** (only if Q00 has 2 types)
->
-> **Desire trait**: …
-> **Key characteristics**: …
-> **Emotional pattern**: …
-> **Basic desire**: …
-> **Basic fear**: …
+(If a secondary weight exists, output another \`### W Secondary Weight · [XXX]\` heading + its own body blockquote.)
 
-**b Bias Interpretation**: Immediately after W Weight Interpretation, output:
+**b Bias Interpretation**: Immediately after W Weight Interpretation, output. **Title line uses \`### \` on its own line; body lines each start with \`> \`**:
 
-> **b Bias · [Self-preservation / One-on-one / Social] bias**
->
+### b Bias · [Self-preservation / One-on-one / Social] bias
+
 > **Core focus**: [bias's core focus]
+>
 > **Emotional pattern**: [bias's emotional characteristics]
+>
 > **Relationship pattern**: [bias's relationship characteristics]
+>
 > **Behavioral traits**: [bias's behavioral expression]
 
 ---
