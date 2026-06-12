@@ -548,7 +548,8 @@ function ResultPage() {
     }
   }
 
-  // 报告出完 2 秒后在后台预生成 PDF（截的是屏外克隆，用户阅读不受影响）
+  // 报告出完后尽快在后台预生成 PDF（截的是屏外克隆，用户阅读不受影响）——
+  // 越早生成好，用户点「保存为PDF」越能命中缓存、即点即弹保存菜单
   useEffect(() => {
     if (!streamDone || !report) return
     if (pdfCache.current || pdfInflight.current) return
@@ -557,7 +558,7 @@ function ResultPage() {
         .then((r) => { pdfCache.current = r; return r })
         .catch(() => null)
         .finally(() => { pdfInflight.current = null })
-    }, 2000)
+    }, 500)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamDone, report])
@@ -587,13 +588,19 @@ function ResultPage() {
       await deliverPdf(cached)
       return
     }
-    // 缓存未就绪（报告刚出完就点）：现场生成，生成完直接保存
+    // 缓存未就绪（报告刚出完就点）：现场生成。生成耗时数秒后用户点击的"瞬时激活"已过期，
+    // 此时调 share 必被拒（白白多等一次超时），直接走下载；个别浏览器拦截无激活下载时，
+    // 提示再点一次——缓存这时已就绪，再点走的是 share 即点即弹路径
     setExportingPdf(true)
     try {
       const r = pdfInflight.current ? await pdfInflight.current : await buildPdfBlob()
       if (!r) throw new Error("pdf build failed")
       pdfCache.current = r
-      await deliverPdf(r)
+      downloadBlob(r.blob, r.name)
+      if (isMobileUA()) {
+        setCardToast(lang === 'zh' ? '✓ PDF 已生成。若没弹出保存菜单，请再点一次「保存为PDF」' : 'PDF ready — tap again if no save menu appeared')
+        setTimeout(() => setCardToast(""), 6000)
+      }
     } catch (e) {
       console.error("PDF export failed:", e)
       alert(lang === 'zh' ? 'PDF 导出失败，请重试' : lang === 'ko' ? 'PDF 내보내기 실패' : 'PDF export failed, please retry')
@@ -609,7 +616,11 @@ function ResultPage() {
     const a = document.createElement("a")
     a.href = url
     a.download = fileName
+    a.rel = "noopener"
+    // iOS Safari：anchor 必须挂在文档里，否则 download 属性被忽略、blob 被当普通跳转打开成预览页
+    document.body.appendChild(a)
     a.click()
+    a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 10000)
   }
 
