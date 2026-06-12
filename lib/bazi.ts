@@ -84,7 +84,22 @@ export function calcBazi(q01Text: string): BaziResult | null {
     const hasTime = timeIndex >= 0
     if (!hasTime) timeIndex = 6  // 默认午时
 
-    // ── 尝试解析农历 ─────────────────────────────────────
+    // ── 判断阴历/阳历（滚轮选择器会带 阴历/Lunar/음력 前缀）─────
+    const isLunar = /农历|阴历|陰曆|lunar|음력/i.test(text)
+
+    // ── 统一数字日期提取：年月日 / 년월일 / - / / / . 各种分隔符 ──
+    // 滚轮产出如「阴历，1991年2月5日」「Lunar, 1991-02-05」「1991.2.5」
+    const digitDateRe = /(\d{4})\s*[年년.\-/]\s*(\d{1,2})\s*[月월.\-/]\s*(\d{1,2})/
+    const mDigit = text.match(digitDateRe)
+    if (isLunar && mDigit) {
+      const lunar = Lunar.fromYmdHms(
+        parseInt(mDigit[1]), parseInt(mDigit[2]), parseInt(mDigit[3]),
+        timeIndex * 2, 0, 0
+      )
+      return buildResult(lunar, genderNum, genderLabel, hasTime)
+    }
+
+    // ── 尝试解析农历中文数字 ───────────────────────────────
     // 格式：农历YYYY年X月初X / 农历YYYY年十一月廿五
     const lunarRe = /农历\s*(\d{4})\s*年\s*([正一二三四五六七八九十腊]{1,3})月\s*([初一二三四五六七八九十廿三]+)/
     const mLunar = text.match(lunarRe)
@@ -97,18 +112,19 @@ export function calcBazi(q01Text: string): BaziResult | null {
       else lm = LUNAR_MONTH_MAP[mLunar[2]] ?? 1
       const ld = parseLunarDay(mLunar[3])
 
-      const lunar = Lunar.fromYmdHms(ly, lm, ld, timeIndex * 2 + 1, 0, 0)
+      const lunar = Lunar.fromYmdHms(ly, lm, ld, timeIndex * 2, 0, 0)
       return buildResult(lunar, genderNum, genderLabel, hasTime)
     }
 
+    // 以下为阳历分支：仅当未标注阴历时才走，避免阴历被阳历正则劫持
     // ── 尝试解析阳历中文 ─────────────────────────────────
     // 格式：1991年3月20日 / 1991年03月20日
     const solarRe = /(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/
     const mSolar = text.match(solarRe)
-    if (mSolar) {
+    if (!isLunar && mSolar) {
       const solar = Solar.fromYmdHms(
         parseInt(mSolar[1]), parseInt(mSolar[2]), parseInt(mSolar[3]),
-        timeIndex * 2 + 1, 0, 0
+        timeIndex * 2, 0, 0
       )
       const lunar = solar.getLunar()
       return buildResult(lunar, genderNum, genderLabel, hasTime)
@@ -122,12 +138,12 @@ export function calcBazi(q01Text: string): BaziResult | null {
     }
     const engRe = /([a-z]{3,})[.\s,]+(\d{1,2})[,\s]+(\d{4})/i
     const mEng = text.match(engRe)
-    if (mEng) {
+    if (!isLunar && mEng) {
       const mo = monthNames[mEng[1].slice(0,3).toLowerCase()]
       if (mo) {
         const solar = Solar.fromYmdHms(
           parseInt(mEng[3]), mo, parseInt(mEng[2]),
-          timeIndex * 2 + 1, 0, 0
+          timeIndex * 2, 0, 0
         )
         const lunar = solar.getLunar()
         return buildResult(lunar, genderNum, genderLabel, hasTime)
@@ -137,10 +153,10 @@ export function calcBazi(q01Text: string): BaziResult | null {
     // ISO 格式 1991-03-20
     const isoRe = /(\d{4})[-/](\d{1,2})[-/](\d{1,2})/
     const mIso = text.match(isoRe)
-    if (mIso) {
+    if (!isLunar && mIso) {
       const solar = Solar.fromYmdHms(
         parseInt(mIso[1]), parseInt(mIso[2]), parseInt(mIso[3]),
-        timeIndex * 2 + 1, 0, 0
+        timeIndex * 2, 0, 0
       )
       const lunar = solar.getLunar()
       return buildResult(lunar, genderNum, genderLabel, hasTime)
