@@ -1375,10 +1375,10 @@ function ResultPage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "18px" }}>
           {[
-            { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff" },
-            { label: chrome.statHealth, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88" },
-            { label: chrome.statWeight, value: mainWeight ? `${mainWeight}型` : "—", suffix: "", color: "#00ff88" },
-            { label: chrome.statBias, value: bias ? `${bias}型` : "—", suffix: "", color: "#00ff88" },
+            { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff", note: "" },
+            { label: chrome.statHealth, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88", note: healthNote },
+            { label: chrome.statWeight, value: mainWeight ? `${mainWeight}型` : "—", suffix: "", color: "#00ff88", note: "" },
+            { label: chrome.statBias, value: bias ? `${bias}型` : "—", suffix: "", color: "#00ff88", note: "" },
           ].map((s) => (
             <div key={s.label} style={{ padding: "12px 14px", background: "#0a1a12", border: "1px solid #1c3c2a", borderRadius: "11px" }}>
               <div style={{ color: "#7fc97f", fontSize: "10.5px", marginBottom: "6px" }}>{s.label}</div>
@@ -1386,6 +1386,7 @@ function ResultPage() {
                 <span style={{ color: s.color, fontSize: "20px", fontWeight: 700, textShadow: `0 0 14px ${s.color}55` }}>{s.value}</span>
                 <span style={{ color: "#2d5a6a", fontSize: "10px" }}>{s.suffix}</span>
               </div>
+              {s.note && <div style={{ color: "#7a9a8a", fontSize: "10.5px", marginTop: "5px", lineHeight: 1.4 }}>{s.note}</div>}
             </div>
           ))}
         </div>
