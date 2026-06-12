@@ -31,17 +31,36 @@ export async function POST(req: NextRequest) {
 
     const user = userData.user;
     const isAdmin = ADMIN_EMAILS.includes(user.email || "");
-    let submissionId: string;
+    let submissionId: string | null = null;
+
+    // 新版问卷 basic_info 是 "姓名: 范向南 / 性别: 男 / ..." 合成串，优先按标签提取；旧格式回退首段
+    const _bi = (answers.basic_info || "") as string;
+    const name = (_bi.match(/(?:姓名|Name|이름)[:：]\s*([^/，,、\n]+)/i)?.[1] || _bi.split(/[，,、/\s]/)[0] || "").trim() || "anonymous";
 
     if (existingSubmissionId) {
-      submissionId = existingSubmissionId;
-      if (inviteCode) {
-        await supabase.from("submissions").update({ invite_code: inviteCode }).eq("id", submissionId);
+      // 旧ID只允许复用"未支付、未出报告"的草稿，且用最新答案覆盖——
+      // 已支付/已出报告的记录若被复用，新填的人会被旧档顶掉、新答案丢失（2026-06-13 线上bug）
+      const { data: existing } = await supabase
+        .from("submissions")
+        .select("id, paid, report")
+        .eq("id", existingSubmissionId)
+        .maybeSingle();
+      if (existing && !existing.paid && !existing.report) {
+        await supabase.from("submissions").update({
+          name, lang,
+          enneagram: answers.enneagram, basic_info: answers.basic_info,
+          origin: answers.origin, critical_error: answers.critical_error,
+          core_loop: answers.core_loop, const_value: answers.const,
+          status: answers.status, legacy: answers.legacy,
+          dimension: answers.dimension, defense: answers.defense,
+          invite_code: inviteCode || null,
+        }).eq("id", existingSubmissionId);
+        submissionId = existingSubmissionId;
       }
-    } else {
-      // 新版问卷 basic_info 是 "姓名: 范向南 / 性别: 男 / ..." 合成串，优先按标签提取；旧格式回退首段
-      const _bi = (answers.basic_info || "") as string;
-      const name = (_bi.match(/(?:姓名|Name|이름)[:：]\s*([^/，,、\n]+)/i)?.[1] || _bi.split(/[，,、/\s]/)[0] || "").trim() || "anonymous";
+      // 旧ID不可复用 → 落到下方新建
+    }
+
+    if (!submissionId) {
       const { data: row, error: insertErr } = await supabase
         .from("submissions")
         .insert({

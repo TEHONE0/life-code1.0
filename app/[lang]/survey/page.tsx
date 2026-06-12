@@ -242,6 +242,9 @@ export default function SurveyPage() {
       localStorage.removeItem(DRAFT_KEY);
       localStorage.removeItem(FIELDS_KEY);
       localStorage.removeItem(BIRTH_KEY);
+      // 测新的人必须断开与上一份提交的关联，否则后端会复用旧档、新答案被丢弃（2026-06-13 线上bug）
+      sessionStorage.removeItem("existing_submission_id");
+      sessionStorage.removeItem("survey_answers");
       return;
     }
     // 来自"我的问卷-重新填写"：只有答案串（无子字段草稿），把 basic_info 合成串反解回子字段和生日滚轮
