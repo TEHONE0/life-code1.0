@@ -35,6 +35,9 @@ export default function PaymentPage() {
       return
     }
     setHasAnswers(true)
+    // 先用问卷页缓存的邮箱立即渲染界面，不必干等下面的 getSession 网络回来（手机黑屏根因）
+    const cachedEmail = sessionStorage.getItem("user_email")
+    if (cachedEmail) setUserEmail(cachedEmail)
 
     supabaseBrowser.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
@@ -135,7 +138,14 @@ export default function PaymentPage() {
     }
   }
 
-  if (!hasAnswers || !userEmail) return null
+  // 兜底加载态（无缓存邮箱时短暂出现）：给暗底 loading 提示，不再黑屏
+  if (!hasAnswers || !userEmail) return (
+    <main className="min-h-screen flex items-center justify-center px-5" style={{ background: "radial-gradient(ellipse at center, #061206 0%, #050a05 70%)" }}>
+      <div className="text-sm" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
+        {lang === 'zh' ? '// 正在进入支付' : lang === 'ko' ? '// 결제 페이지로 이동 중' : '// Entering checkout'}<AnimatedDots />
+      </div>
+    </main>
+  )
 
   return (
     <main

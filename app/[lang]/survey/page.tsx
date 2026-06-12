@@ -187,6 +187,7 @@ export default function SurveyPage() {
   const [page, setPage] = useState(0);
   const [activeIdx, setActiveIdx] = useState(0);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [missingModal, setMissingModal] = useState<string[]>([]);
   const qRefs = useRef<(HTMLDivElement | null)[]>([]);
   const submitRef = useRef<HTMLDivElement | null>(null);
@@ -289,42 +290,54 @@ export default function SurveyPage() {
   };
 
   const handleSubmit = async () => {
+    if (submitting) return; // 防止手机网络慢时重复点击触发多次提交
     const missing = QUESTIONS.filter((q) => !(answers[q.id] || "").trim());
     if (missing.length > 0) {
       setMissingModal(missing.map((q) => q.code));
       return;
     }
+    setSubmitting(true);
     setError("");
     sessionStorage.setItem("survey_answers", JSON.stringify(answers));
     sessionStorage.setItem("survey_lang", lang);
     // 不清草稿：用户在支付页点「重新填写」回到问卷时，能完整恢复刚填的答案，避免白填
 
-    // Save to DB immediately — with auth token if logged in, anonymous if not
-    const { data: sessionData } = await supabaseBrowser.auth.getSession();
-    const token = sessionData.session?.access_token;
-    const existingId = sessionStorage.getItem("existing_submission_id") || undefined;
     try {
-      const res = await fetch("/api/save-draft", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ answers, lang, existingSubmissionId: existingId }),
-      });
-      const json = await res.json();
-      if (json.submissionId) {
-        sessionStorage.setItem("existing_submission_id", json.submissionId);
+      // Save to DB immediately — with auth token if logged in, anonymous if not
+      const { data: sessionData } = await supabaseBrowser.auth.getSession();
+      const token = sessionData.session?.access_token;
+      // 缓存邮箱给支付页：支付页可据此立即渲染，不必干等 getSession 回来（黑屏根因）
+      if (sessionData.session?.user?.email) {
+        sessionStorage.setItem("user_email", sessionData.session.user.email);
       }
-    } catch {
-      // Non-fatal: sessionStorage is still the fallback
-    }
+      const existingId = sessionStorage.getItem("existing_submission_id") || undefined;
+      try {
+        const res = await fetch("/api/save-draft", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ answers, lang, existingSubmissionId: existingId }),
+        });
+        const json = await res.json();
+        if (json.submissionId) {
+          sessionStorage.setItem("existing_submission_id", json.submissionId);
+        }
+      } catch {
+        // Non-fatal: sessionStorage is still the fallback
+      }
 
-    if (!sessionData.session) {
-      router.push(`/${lang}/auth?next=${encodeURIComponent(`/${lang}/payment`)}`);
-      return;
+      if (!sessionData.session) {
+        router.push(`/${lang}/auth?next=${encodeURIComponent(`/${lang}/payment`)}`);
+        return;
+      }
+      router.push(`/${lang}/payment`);
+      // 跳转中保持 submitting=true，组件即将卸载，不重置以免跳转间隙被再次点击
+    } catch {
+      setSubmitting(false);
+      setError(lang === "zh" ? "提交失败，请检查网络后重试" : "Submit failed, please retry");
     }
-    router.push(`/${lang}/payment`);
   };
 
   const focusGlow = {
@@ -754,19 +767,29 @@ export default function SurveyPage() {
               </button>
               <button
                 onClick={handleSubmit}
+                disabled={submitting}
                 className="flex-1 py-4 text-base font-bold tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
                 style={{
-                  border: "none", color: "#04140a", cursor: "pointer", fontFamily: mono, borderRadius: "14px",
+                  border: "none", color: "#04140a", cursor: submitting ? "not-allowed" : "pointer", fontFamily: mono, borderRadius: "14px",
                   background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
                   boxShadow: "0 0 28px #00ff8855, 0 2px 10px #00000066",
                   fontSize: "clamp(0.85rem, 4vw, 1rem)",
                   WebkitTapHighlightColor: "transparent",
+                  opacity: submitting ? 0.7 : 1,
                 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04140a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" />
-                </svg>
-                {t.submitBtn.replace(/^\/\/\s*/, "")}
+                {submitting ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04140a" strokeWidth="2" strokeLinecap="round" className="animate-spin">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04140a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" />
+                  </svg>
+                )}
+                {submitting
+                  ? (lang === 'zh' ? '提交中…' : lang === 'ko' ? '제출 중…' : 'Submitting…')
+                  : t.submitBtn.replace(/^\/\/\s*/, "")}
               </button>
             </div>
           )}
