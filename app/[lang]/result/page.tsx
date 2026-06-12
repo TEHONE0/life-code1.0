@@ -497,15 +497,22 @@ function ResultPage() {
       const fileName = `生命代码报告_${Date.now()}.pdf`
       const blob = pdf.output("blob")
 
-      // 手机浏览器（尤其iOS Safari）对 a[download] 支持差，优先用系统分享面板，让用户选"存储到文件/保存图片"
+      // 手机优先用系统分享面板（可存到"文件"/微信）。注意：逐段截图耗时数秒，调用 share 时
+      // 用户点击的"瞬时激活"往往已过期，浏览器会抛 NotAllowedError——此时静默降级为直接下载，
+      // 不能当成错误弹窗（这是手机上"PDF导出失败"弹窗的根因）
       const file = new File([blob], fileName, { type: "application/pdf" })
-      if (isMobileUA() && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: fileName })
-      } else if (isMobileUA()) {
-        // iOS 等不支持分享 PDF 文件：新标签打开 blob，用户可在预览里存到"文件"（pdf.save 在 iOS 多数无效）
-        const url = URL.createObjectURL(blob)
-        window.open(url, "_blank")
-        setTimeout(() => URL.revokeObjectURL(url), 10000)
+      if (isMobileUA()) {
+        let shared = false
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: fileName })
+            shared = true
+          } catch (e) {
+            // 用户主动取消分享面板：到此为止，不再触发下载
+            if (e instanceof Error && e.name === "AbortError") shared = true
+          }
+        }
+        if (!shared) downloadBlob(blob, fileName)
       } else {
         pdf.save(fileName)
       }
