@@ -356,8 +356,6 @@ function ResultPage() {
   const [copied, setCopied] = useState(false)
   const [streaming, setStreaming] = useState(false)
   const [streamDone, setStreamDone] = useState(false)
-  const [shared, setShared] = useState(false)
-  const [shareModal, setShareModal] = useState(false)
   const [exportingPdf, setExportingPdf] = useState(false)
   const [giftCodes, setGiftCodes] = useState<{ code: string; label: string | null; used_count: number; max_uses: number | null; expires_at: string | null }[]>([])
   const [giftBuying, setGiftBuying] = useState(false)
@@ -415,38 +413,6 @@ function ResultPage() {
     : lang === 'ko'
     ? '우주가 코드라면, 당신은 어떤 줄인가요? 생명 코드를 확인하세요 →'
     : 'If life is code — which line are you? Decode yours →'
-
-  const handleShare = () => setShareModal(true)
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-    } catch {
-      const el = document.createElement('textarea')
-      el.value = shareUrl
-      document.body.appendChild(el)
-      el.select()
-      document.execCommand('copy')
-      document.body.removeChild(el)
-    }
-    setShared(true)
-    setTimeout(() => setShared(false), 2000)
-  }
-
-  // 微信不开放网页直接拉起分享的接口（无法用URL跳转），唯一能"直接打到App"的办法
-  // 是调用系统分享面板（Web Share API）——手机装了微信的话，面板里会直接出现微信选项
-  const handleShareToWeChat = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: shareText, text: shareText, url: shareUrl })
-        return
-      } catch (e) {
-        if (e instanceof Error && e.name === "AbortError") return // 用户取消分享面板
-      }
-    }
-    // 不支持系统分享面板（如桌面浏览器）时，退回复制链接
-    handleCopyLink()
-  }
 
   const handleCopy = async () => {
     try {
@@ -553,9 +519,11 @@ function ResultPage() {
       const fileName = `生命代码_${userName || "card"}_${Date.now()}.png`
       const file = new File([blob], fileName, { type: "image/png" })
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      // 移动端：拉起系统分享面板（装了微信/微博会直接出现对应选项），把卡片图 + 文案 + 链接一起分享出去
       if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: fileName })
+        await navigator.share({ files: [file], text: shareText, url: shareUrl })
       } else {
+        // 桌面端无系统分享面板：直接下载卡片图，用户自己拖进微信/微博
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
@@ -1098,7 +1066,7 @@ function ResultPage() {
               // {lang === 'zh' ? '保存 · 分享' : 'SAVE · SHARE'}
             </div>
 
-            {/* 生成分享卡片（主推：把报告精华拼成一张可发朋友圈的卡） */}
+            {/* 分享给朋友（主推：生成分享卡片图，移动端拉起系统面板发微信/微博，桌面下载） */}
             <button
               onClick={handleShareCard}
               disabled={cardBusy}
@@ -1109,20 +1077,11 @@ function ResultPage() {
             >
               {cardBusy
                 ? (lang === 'zh' ? '生成中...' : lang === 'ko' ? '생성 중...' : 'Generating...')
-                : (lang === 'zh' ? '◇ 生成我的分享卡片' : lang === 'ko' ? '◇ 공유 카드 만들기' : '◇ Create share card')}
+                : (lang === 'zh' ? '◇ 分享给朋友（生成分享卡）' : lang === 'ko' ? '◇ 친구에게 공유' : '◇ Share with friends')}
             </button>
 
-            {/* 3-button row */}
+            {/* 2-button row */}
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleShare}
-                className="btn-result flex-1 py-3 text-sm font-bold tracking-wider"
-                style={{ ...btnBase, border: `1px solid ${shared ? "#00ff88" : "#3a6a3a"}`, color: shared ? "#00ff88" : "#5a9a5a" }}
-                onMouseEnter={(e) => { if (!shared) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
-                onMouseLeave={(e) => { if (!shared) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
-              >
-                {shared ? (lang === 'zh' ? '✓ 链接已复制' : lang === 'ko' ? '✓ 복사됨' : '✓ Copied') : (lang === 'zh' ? '分享给朋友' : lang === 'ko' ? '친구에게 공유' : 'Share')}
-              </button>
               <button
                 onClick={handleCopy}
                 className="btn-result flex-1 py-3 text-sm font-bold tracking-wider"
@@ -1207,66 +1166,6 @@ function ResultPage() {
                 : (lang === 'zh' ? '🎁 再送一位朋友 ¥18.80' : lang === 'ko' ? '🎁 친구에게 선물 ¥18.80' : '🎁 Gift a friend ¥18.80')}
             </button>
 
-            {/* Share modal */}
-            {shareModal && (
-              <div
-                style={{ position: "fixed", inset: 0, background: "#000000bb", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
-                onClick={() => setShareModal(false)}
-              >
-                <div
-                  className="space-y-4 p-6"
-                  style={{ border: "1px solid #2a5a2a", borderRadius: "16px", background: "#080e08", fontFamily: "Courier New, monospace", maxWidth: "360px", width: "90%" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="text-sm font-bold" style={{ color: "#00ff88" }}>
-                    {lang === 'zh' ? '// 分享给朋友' : lang === 'ko' ? '// 친구에게 공유' : '// Share'}
-                  </div>
-
-                  {/* Platform buttons */}
-                  {[
-                    {
-                      label: lang === 'zh' ? '微博' : 'Weibo',
-                      color: "#E6162D",
-                      href: `https://service.weibo.com/share/share.php?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`,
-                    },
-                  ].map(({ label, color, href }) => (
-                    <a
-                      key={label}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full py-3 text-sm font-bold text-center"
-                      style={{ border: `1px solid ${color}44`, color, background: "transparent", textDecoration: "none", letterSpacing: "0.05em" }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${color}22` }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent" }}
-                    >
-                      {label}
-                    </a>
-                  ))}
-
-                  {/* WeChat: 系统分享面板，装了微信会直接出现微信选项；不支持时退回复制链接 */}
-                  <button
-                    onClick={handleShareToWeChat}
-                    className="w-full py-3 text-sm font-bold"
-                    style={{ border: `1px solid ${shared ? "#00ff88" : "#07C160"}`, color: shared ? "#00ff88" : "#07C160", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", letterSpacing: "0.05em" }}
-                    onMouseEnter={(e) => { if (!shared) (e.currentTarget as HTMLElement).style.background = "#07C16022" }}
-                    onMouseLeave={(e) => { if (!shared) (e.currentTarget as HTMLElement).style.background = "transparent" }}
-                  >
-                    {shared ? (lang === 'zh' ? '✓ 已复制链接' : '✓ Copied') : (lang === 'zh' ? '分享到微信' : lang === 'ko' ? 'WeChat으로 공유' : 'Share to WeChat')}
-                  </button>
-
-                  <button
-                    onClick={() => setShareModal(false)}
-                    className="w-full py-2 text-sm"
-                    style={{ border: "1px solid #2a5a2a", color: "#4a8a4a", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#00ff8866"; (e.currentTarget as HTMLElement).style.color = "#7aba7a" }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#2a5a2a"; (e.currentTarget as HTMLElement).style.color = "#4a8a4a" }}
-                  >
-                    {lang === 'zh' ? '关闭' : lang === 'ko' ? '닫기' : 'Close'}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
 

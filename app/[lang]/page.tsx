@@ -123,7 +123,7 @@ export default function HomePage() {
         ["> scan", "看清人生中反复出现的卡点"],
         ["> debug", "找到生命系统里那些悄悄运行的 Bug"],
         ["> rebuild", "让你有机会重新选择怎么活"],
-        ["> heal", "看见自己，治愈自己"],
+        ["> heal", "看见自己，疗愈自己"],
       ]
     : [
         ["// init", "A psychological assessment inferred by AI code"],
@@ -268,7 +268,7 @@ export default function HomePage() {
           </div>
           {promoActive && (
             <div className="space-y-2">
-              <div className="text-sm font-bold flex items-center justify-center gap-2" style={{ color: "#FFC93C", textShadow: "0 0 10px #FFC93C55", fontFamily: mono }}>
+              <div className="text-sm font-bold flex flex-wrap items-center justify-center gap-x-2 gap-y-1" style={{ color: "#FFC93C", textShadow: "0 0 10px #FFC93C55", fontFamily: mono }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, filter: "drop-shadow(0 0 5px #FFC93C88)" }}>
                   <rect x="3" y="8" width="18" height="4" rx="1" />
                   <path d="M5 12 v8 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1 -1 v-8" />
@@ -276,7 +276,8 @@ export default function HomePage() {
                   <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
                   <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
                 </svg>
-                {zh ? "首发活动（至6月30日）：买一赠一，送给你最想读懂的人" : "Launch offer (until Jun 30): buy one, gift one to someone you most want to understand"}
+                <span>{zh ? "首发活动（至6月30日）：" : "Launch offer (until Jun 30): "}</span>
+                <span>{zh ? "买一赠一，送给你最想读懂的人" : "buy one, gift one to someone you most want to understand"}</span>
               </div>
               <div className="relative mx-auto" style={{ width: "80%", maxWidth: "420px", height: "2px" }}>
                 <div className="absolute inset-0" style={{ borderRadius: "999px", background: "linear-gradient(90deg, transparent 0%, #FFC93C 50%, transparent 100%)" }} />
@@ -374,7 +375,7 @@ export default function HomePage() {
             <div className="mx-auto"><NeonRing size={96}>{IconShield}</NeonRing></div>
             <div className="space-y-4 text-center md:text-left">
               <h2 className="text-lg md:text-xl font-bold" style={{ color: "#00ff88", fontFamily: mono }}>
-                {zh ? "这是一份来自你内心深处的自我理解报告" : "This is not fortune-telling — it's a self-understanding report"}
+                {zh ? "这是一份来自你内心的自我理解报告" : "This is not fortune-telling — it's a self-understanding report"}
               </h2>
               <div className="grid md:grid-cols-3 gap-4 text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
                 <p>{zh ? "以AI算法、代码程序、心理学、九型人格为分析框架，不预测吉凶、不替你做任何决定" : "Built on psychology (Enneagram). No fortune predictions, no decisions made for you"}</p>

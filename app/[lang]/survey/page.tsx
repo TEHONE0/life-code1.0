@@ -297,8 +297,7 @@ export default function SurveyPage() {
     setError("");
     sessionStorage.setItem("survey_answers", JSON.stringify(answers));
     sessionStorage.setItem("survey_lang", lang);
-    localStorage.removeItem(DRAFT_KEY);
-    localStorage.removeItem(FIELDS_KEY);
+    // 不清草稿：用户在支付页点「重新填写」回到问卷时，能完整恢复刚填的答案，避免白填
 
     // Save to DB immediately — with auth token if logged in, anonymous if not
     const { data: sessionData } = await supabaseBrowser.auth.getSession();
