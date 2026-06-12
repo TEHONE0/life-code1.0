@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("submissions")
-    .select("id, name, lang, paid, created_at, report, enneagram, basic_info, origin, critical_error, core_loop, const_value, status, legacy, dimension")
+    .select("id, name, lang, paid, created_at, report, enneagram, basic_info, origin, critical_error, core_loop, const_value, status, legacy, dimension, defense")
     .eq("user_id", userData.user.id)
     .order("created_at", { ascending: false });
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     answers: {
       enneagram: r.enneagram, basic_info: r.basic_info, origin: r.origin,
       critical_error: r.critical_error, core_loop: r.core_loop, const: r.const_value,
-      status: r.status, legacy: r.legacy, dimension: r.dimension,
+      status: r.status, legacy: r.legacy, dimension: r.dimension, defense: r.defense,
     },
   }));
   return NextResponse.json({ submissions: list });

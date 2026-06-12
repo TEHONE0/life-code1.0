@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
           origin: answers.origin, critical_error: answers.critical_error,
           core_loop: answers.core_loop, const_value: answers.const,
           status: answers.status, legacy: answers.legacy,
-          dimension: answers.dimension, paid: isAdmin,
+          dimension: answers.dimension, defense: answers.defense, paid: isAdmin,
           invite_code: inviteCode || null,
         })
         .select("id").single();

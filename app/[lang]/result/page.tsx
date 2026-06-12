@@ -799,7 +799,7 @@ function ResultPage() {
           sessionStorage.setItem("survey_answers", JSON.stringify({
             enneagram: submission.enneagram, basic_info: submission.basic_info, origin: submission.origin,
             critical_error: submission.critical_error, core_loop: submission.core_loop, const: submission.const_value,
-            status: submission.status, legacy: submission.legacy, dimension: submission.dimension,
+            status: submission.status, legacy: submission.legacy, dimension: submission.dimension, defense: submission.defense,
           }))
           sessionStorage.setItem("survey_lang", submission.lang)
           router.replace(`/${lang}/payment`)
@@ -834,7 +834,7 @@ function ResultPage() {
           const answers = {
             enneagram: submission.enneagram, basic_info: submission.basic_info, origin: submission.origin,
             critical_error: submission.critical_error, core_loop: submission.core_loop, const: submission.const_value,
-            status: submission.status, legacy: submission.legacy, dimension: submission.dimension,
+            status: submission.status, legacy: submission.legacy, dimension: submission.dimension, defense: submission.defense,
           }
           await streamFromAnswers(answers, submission.lang, submission.id)
         }

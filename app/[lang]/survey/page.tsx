@@ -44,7 +44,7 @@ const UI = {
     sidebarTitle: "生命代码问卷",
     sidebarSub: "LIFE CODE SCANNER",
     progress: "进度",
-    steps: ["基本信息", "变量采集中", "原生家庭环境", "核心信念", "主循环事件", "不可变常量", "当前状态", "程序终止前的愿望", "意识维度扫描", "提交完成"],
+    steps: ["基本信息", "变量采集中", "原生家庭环境", "核心信念", "主循环事件", "不可变常量", "当前状态", "程序终止前的愿望", "意识维度扫描", "防御反应扫描", "提交完成"],
     security: "数据安全保护",
     author: "作者",
     authorRole: "AI 导演 ｜ 生命代码创造者",
@@ -61,7 +61,7 @@ const UI = {
     sidebarTitle: "Life Code Survey",
     sidebarSub: "LIFE CODE SCANNER",
     progress: "Progress",
-    steps: ["BASIC_INFO", "ENNEAGRAM_SCAN", "ORIGIN_ENVIRONMENT", "CRITICAL_ERROR", "CORE_LOOP", "UNDELETABLE_CONST", "CURRENT_STATUS", "LEGACY_DEFINE", "DIMENSION_SCAN", "SUBMIT"],
+    steps: ["BASIC_INFO", "ENNEAGRAM_SCAN", "ORIGIN_ENVIRONMENT", "CRITICAL_ERROR", "CORE_LOOP", "UNDELETABLE_CONST", "CURRENT_STATUS", "LEGACY_DEFINE", "DIMENSION_SCAN", "DEFENSE_RESPONSE", "SUBMIT"],
     security: "Data protection",
     author: "Creator",
     authorRole: "Film director | Creator of Life Code",
@@ -78,7 +78,7 @@ const UI = {
     sidebarTitle: "라이프 코드 설문",
     sidebarSub: "LIFE CODE SCANNER",
     progress: "진행",
-    steps: ["BASIC_INFO", "ENNEAGRAM_SCAN", "ORIGIN_ENVIRONMENT", "CRITICAL_ERROR", "CORE_LOOP", "UNDELETABLE_CONST", "CURRENT_STATUS", "LEGACY_DEFINE", "DIMENSION_SCAN", "제출 완료"],
+    steps: ["BASIC_INFO", "ENNEAGRAM_SCAN", "ORIGIN_ENVIRONMENT", "CRITICAL_ERROR", "CORE_LOOP", "UNDELETABLE_CONST", "CURRENT_STATUS", "LEGACY_DEFINE", "DIMENSION_SCAN", "방어 반응 스캔", "제출 완료"],
     security: "데이터 보호",
     author: "제작자",
     authorRole: "영화감독 | 라이프 코드 제작자",
@@ -558,8 +558,8 @@ export default function SurveyPage() {
       );
     }
 
-    // Q08：单选卡片（2×2 网格）
-    if (q.id === "dimension") {
+    // Q08 / Q09：单选卡片（2×2 网格）
+    if (q.id === "dimension" || q.id === "defense") {
       const lines = q.label.split("\n").filter((l) => l.trim());
       const question = lines[0];
       const options = lines.slice(1);

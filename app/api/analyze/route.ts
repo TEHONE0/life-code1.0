@@ -79,6 +79,9 @@ ${answers.legacy}
 
 Q08 · DIMENSION_SCAN（意识维度）：
 ${answers.dimension || "未填写"}
+
+Q09 · DEFENSE_RESPONSE（被指出问题时的第一反应，1能反思→4反击/回避；健康层级与全局调制的关键信号）：
+${answers.defense || "未填写"}
 ${baziBlock}
 请根据以上变量，生成完整的生命代码解析报告。`
       : `Current year: ${currentYear} (all analysis referencing "near term", "current year", or "annual cycle" should be based on ${currentYear})
@@ -111,6 +114,9 @@ ${answers.legacy}
 
 Q08 · DIMENSION_SCAN (consciousness dimension):
 ${answers.dimension || "not filled"}
+
+Q09 · DEFENSE_RESPONSE (first reaction when a flaw is pointed out, 1=reflects → 4=attacks/avoids; key signal for health level and global tuning):
+${answers.defense || "not filled"}
 ${baziBlock}
 ${lang === 'ko' ? 'Note: This user\'s interface language is Korean (한국어). If you need to output the birth data incomplete notice, write it in Korean.\n\n' : ''}Please generate the complete Life Code report based on the above variables.`;
 

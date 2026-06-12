@@ -141,5 +141,13 @@ export const en = {
       placeholder: "Choose 1, 2, 3, or 4",
       multiline: false,
     },
+    {
+      id: "defense",
+      code: "Q09 · DEFENSE_RESPONSE",
+      comment: "// Defense response scan",
+      label: "When someone points out a flaw in you, which is closest to your first reaction? (Pick one)\n1. I pause, but can consider whether they have a point\n2. I get defensive in the moment, but reflect on it later\n3. I resist it — it's hard to take in\n4. I push back hard or shut it out, and relationships often suffer",
+      placeholder: "Choose 1, 2, 3, or 4",
+      multiline: false,
+    },
   ],
 }

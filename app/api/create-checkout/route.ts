@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
           status: answers.status,
           legacy: answers.legacy,
           dimension: answers.dimension,
+          defense: answers.defense,
           paid: false,
           invite_code: inviteCode || null,
         })

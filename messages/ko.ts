@@ -143,5 +143,13 @@ export const ko: typeof en = {
       placeholder: "1, 2, 3 또는 4 선택",
       multiline: false,
     },
+    {
+      id: "defense",
+      code: "Q09 · DEFENSE_RESPONSE",
+      comment: "// 방어 반응 스캔",
+      label: "누군가 당신의 문제를 지적할 때, 첫 반응에 가장 가까운 것은? (하나 선택)\n1. 잠시 멈칫하지만, 상대 말이 일리 있는지 생각해 본다\n2. 그 순간엔 변명하지만, 나중에 되돌아본다\n3. 거부감이 들어 받아들이기 어렵다\n4. 강하게 반발하거나 회피하고, 그 때문에 관계가 자주 상한다",
+      placeholder: "1, 2, 3 또는 4 선택",
+      multiline: false,
+    },
   ],
 }
