@@ -261,7 +261,7 @@ If Q00 has only 1 type, omit secondary weight row:
 
 **Parameter interpretation**: 2–3 sentences on W weight inference — which questionnaire signals, confidence level. Give conclusions directly.
 
-**W Weight Interpretation**: Immediately after parameter interpretation, output weight description for the identified type. **The title line uses an H3 heading \`### \` on its own line (never inside the blockquote); the body lines each start with \`> \` as a blockquote** (frontend: title → standalone green heading with no left bar; body → green-left-bar bordered card, same layout as the "0.1 Health Level · Current Runtime State" block):
+**W Weight Interpretation**: Immediately after parameter interpretation, output weight description for the identified type. **The title line uses an H3 heading \`### \` on its own line (never inside the blockquote); the body lines each start with \`> \` as a blockquote** (frontend: title → standalone green heading with no left bar; body → green-left-bar bordered card, same layout as the "Health Level · Current Runtime State" block):
 
 ### W Primary Weight · [XXX]
 

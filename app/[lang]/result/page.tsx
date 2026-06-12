@@ -49,6 +49,8 @@ function cleanReport(text: string, userName?: string): string {
     .replace(/[^\n]*DIMENSION_LEVEL[^\n]*/g, '')
     // 过滤 HEALTH_LEVEL 系统标记行（健康层级，前端反查用，用户不可见）
     .replace(/[^\n]*HEALTH_LEVEL[^\n]*/g, '')
+    // 健康等级模块标题统一：旧报告输出 "**0.1 健康等级·当前运行状态**"（白色粗体），转成绿色 ### 标题并去掉编号
+    .replace(/^#{0,4}\s*\*{0,2}\s*(?:0\.1\s*)?健康[等层]级\s*[·•]\s*当前运行状态\s*\*{0,2}[：:]?\s*$/gm, '### 健康等级·当前运行状态')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
   if (userName) {
@@ -442,11 +444,9 @@ function ResultPage() {
     setTimeout(() => setCopiedGift(null), 2000)
   }
   const reportRef = useRef<HTMLDivElement>(null)
-  const reportInnerRef = useRef<HTMLDivElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
   const pdfStatsRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
-  const [pdfLink, setPdfLink] = useState<{ blob: Blob; name: string } | null>(null)
   const [cardBusy, setCardBusy] = useState(false)
   const [cardToast, setCardToast] = useState("")
   // Prevents double execution (StrictMode guard + re-render guard)
@@ -461,27 +461,42 @@ function ResultPage() {
     : 'If life is code — which line are you? Decode yours →'
 
 
-  const handleExportPdf = async () => {
-    const node = reportRef.current
-    const inner = reportInnerRef.current
-    if (!node || !inner || exportingPdf) return
-    setExportingPdf(true)
+  // ===== PDF 导出 =====
+  // 在「屏外克隆」的报告 DOM 上逐段截图拼 PDF：页面本体全程不动（不再黑屏），
+  // 且可以在报告出完后于后台预生成，点按钮时缓存已就绪、瞬间弹出下载/分享菜单
+  const pdfCache = useRef<{ blob: Blob; name: string } | null>(null)
+  const pdfInflight = useRef<Promise<{ blob: Blob; name: string } | null> | null>(null)
+  const raf2 = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    // 整个报告一次性截成大canvas，html2canvas克隆超高DOM时会被截断（手机上只渲染到一半就停）
-    // 改法：每次只让html2canvas克隆"一屏"高度的内容——把外层裁成固定高度窗口，
-    // 内层用 translateY 把对应分段移到窗口里，逐段截图后拼成多页PDF
-    const origNodeStyle = { height: node.style.height, overflow: node.style.overflow, width: node.style.width }
-    const origInnerTransform = inner.style.transform
+  // html2canvas 在 iOS 上截图会把页面滚回顶部：每次截图前记住滚动位置、截完立即还原
+  const keepScroll = async <T,>(fn: () => Promise<T>): Promise<T> => {
+    const x = window.scrollX, y = window.scrollY
     try {
-      // 宽内容（长ASCII画/宽表格）会横向溢出可视宽度，只按 clientWidth 截图右边会被切。
-      // 导出前把窗口临时加宽到完整内容宽度，截完在 finally 里恢复
-      if (node.scrollWidth > node.clientWidth) {
-        node.style.width = `${node.scrollWidth}px`
-        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-      }
+      return await fn()
+    } finally {
+      window.scrollTo(x, y)
+    }
+  }
+
+  const buildPdfBlob = async (): Promise<{ blob: Blob; name: string } | null> => {
+    const node = reportRef.current
+    if (!node) return null
+    // 宽内容（长ASCII画/宽表格）会横向溢出可视宽度，克隆容器直接按完整内容宽度铺开
+    const width = Math.max(node.clientWidth, node.scrollWidth)
+    const holder = document.createElement("div")
+    holder.style.cssText = `position:absolute;left:-99999px;top:0;width:${width}px;pointer-events:none;`
+    const clone = node.cloneNode(true) as HTMLElement
+    clone.style.width = `${width}px`
+    holder.appendChild(clone)
+    document.body.appendChild(holder)
+    try {
+      // 整个报告一次性截成大canvas，html2canvas克隆超高DOM时会被截断（手机上只渲染到一半就停）
+      // 改法：每次只截"一屏"高度——外层裁成固定高度窗口，内层 translateY 平移，逐段截图拼多页
+      const inner = clone.querySelector("[data-pdf-inner]") as HTMLElement | null
+      if (!inner) return null
+      await raf2()
       // +32px缓冲：避免最后一个区块（如画像边框）因取整误差被切掉底边
       const totalHeight = inner.scrollHeight + 32
-      const totalWidth = Math.max(node.clientWidth, node.scrollWidth)
       const sliceHeight = 1000 // 窗口高度（px），保持较小，确保每次克隆的DOM体积可控
       const scale = 1.5
       let pdf: jsPDF | null = null
@@ -489,94 +504,102 @@ function ResultPage() {
       // 四张核心读数卡片：截「屏外固定宽度」的专用块（pdfStatsRef），不截页面上的响应式网格——
       // 响应式网格在手机上是 2×2、宽度随视口变，html2canvas 截它会裁切/不全。固定块写死布局，必全。
       // 页宽对齐报告页（pageW），避免混合页宽被阅读器统一缩放裁切。
-      const pageW = totalWidth * scale
+      const pageW = width * scale
       const statsNode = pdfStatsRef.current
       if (statsNode) {
         const sw = statsNode.offsetWidth
-        const statsCanvas = await html2canvas(statsNode, { backgroundColor: "#080e08", scale, useCORS: true, width: sw, windowWidth: sw })
+        const statsCanvas = await keepScroll(() => html2canvas(statsNode, { backgroundColor: "#080e08", scale, useCORS: true, width: sw, windowWidth: sw }))
         const statsImg = statsCanvas.toDataURL("image/jpeg", 0.92)
         const drawH = statsCanvas.height * (pageW / statsCanvas.width) // 按报告页宽等比缩放
-        pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [pageW, drawH] })
+        // ⚠️ orientation 必须跟宽高比走：jsPDF 会把不符合 orientation 的 format 宽高自动对调，
+        // 横版页写死 portrait 会导致页面被对调、图片右切+下方留白（卡片页只剩半张的根因）
+        pdf = new jsPDF({ orientation: pageW > drawH ? "landscape" : "portrait", unit: "px", format: [pageW, drawH] })
         pdf.addImage(statsImg, "JPEG", 0, 0, pageW, drawH)
       }
 
-      node.style.overflow = "hidden"
+      clone.style.overflow = "hidden"
       for (let top = 0; top < totalHeight; top += sliceHeight) {
         const sh = Math.min(sliceHeight, totalHeight - top)
-        node.style.height = `${sh}px`
+        clone.style.height = `${sh}px`
         inner.style.transform = `translateY(-${top}px)`
         // 等待重排完成再截图
-        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+        await raf2()
 
-        const canvas = await html2canvas(node, {
+        const canvas = await keepScroll(() => html2canvas(clone, {
           backgroundColor: "#080e08",
           scale,
           useCORS: true,
-          width: totalWidth,
+          width,
           height: sh,
-        })
+        }))
         const imgData = canvas.toDataURL("image/jpeg", 0.92)
+        // orientation 同上：末段切片可能宽大于高，写死 portrait 会被 jsPDF 对调裁切
         if (!pdf) {
-          pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width, canvas.height] })
+          pdf = new jsPDF({ orientation: canvas.width > canvas.height ? "landscape" : "portrait", unit: "px", format: [canvas.width, canvas.height] })
         } else {
-          pdf.addPage([canvas.width, canvas.height])
+          pdf.addPage([canvas.width, canvas.height], canvas.width > canvas.height ? "l" : "p")
         }
         pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height)
       }
-      if (!pdf) return
-      const fileName = `生命代码报告_${Date.now()}.pdf`
-      const blob = pdf.output("blob")
-
-      // 手机端不走系统分享面板：逐段截图耗时数秒，share 时用户点击的"瞬时激活"已过期会被拒，
-      // 大 PDF 的分享预览还常灰屏/卡死（这是"点了黑屏/没反应"的根因）。改为生成完直接亮出
-      // 可见的"保存PDF"按钮——用户点它时是全新激活，下载/打开必成功。
-      if (isMobileUA()) {
-        setPdfLink({ blob, name: fileName })
-        setCardToast(lang === 'zh' ? '✓ PDF 已生成，点下方「保存 PDF」按钮' : 'PDF ready — tap the Save button below')
-        setTimeout(() => setCardToast(""), 4000)
-      } else {
-        pdf.save(fileName)
-      }
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") {
-        // 用户取消了分享面板，不算错误
-      } else {
-        console.error("PDF export failed:", e)
-        alert(lang === 'zh' ? 'PDF 导出失败，请重试' : lang === 'ko' ? 'PDF 내보내기 실패' : 'PDF export failed, please retry')
-      }
+      if (!pdf) return null
+      return { blob: pdf.output("blob"), name: `生命代码报告_${Date.now()}.pdf` }
     } finally {
-      node.style.height = origNodeStyle.height
-      node.style.overflow = origNodeStyle.overflow
-      node.style.width = origNodeStyle.width
-      inner.style.transform = origInnerTransform
-      setExportingPdf(false)
+      holder.remove()
     }
   }
 
-  // 手机端「保存PDF」按钮的点击动作：调起系统分享面板（iOS 的"存储到文件"在这里）。
-  // 按钮点击是全新用户激活，不会像生成后那样过期被拒；share 不可用时兜底直接下载。
-  const savePdf = async () => {
-    if (!pdfLink) return
-    const file = new File([pdfLink.blob], pdfLink.name, { type: "application/pdf" })
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file] })
-        setPdfLink(null)
-        return
-      } catch (e) {
-        if (e instanceof Error && e.name === "AbortError") return // 用户取消，保留按钮
-        // 其他错误走下载兜底
+  // 报告出完 2 秒后在后台预生成 PDF（截的是屏外克隆，用户阅读不受影响）
+  useEffect(() => {
+    if (!streamDone || !report) return
+    if (pdfCache.current || pdfInflight.current) return
+    const t = setTimeout(() => {
+      pdfInflight.current = buildPdfBlob()
+        .then((r) => { pdfCache.current = r; return r })
+        .catch(() => null)
+        .finally(() => { pdfInflight.current = null })
+    }, 2000)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamDone, report])
+
+  // 保存到本地：手机端优先弹系统分享面板（"存储到文件"在这里），被拒/不可用直接走浏览器下载
+  const deliverPdf = async (r: { blob: Blob; name: string }) => {
+    if (isMobileUA()) {
+      const file = new File([r.blob], r.name, { type: "application/pdf" })
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] })
+          return
+        } catch (e) {
+          if (e instanceof Error && e.name === "AbortError") return // 用户取消，不算错误
+          // 其他错误（如生成耗时导致点击激活过期被拒）走下载兜底
+        }
       }
     }
-    const url = URL.createObjectURL(pdfLink.blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = pdfLink.name
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 3000)
-    setPdfLink(null)
+    downloadBlob(r.blob, r.name)
+  }
+
+  const handleExportPdf = async () => {
+    if (exportingPdf) return
+    // 缓存已就绪（常态）：点击瞬间直接弹保存菜单，一步到位
+    const cached = pdfCache.current
+    if (cached) {
+      await deliverPdf(cached)
+      return
+    }
+    // 缓存未就绪（报告刚出完就点）：现场生成，生成完直接保存
+    setExportingPdf(true)
+    try {
+      const r = pdfInflight.current ? await pdfInflight.current : await buildPdfBlob()
+      if (!r) throw new Error("pdf build failed")
+      pdfCache.current = r
+      await deliverPdf(r)
+    } catch (e) {
+      console.error("PDF export failed:", e)
+      alert(lang === 'zh' ? 'PDF 导出失败，请重试' : lang === 'ko' ? 'PDF 내보내기 실패' : 'PDF export failed, please retry')
+    } finally {
+      setExportingPdf(false)
+    }
   }
 
   const isMobileUA = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
@@ -1183,7 +1206,7 @@ function ResultPage() {
           className={`transition-opacity duration-700 delay-300 ${visible ? "opacity-100" : "opacity-0"}`}
           style={{ background: "#080e08", border: "1px solid #1a3a1a", borderRadius: "16px", padding: "1.5rem" }}
         >
-          <div ref={reportInnerRef}>
+          <div data-pdf-inner>
           <div className="prose prose-invert max-w-none text-sm leading-relaxed" style={{ fontFamily: "Courier New, monospace" }}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
@@ -1317,22 +1340,15 @@ function ResultPage() {
                 onMouseEnter={(e) => { if (!exportingPdf) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
                 onMouseLeave={(e) => { if (!exportingPdf) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
               >
-                {exportingPdf
-                  ? (lang === 'zh' ? '生成中...' : lang === 'ko' ? '생성 중...' : 'Generating...')
-                  : (lang === 'zh' ? '保存为PDF' : lang === 'ko' ? 'PDF로 저장' : 'Save as PDF')}
+                {exportingPdf ? (
+                  <>
+                    <span className="inline-block animate-spin" style={{ width: "12px", height: "12px", border: "2px solid currentColor", borderTopColor: "transparent", borderRadius: "50%", marginRight: "8px", verticalAlign: "-2px" }} />
+                    {lang === 'zh' ? '生成中...' : lang === 'ko' ? '생성 중...' : 'Generating...'}
+                  </>
+                ) : (lang === 'zh' ? '保存为PDF' : lang === 'ko' ? 'PDF로 저장' : 'Save as PDF')}
               </button>
             </div>
 
-            {/* PDF 就绪后的可见保存按钮：点击=全新激活，调起系统分享面板（iOS"存储到文件"），不可用时直接下载 */}
-            {pdfLink && (
-              <button
-                onClick={savePdf}
-                className="btn-result w-full py-3 text-sm font-bold tracking-wider"
-                style={{ ...btnBase, textAlign: "center", border: "1px solid #00ff88", color: "#00ff88", boxShadow: "0 0 18px #00ff8822", cursor: "pointer" }}
-              >
-                {lang === 'zh' ? '📥 保存 PDF（弹出菜单 → 存储到文件）' : lang === 'ko' ? '📥 PDF 저장' : '📥 Save PDF'}
-              </button>
-            )}
 
             {/* My Archive */}
             <button
