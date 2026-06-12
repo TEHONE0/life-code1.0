@@ -136,9 +136,9 @@ Type 4 vs 9: 4 retreats due to feeling misunderstood (intense inside); 9 retreat
 Type 5 vs 6: 5 thinks to accumulate capability; 6 thinks to predict threats. 5 withdraws to conserve energy; 6 seeks external reassurance.
 Type 3 vs 8: 3 wants external recognition; 8 wants internal autonomy. Failure: 3 feels shame and hides; 8 gets angry and fights back.
 
-### Q08 Consciousness Dimension Usage Rules
+### Q09 Consciousness Dimension Usage Rules
 
-Q08 data is used in two places: Bug index calculation + Dimension level determination.
+Q09 data is used in two places: Bug index calculation + Dimension level determination.
 - Option 1 (factory default) → Bug index takes upper range (no awareness bonus)
 - Option 2 (occasional perception) → Bug index takes upper-middle range
 - Option 3 (ongoing exploration) → Bug index takes midpoint of range
@@ -478,15 +478,15 @@ If birth data incomplete:
 
 ## 【Dimension Portrait】
 
-After the closing code block, output the corresponding portrait (wrapped in a text code block) based on the Bug Index × Q08 dual-threshold system.
+After the closing code block, output the corresponding portrait (wrapped in a text code block) based on the Bug Index × Q09 dual-threshold system.
 
 **Dimension level determination (dual-threshold, internal calculation)**:
-- Q08 option 4, Bug 0–10 → HIGH_DIMENSION
-- Q08 option 4, Bug 11–100 → AWAKENED (Q08=4 locks the minimum level at AWAKENED regardless of Bug count)
-- Q08 option 3, Bug 0–35 → AWAKENED
-- Q08 option 3, Bug 36–100 → SAPIENT_ENTITY
-- Q08 option 1 or 2, Bug 0–35 → SAPIENT_ENTITY
-- Q08 option 1 or 2, Bug 36–100 → LOWER_DIMENSION
+- Q09 option 4, Bug 0–10 → HIGH_DIMENSION
+- Q09 option 4, Bug 11–100 → AWAKENED (Q09=4 locks the minimum level at AWAKENED regardless of Bug count)
+- Q09 option 3, Bug 0–35 → AWAKENED
+- Q09 option 3, Bug 36–100 → SAPIENT_ENTITY
+- Q09 option 1 or 2, Bug 0–35 → SAPIENT_ENTITY
+- Q09 option 1 or 2, Bug 36–100 → LOWER_DIMENSION
 
 LOWER_DIMENSION → output:
 \`\`\`text
@@ -589,10 +589,10 @@ After the portrait, output exactly one line (format locked, required):
 \`DIMENSION_LEVEL: [LOWER_DIMENSION / SAPIENT_ENTITY / AWAKENED / HIGH_DIMENSION]\`
 (no other text)
 
-Choose the level based on Bug Index × Q08:
-- Q08 option 4, Bug 0–10 → HIGH_DIMENSION
-- Q08 option 4, Bug 11–100 → AWAKENED (Q08=4 locks the minimum level at AWAKENED regardless of Bug count)
-- Q08 option 3, Bug 0–35 → AWAKENED
-- Q08 option 3, Bug 36–100 → SAPIENT_ENTITY
-- Q08 option 1 or 2, Bug 0–35 → SAPIENT_ENTITY
-- Q08 option 1 or 2, Bug 36–100 → LOWER_DIMENSION`
+Choose the level based on Bug Index × Q09:
+- Q09 option 4, Bug 0–10 → HIGH_DIMENSION
+- Q09 option 4, Bug 11–100 → AWAKENED (Q09=4 locks the minimum level at AWAKENED regardless of Bug count)
+- Q09 option 3, Bug 0–35 → AWAKENED
+- Q09 option 3, Bug 36–100 → SAPIENT_ENTITY
+- Q09 option 1 or 2, Bug 0–35 → SAPIENT_ENTITY
+- Q09 option 1 or 2, Bug 36–100 → LOWER_DIMENSION`

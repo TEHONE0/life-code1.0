@@ -527,27 +527,13 @@ function ResultPage() {
       const fileName = `生命代码报告_${Date.now()}.pdf`
       const blob = pdf.output("blob")
 
-      // 手机优先用系统分享面板（可存到"文件"/微信）。注意：逐段截图耗时数秒，调用 share 时
-      // 用户点击的"瞬时激活"往往已过期，浏览器会抛 NotAllowedError——iOS 的 <a download> 又不生效，
-      // 于是"点了没反应、没下载按钮"。兜底：把生成好的 blob 挂成一个可见的"保存PDF"按钮，
-      // 用户点它时是全新激活，下载/打开必成功。
-      const file = new File([blob], fileName, { type: "application/pdf" })
+      // 手机端不走系统分享面板：逐段截图耗时数秒，share 时用户点击的"瞬时激活"已过期会被拒，
+      // 大 PDF 的分享预览还常灰屏/卡死（这是"点了黑屏/没反应"的根因）。改为生成完直接亮出
+      // 可见的"保存PDF"按钮——用户点它时是全新激活，下载/打开必成功。
       if (isMobileUA()) {
-        let shared = false
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({ files: [file], title: fileName })
-            shared = true
-          } catch (e) {
-            if (e instanceof Error && e.name === "AbortError") shared = true // 用户主动取消
-          }
-        }
-        if (!shared) {
-          // 显示一个可见的保存按钮（新激活，避免过期失败）
-          setPdfLink({ url: URL.createObjectURL(blob), name: fileName })
-          setCardToast(lang === 'zh' ? 'PDF 已就绪，点下方「保存 PDF」按钮' : 'PDF ready — tap the Save button below')
-          setTimeout(() => setCardToast(""), 4000)
-        }
+        setPdfLink({ url: URL.createObjectURL(blob), name: fileName })
+        setCardToast(lang === 'zh' ? '✓ PDF 已生成，点下方「保存 PDF」按钮' : 'PDF ready — tap the Save button below')
+        setTimeout(() => setCardToast(""), 4000)
       } else {
         pdf.save(fileName)
       }

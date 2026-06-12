@@ -137,7 +137,7 @@ export const zh: typeof en = {
     },
     {
       id: "defense",
-      code: "Q09 · DEFENSE_RESPONSE",
+      code: "Q08 · DEFENSE_RESPONSE",
       comment: "// 防御反应扫描",
       label: "当有人指出你的问题时，你第一反应更接近哪个？（选最接近的1个）\n1. 会愣一下，但能想想对方说得有没有道理\n2. 当下会辩解，但事后会回想\n3. 很抵触，很难听进去\n4. 会强烈反击或干脆回避，关系常因此受损",
       placeholder: "选1、2、3或4",
@@ -145,7 +145,7 @@ export const zh: typeof en = {
     },
     {
       id: "dimension",
-      code: "Q08 · DIMENSION_SCAN",
+      code: "Q09 · DIMENSION_SCAN",
       comment: "// 意识维度扫描",
       label: "你认为人可以改变命运吗？（选最接近你真实想法的1个，不用想太多）\n1. 能，人定胜天，命运靠自己创造\n2. 能，但有更大的规律在运作，顺势而为比硬改更有用\n3. 很难，命运像是被提前写好的，有更高的力量在主导\n4. 能，命运就是代码——我已经在改写自己的代码",
       placeholder: "选1、2、3或4",

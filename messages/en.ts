@@ -135,7 +135,7 @@ export const en = {
     },
     {
       id: "defense",
-      code: "Q09 · DEFENSE_RESPONSE",
+      code: "Q08 · DEFENSE_RESPONSE",
       comment: "// Defense response scan",
       label: "When someone points out a flaw in you, which is closest to your first reaction? (Pick one)\n1. I pause, but can consider whether they have a point\n2. I get defensive in the moment, but reflect on it later\n3. I resist it — it's hard to take in\n4. I push back hard or shut it out, and relationships often suffer",
       placeholder: "Choose 1, 2, 3, or 4",
@@ -143,7 +143,7 @@ export const en = {
     },
     {
       id: "dimension",
-      code: "Q08 · DIMENSION_SCAN",
+      code: "Q09 · DIMENSION_SCAN",
       comment: "// Consciousness dimension scan",
       label: "Do you believe humans can change their fate? (Pick the one closest to your honest view — no overthinking)\n1. Yes — willpower creates destiny. I shape my own life.\n2. Yes, but there are larger patterns at work. Flow matters more than force.\n3. Hard to say. Destiny feels pre-written. A higher force is in charge.\n4. Yes — destiny is code. I'm already rewriting mine.",
       placeholder: "Choose 1, 2, 3, or 4",
