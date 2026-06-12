@@ -444,7 +444,9 @@ function ResultPage() {
   const reportRef = useRef<HTMLDivElement>(null)
   const reportInnerRef = useRef<HTMLDivElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
+  const pdfStatsRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
+  const [pdfLink, setPdfLink] = useState<{ url: string; name: string } | null>(null)
   const [cardBusy, setCardBusy] = useState(false)
   const [cardToast, setCardToast] = useState("")
   // Prevents double execution (StrictMode guard + re-render guard)
@@ -484,12 +486,13 @@ function ResultPage() {
       const scale = 1.5
       let pdf: jsPDF | null = null
 
-      // 四张核心读数卡片在 reportRef 之外，单独截成 PDF 第一页（否则导出报告里没有卡片）。
-      // 关键：页宽必须与报告页一致（pageW），否则混合页宽会被阅读器统一缩放，导致右侧被切、下方留白
+      // 四张核心读数卡片：截「屏外固定宽度」的专用块（pdfStatsRef），不截页面上的响应式网格——
+      // 响应式网格在手机上是 2×2、宽度随视口变，html2canvas 截它会裁切/不全。固定块写死布局，必全。
+      // 页宽对齐报告页（pageW），避免混合页宽被阅读器统一缩放裁切。
       const pageW = totalWidth * scale
-      const statsNode = statsRef.current
+      const statsNode = pdfStatsRef.current
       if (statsNode) {
-        const sw = statsNode.scrollWidth
+        const sw = statsNode.offsetWidth
         const statsCanvas = await html2canvas(statsNode, { backgroundColor: "#080e08", scale, useCORS: true, width: sw, windowWidth: sw })
         const statsImg = statsCanvas.toDataURL("image/jpeg", 0.92)
         const drawH = statsCanvas.height * (pageW / statsCanvas.width) // 按报告页宽等比缩放
@@ -525,8 +528,9 @@ function ResultPage() {
       const blob = pdf.output("blob")
 
       // 手机优先用系统分享面板（可存到"文件"/微信）。注意：逐段截图耗时数秒，调用 share 时
-      // 用户点击的"瞬时激活"往往已过期，浏览器会抛 NotAllowedError——此时静默降级为直接下载，
-      // 不能当成错误弹窗（这是手机上"PDF导出失败"弹窗的根因）
+      // 用户点击的"瞬时激活"往往已过期，浏览器会抛 NotAllowedError——iOS 的 <a download> 又不生效，
+      // 于是"点了没反应、没下载按钮"。兜底：把生成好的 blob 挂成一个可见的"保存PDF"按钮，
+      // 用户点它时是全新激活，下载/打开必成功。
       const file = new File([blob], fileName, { type: "application/pdf" })
       if (isMobileUA()) {
         let shared = false
@@ -535,11 +539,15 @@ function ResultPage() {
             await navigator.share({ files: [file], title: fileName })
             shared = true
           } catch (e) {
-            // 用户主动取消分享面板：到此为止，不再触发下载
-            if (e instanceof Error && e.name === "AbortError") shared = true
+            if (e instanceof Error && e.name === "AbortError") shared = true // 用户主动取消
           }
         }
-        if (!shared) downloadBlob(blob, fileName)
+        if (!shared) {
+          // 显示一个可见的保存按钮（新激活，避免过期失败）
+          setPdfLink({ url: URL.createObjectURL(blob), name: fileName })
+          setCardToast(lang === 'zh' ? 'PDF 已就绪，点下方「保存 PDF」按钮' : 'PDF ready — tap the Save button below')
+          setTimeout(() => setCardToast(""), 4000)
+        }
       } else {
         pdf.save(fileName)
       }
@@ -1303,6 +1311,21 @@ function ResultPage() {
               </button>
             </div>
 
+            {/* PDF 就绪后的可见保存按钮（手机分享失败/不可用时兜底，用户点击=新激活，下载/打开必成功） */}
+            {pdfLink && (
+              <a
+                href={pdfLink.url}
+                download={pdfLink.name}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setTimeout(() => setPdfLink(null), 1500)}
+                className="btn-result w-full py-3 text-sm font-bold tracking-wider"
+                style={{ ...btnBase, display: "block", textAlign: "center", textDecoration: "none", border: "1px solid #00ff88", color: "#00ff88", boxShadow: "0 0 18px #00ff8822" }}
+              >
+                {lang === 'zh' ? '📥 保存 PDF（点击下载 / 打开后可存到文件）' : lang === 'ko' ? '📥 PDF 저장' : '📥 Save PDF'}
+              </a>
+            )}
+
             {/* My Archive */}
             <button
               onClick={() => router.push(`/${lang}/account`)}
@@ -1388,6 +1411,31 @@ function ResultPage() {
             {labels.home}
           </button>
         </div>
+        </div>
+      </div>
+
+      {/* 屏外固定宽度四卡块（PDF 第一页截图源）：写死 2×2 布局，避开页面响应式网格的裁切问题 */}
+      <div
+        ref={pdfStatsRef}
+        style={{ position: "absolute", left: "-9999px", top: 0, width: "760px", padding: "28px", background: "#080e08", fontFamily: mono, boxSizing: "border-box" }}
+      >
+        <div style={{ color: "#2d5a2d", fontSize: "15px", letterSpacing: "0.08em", marginBottom: "16px" }}>◇ {chrome.statsTitle}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          {[
+            { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff", note: "" },
+            { label: chrome.statHealth, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88", note: healthNote },
+            { label: chrome.statWeight, value: mainWeight ? `${mainWeight}型` : "—", suffix: "", color: "#00ff88", note: "" },
+            { label: chrome.statBias, value: bias ? `${bias}型` : "—", suffix: "", color: "#00ff88", note: "" },
+          ].map((s) => (
+            <div key={s.label} style={{ padding: "18px 20px", background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "14px", minHeight: "92px" }}>
+              <div style={{ color: "#7fc97f", fontSize: "14px", marginBottom: "10px" }}>{s.label}</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
+                <span style={{ color: s.color, fontSize: "26px", fontWeight: 700, fontFamily: scifi, textShadow: `0 0 14px ${s.color}55` }}>{s.value}</span>
+                <span style={{ color: "#8fbf8f", fontSize: "13px" }}>{s.suffix}</span>
+              </div>
+              {s.note && <div style={{ color: "#a8d8a8", fontSize: "13px", marginTop: "8px", lineHeight: 1.5 }}>{s.note}</div>}
+            </div>
+          ))}
         </div>
       </div>
 

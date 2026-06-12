@@ -8,7 +8,7 @@ import NavEntries from "@/components/NavEntries";
 import LangSwitch from "@/components/LangSwitch";
 import {
   NeonRing, IconEnneagram, IconPerson, IconHome, IconWarning, IconLoop,
-  IconShieldSm, IconPulse, IconStar, IconCube, IconLock,
+  IconShieldSm, IconPulse, IconStar, IconCube, IconLock, IconScan,
 } from "@/components/neon";
 
 const mono = "Courier New, monospace";
@@ -33,6 +33,7 @@ const QUESTION_ICONS: Record<string, React.ReactNode> = {
   const: IconShieldSm,
   status: IconPulse,
   legacy: IconStar,
+  defense: IconScan,
   dimension: IconCube,
 };
 
@@ -44,7 +45,7 @@ const UI = {
     sidebarTitle: "生命代码问卷",
     sidebarSub: "LIFE CODE SCANNER",
     progress: "进度",
-    steps: ["基本信息", "变量采集中", "原生家庭环境", "核心信念", "主循环事件", "不可变常量", "当前状态", "程序终止前的愿望", "意识维度扫描", "防御反应扫描", "提交完成"],
+    steps: ["基本信息", "变量采集中", "原生家庭环境", "核心信念", "主循环事件", "不可变常量", "当前状态", "程序终止前的愿望", "防御反应扫描", "意识维度扫描", "提交完成"],
     security: "数据安全保护",
     author: "作者",
     authorRole: "AI 导演 ｜ 生命代码创造者",
@@ -61,7 +62,7 @@ const UI = {
     sidebarTitle: "Life Code Survey",
     sidebarSub: "LIFE CODE SCANNER",
     progress: "Progress",
-    steps: ["BASIC_INFO", "ENNEAGRAM_SCAN", "ORIGIN_ENVIRONMENT", "CRITICAL_ERROR", "CORE_LOOP", "UNDELETABLE_CONST", "CURRENT_STATUS", "LEGACY_DEFINE", "DIMENSION_SCAN", "DEFENSE_RESPONSE", "SUBMIT"],
+    steps: ["BASIC_INFO", "ENNEAGRAM_SCAN", "ORIGIN_ENVIRONMENT", "CRITICAL_ERROR", "CORE_LOOP", "UNDELETABLE_CONST", "CURRENT_STATUS", "LEGACY_DEFINE", "DEFENSE_RESPONSE", "DIMENSION_SCAN", "SUBMIT"],
     security: "Data protection",
     author: "Creator",
     authorRole: "Film director | Creator of Life Code",
@@ -78,7 +79,7 @@ const UI = {
     sidebarTitle: "라이프 코드 설문",
     sidebarSub: "LIFE CODE SCANNER",
     progress: "진행",
-    steps: ["BASIC_INFO", "ENNEAGRAM_SCAN", "ORIGIN_ENVIRONMENT", "CRITICAL_ERROR", "CORE_LOOP", "UNDELETABLE_CONST", "CURRENT_STATUS", "LEGACY_DEFINE", "DIMENSION_SCAN", "방어 반응 스캔", "제출 완료"],
+    steps: ["BASIC_INFO", "ENNEAGRAM_SCAN", "ORIGIN_ENVIRONMENT", "CRITICAL_ERROR", "CORE_LOOP", "UNDELETABLE_CONST", "CURRENT_STATUS", "LEGACY_DEFINE", "방어 반응 스캔", "DIMENSION_SCAN", "제출 완료"],
     security: "데이터 보호",
     author: "제작자",
     authorRole: "영화감독 | 라이프 코드 제작자",
