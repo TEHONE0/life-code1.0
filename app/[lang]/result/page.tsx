@@ -353,7 +353,6 @@ function ResultPage() {
   const [report, setReport] = useState("")
   const [dimensionLevel, setDimensionLevel] = useState("")
   const [visible, setVisible] = useState(false)
-  const [copied, setCopied] = useState(false)
   const [streaming, setStreaming] = useState(false)
   const [streamDone, setStreamDone] = useState(false)
   const [exportingPdf, setExportingPdf] = useState(false)
@@ -414,22 +413,6 @@ function ResultPage() {
     ? '우주가 코드라면, 당신은 어떤 줄인가요? 생명 코드를 확인하세요 →'
     : 'If life is code — which line are you? Decode yours →'
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(report)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      const el = document.createElement("textarea")
-      el.value = report
-      document.body.appendChild(el)
-      el.select()
-      document.execCommand("copy")
-      document.body.removeChild(el)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
 
   const handleExportPdf = async () => {
     const node = reportRef.current
@@ -485,10 +468,13 @@ function ResultPage() {
 
       // 手机浏览器（尤其iOS Safari）对 a[download] 支持差，优先用系统分享面板，让用户选"存储到文件/保存图片"
       const file = new File([blob], fileName, { type: "application/pdf" })
-      // 桌面端系统分享面板没有"保存到文件"，直接触发浏览器下载；移动端保留分享面板（可存到"文件"）
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-      if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (isMobileUA() && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: fileName })
+      } else if (isMobileUA()) {
+        // iOS 等不支持分享 PDF 文件：新标签打开 blob，用户可在预览里存到"文件"（pdf.save 在 iOS 多数无效）
+        const url = URL.createObjectURL(blob)
+        window.open(url, "_blank")
+        setTimeout(() => URL.revokeObjectURL(url), 10000)
       } else {
         pdf.save(fileName)
       }
@@ -497,6 +483,7 @@ function ResultPage() {
         // 用户取消了分享面板，不算错误
       } else {
         console.error("PDF export failed:", e)
+        alert(lang === 'zh' ? 'PDF 导出失败，请重试' : lang === 'ko' ? 'PDF 내보내기 실패' : 'PDF export failed, please retry')
       }
     } finally {
       node.style.height = origNodeStyle.height
@@ -507,29 +494,58 @@ function ResultPage() {
     }
   }
 
-  // 生成分享卡片：把屏外的卡片 DOM 用 html2canvas 截成 PNG，移动端走系统分享面板、桌面端直接下载
-  const handleShareCard = async () => {
+  const isMobileUA = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+  const downloadBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = fileName
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
+  }
+
+  // 把屏外的卡片 DOM 用 html2canvas 截成 PNG
+  const captureCard = async (): Promise<{ blob: Blob; file: File; fileName: string } | null> => {
     const node = cardRef.current
-    if (!node || cardBusy) return
+    if (!node) return null
+    const canvas = await html2canvas(node, { backgroundColor: null, scale: 2.5, useCORS: true })
+    const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/png"))
+    if (!blob) return null
+    const fileName = `生命代码_${userName || "card"}_${Date.now()}.png`
+    return { blob, file: new File([blob], fileName, { type: "image/png" }), fileName }
+  }
+
+  // 生成分享卡：保存卡片图到本地（移动端系统面板可选"存储图像"，桌面直接下载）
+  const handleSaveCard = async () => {
+    if (cardBusy) return
     setCardBusy(true)
     try {
-      const canvas = await html2canvas(node, { backgroundColor: null, scale: 2.5, useCORS: true })
-      const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/png"))
-      if (!blob) return
-      const fileName = `生命代码_${userName || "card"}_${Date.now()}.png`
-      const file = new File([blob], fileName, { type: "image/png" })
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-      // 移动端：拉起系统分享面板（装了微信/微博会直接出现对应选项），把卡片图 + 文案 + 链接一起分享出去
-      if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: shareText, url: shareUrl })
+      const r = await captureCard()
+      if (!r) return
+      if (isMobileUA() && navigator.canShare && navigator.canShare({ files: [r.file] })) {
+        await navigator.share({ files: [r.file] })
       } else {
-        // 桌面端无系统分享面板：直接下载卡片图，用户自己拖进微信/微博
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = fileName
-        a.click()
-        URL.revokeObjectURL(url)
+        downloadBlob(r.blob, r.fileName)
+      }
+    } catch (e) {
+      if (!(e instanceof Error && e.name === "AbortError")) console.error("Save card failed:", e)
+    } finally {
+      setCardBusy(false)
+    }
+  }
+
+  // 分享给朋友：生成卡片图 + 系统面板发微信/微博（带文案+链接），桌面下载
+  const handleShareCard = async () => {
+    if (cardBusy) return
+    setCardBusy(true)
+    try {
+      const r = await captureCard()
+      if (!r) return
+      if (isMobileUA() && navigator.canShare && navigator.canShare({ files: [r.file] })) {
+        await navigator.share({ files: [r.file], text: shareText, url: shareUrl })
+      } else {
+        downloadBlob(r.blob, r.fileName)
       }
     } catch (e) {
       if (!(e instanceof Error && e.name === "AbortError")) console.error("Share card failed:", e)
@@ -1066,9 +1082,9 @@ function ResultPage() {
               // {lang === 'zh' ? '保存 · 分享' : 'SAVE · SHARE'}
             </div>
 
-            {/* 分享给朋友（主推：生成分享卡片图，移动端拉起系统面板发微信/微博，桌面下载） */}
+            {/* 第一排：生成分享卡（保存卡片图到本地/相册） */}
             <button
-              onClick={handleShareCard}
+              onClick={handleSaveCard}
               disabled={cardBusy}
               className="btn-result w-full py-3 text-sm font-bold tracking-wider"
               style={{ ...btnBase, border: "1px solid #00ff88", color: "#00ff88", opacity: cardBusy ? 0.6 : 1, cursor: cardBusy ? "not-allowed" : "pointer", boxShadow: "0 0 18px #00ff8822" }}
@@ -1077,19 +1093,20 @@ function ResultPage() {
             >
               {cardBusy
                 ? (lang === 'zh' ? '生成中...' : lang === 'ko' ? '생성 중...' : 'Generating...')
-                : (lang === 'zh' ? '◇ 分享给朋友（生成分享卡）' : lang === 'ko' ? '◇ 친구에게 공유' : '◇ Share with friends')}
+                : (lang === 'zh' ? '◇ 生成分享卡' : lang === 'ko' ? '◇ 공유 카드 만들기' : '◇ Create share card')}
             </button>
 
-            {/* 2-button row */}
+            {/* 第二排：分享给朋友 + 保存为PDF */}
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={handleCopy}
+                onClick={handleShareCard}
+                disabled={cardBusy}
                 className="btn-result flex-1 py-3 text-sm font-bold tracking-wider"
-                style={{ ...btnBase, border: `1px solid ${copied ? "#00ff88" : "#3a6a3a"}`, color: copied ? "#00ff88" : "#5a9a5a" }}
-                onMouseEnter={(e) => { if (!copied) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
-                onMouseLeave={(e) => { if (!copied) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
+                style={{ ...btnBase, border: "1px solid #3a6a3a", color: "#5a9a5a", opacity: cardBusy ? 0.6 : 1, cursor: cardBusy ? "not-allowed" : "pointer" }}
+                onMouseEnter={(e) => { if (!cardBusy) { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" } }}
+                onMouseLeave={(e) => { if (!cardBusy) { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = "#5a9a5a" } }}
               >
-                {copied ? (lang === 'zh' ? '✓ 已复制' : lang === 'ko' ? '✓ 복사됨' : '✓ Copied') : (lang === 'zh' ? '复制报告' : lang === 'ko' ? '보고서 복사' : 'Copy')}
+                {lang === 'zh' ? '分享给朋友' : lang === 'ko' ? '친구에게 공유' : 'Share'}
               </button>
               <button
                 onClick={handleExportPdf}
