@@ -187,11 +187,14 @@ export default function HomePage() {
     : ["Life-system Bug index", "Ch.0 Initial parameters · Source code", "Ch.1 Kernel audit (5 core bugs)", "Ch.2 Evolution path", "Ch.3 The present singularity", "Ch.4 Destiny rendering forecast", "Ch.5 Debug suggestions", "Ch.6 Destiny formula", "Ch.7 Summary · Zen · Life Q&A", "Awakening portrait"]
 
   const previews = [
-    { src: "/preview/origin.png", label: zh ? "初始参数 · 源代码" : "Initial parameters" },
-    { src: "/preview/bug.png", label: zh ? "内核审计 · Bug" : "Kernel audit" },
-    { src: "/preview/debug.png", label: zh ? "Debug 建议" : "Debug suggestions" },
-    { src: "/preview/forecast.png", label: zh ? "命运渲染预测" : "Forecast" },
-    { src: "/preview/portrait.png", label: zh ? "觉醒画像" : "Awakening portrait" },
+    { src: "/preview/v2-readings.png", label: zh ? "报告核心读数" : "Core readings" },
+    { src: "/preview/v2-opening.png", label: zh ? "破防开场" : "Opening insight" },
+    { src: "/preview/v2-weight.png", label: zh ? "性格权重解读" : "Personality weight" },
+    { src: "/preview/v2-health.png", label: zh ? "健康等级 · 运行状态" : "Health level · Runtime" },
+    { src: "/preview/v2-audit.png", label: zh ? "内核审计 · Bug" : "Kernel audit · Bug" },
+    { src: "/preview/v2-debug.png", label: zh ? "Debug 建议" : "Debug suggestions" },
+    { src: "/preview/v2-forecast.png", label: zh ? "命运渲染预测" : "Destiny forecast" },
+    { src: "/preview/v2-portrait.png", label: zh ? "觉醒画像" : "Awakening portrait" },
   ]
 
   const footChips = zh
@@ -333,27 +336,29 @@ export default function HomePage() {
         {/* ───── 报告预览 ───── */}
         <section id="preview" className="py-12 space-y-8">
           {sectionTitle(zh ? "你将得到怎样的报告？" : "What does the report look like?")}
-          <div className="grid md:grid-cols-2 gap-6 items-start">
-            <div className="space-y-2">
+          <div className="space-y-8">
+            {/* 章节清单 */}
+            <div className="grid sm:grid-cols-2 gap-2">
               {chapters.map((c, i) => (
                 <div key={c} className="flex items-center gap-3 text-xs py-2 px-4" style={{ border: "1px solid #112811", background: "#0a150a", fontFamily: mono, color: i === 0 || i === chapters.length - 1 ? "#4db8ff" : "#4a8a4a", borderRadius: "10px" }}>
                   <span style={{ color: "#2d5a2d" }}>{String(i).padStart(2, "0")}</span>
                   <span>{c}</span>
                 </div>
               ))}
-              <p className="text-xs pt-2" style={{ color: "#2d5a2d", fontFamily: mono }}>
-                {zh ? "// 全文约 6000-9000 字，支持保存为 PDF" : "// ~6000-9000 words, exportable as PDF"}
-              </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            {/* 报告示例截图：2 张一排（01·02 / 03·04 …） */}
+            <div className="grid grid-cols-2 gap-3 md:gap-5">
               {previews.map((p) => (
-                <figure key={p.src} className="space-y-1">
+                <figure key={p.src} className="space-y-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.src} alt={p.label} loading="lazy" className="w-full" style={{ border: "1px solid #1a3a1a", borderRadius: "12px" }} />
-                  <figcaption className="text-xs text-center" style={{ color: "#2d5a2d", fontFamily: mono }}>{p.label}</figcaption>
+                  <figcaption className="text-xs text-center" style={{ color: "#4a8a4a", fontFamily: mono }}>{p.label}</figcaption>
                 </figure>
               ))}
             </div>
+            <p className="text-xs text-center" style={{ color: "#2d5a2d", fontFamily: mono }}>
+              {zh ? "// 全文约 6000-9000 字，支持保存为 PDF" : "// ~6000-9000 words, exportable as PDF"}
+            </p>
           </div>
         </section>
 
