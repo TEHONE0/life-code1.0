@@ -76,7 +76,14 @@ const scifi = "Orbitron, Courier New, monospace";
 const CARD = { border: "1px solid #1a3a1a", background: "#0a150a", borderRadius: "16px" } as const;
 
 // 真实用户评价截图：把图片放进 public/reviews/ 并在此登记文件名即可显示
-const REVIEW_IMAGES: string[] = [];
+const REVIEW_IMAGES: string[] = [
+  "/reviews/review-01.jpg",
+  "/reviews/review-02.jpg",
+  "/reviews/review-03.jpg",
+  "/reviews/review-04.jpg",
+  "/reviews/review-05.jpg",
+  "/reviews/review-06.jpg",
+];
 
 // 主 CTA 按钮：鼠标悬浮放大 + 发光（内联样式，hover 状态独立）
 function CtaButton({ big, onClick, label }: { big: boolean; onClick: () => void; label: string }) {
@@ -207,7 +214,7 @@ export default function HomePage() {
           <LangSwitch lang={lang} onPick={(c) => router.push(`/${c}`)} />
         </div>
         <div className="hidden md:flex gap-6 text-xs" style={{ fontFamily: mono }}>
-          {(zh ? [["#pain", "为什么测"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#about", "关于创作者"]] : [["#pain", "Why"], ["#how", "How"], ["#preview", "Sample"], ["#about", "About"]]).map(([href, label]) => (
+          {(zh ? [["#pain", "为什么测"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#reviews", "用户体验"], ["#about", "关于创作者"]] : [["#pain", "Why"], ["#how", "How"], ["#preview", "Sample"], ["#reviews", "Reviews"], ["#about", "About"]]).map(([href, label]) => (
             <a key={href} href={href} className="nav-link" style={{ color: "#4a7a4a", textDecoration: "none" }}>{label}</a>
           ))}
         </div>
@@ -222,7 +229,7 @@ export default function HomePage() {
 
         {/* ───── Hero（整体居中） ───── */}
         <section className="pt-5 pb-14 md:pt-7 md:pb-20 flex flex-col items-center text-center space-y-7">
-          <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0" }}>
+          <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ color: "#e2e8f0", ...(zh ? { fontFamily: "'Alibaba PuHuiTi 2.0', 'PingFang SC', sans-serif" } : {}) }}>
             {zh ? <>用 <span style={{ fontFamily: scifi }}>AI</span> 看见<br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>你生命里反复出现的 <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span></span></> : <>See the <span style={{ color: "#4db8ff", textShadow: "0 0 24px #4db8ff55", fontFamily: scifi }}>BUG</span><br /><span style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>that keeps recurring in your life</span></>}
           </h1>
           <div
@@ -260,15 +267,21 @@ export default function HomePage() {
             {startBtn(true)}
           </div>
           {promoActive && (
-            <div className="text-sm font-bold flex items-center justify-center gap-2" style={{ color: "#FFC93C", textShadow: "0 0 10px #FFC93C55", fontFamily: mono }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, filter: "drop-shadow(0 0 5px #FFC93C88)" }}>
-                <rect x="3" y="8" width="18" height="4" rx="1" />
-                <path d="M5 12 v8 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1 -1 v-8" />
-                <line x1="12" y1="8" x2="12" y2="21" />
-                <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
-                <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
-              </svg>
-              {zh ? "首发活动（至6月30日）：买一赠一，送给你最想读懂的人" : "Launch offer (until Jun 30): buy one, gift one to someone you most want to understand"}
+            <div className="space-y-2">
+              <div className="text-sm font-bold flex items-center justify-center gap-2" style={{ color: "#FFC93C", textShadow: "0 0 10px #FFC93C55", fontFamily: mono }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, filter: "drop-shadow(0 0 5px #FFC93C88)" }}>
+                  <rect x="3" y="8" width="18" height="4" rx="1" />
+                  <path d="M5 12 v8 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1 -1 v-8" />
+                  <line x1="12" y1="8" x2="12" y2="21" />
+                  <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
+                  <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
+                </svg>
+                {zh ? "首发活动（至6月30日）：买一赠一，送给你最想读懂的人" : "Launch offer (until Jun 30): buy one, gift one to someone you most want to understand"}
+              </div>
+              <div className="relative mx-auto" style={{ width: "80%", maxWidth: "420px", height: "2px" }}>
+                <div className="absolute inset-0" style={{ borderRadius: "999px", background: "linear-gradient(90deg, transparent 0%, #FFC93C 50%, transparent 100%)" }} />
+                <div className="absolute top-1/2 left-1/2" style={{ transform: "translate(-50%, -50%)", width: "48px", height: "10px", borderRadius: "999px", background: "#FFC93C", filter: "blur(8px)" }} />
+              </div>
             </div>
           )}
 
@@ -302,6 +315,17 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+          <p className="text-sm md:text-base text-center font-bold animate-glow-pulse" style={{ color: "#00ff88", fontFamily: mono }}>
+            {zh ? "// 点击 " : "// Click "}
+            <button
+              onClick={() => router.push(`/${lang}/survey`)}
+              className="px-3 py-1 mx-1 text-sm md:text-base font-bold align-middle"
+              style={{ border: "1px solid #00ff88", borderRadius: "999px", background: "#00ff8822", color: "#00ff88", cursor: "pointer", fontFamily: mono }}
+            >
+              {zh ? "解析我的生命代码" : "Generate my report"}
+            </button>
+            {zh ? "，回答几个问题，即可生成属于你的报告" : ", answer a few questions, and get your own report"}
+          </p>
         </section>
 
         {/* ───── 报告预览 ───── */}
@@ -331,35 +355,35 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ───── 用户评价（真实截图，放入 public/reviews/ 后显示） ───── */}
+        {REVIEW_IMAGES.length > 0 && (
+          <section id="reviews" className="py-12 space-y-8">
+            {sectionTitle(zh ? "真实用户体验" : "What readers say")}
+            <div className="columns-2 md:columns-3 gap-3">
+              {REVIEW_IMAGES.map((src) => (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img key={src} src={src} alt="user review" loading="lazy" className="w-full mb-3 break-inside-avoid" style={{ border: "1px solid #1a3a1a", borderRadius: "12px", display: "block" }} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ───── 不是算命 ───── */}
         <section className="py-12">
           <div className="p-6 md:p-10 grid md:grid-cols-[auto_1fr] gap-6 md:gap-10 items-center" style={{ ...CARD, boxShadow: "0 0 60px #00ff880d" }}>
             <div className="mx-auto"><NeonRing size={96}>{IconShield}</NeonRing></div>
             <div className="space-y-4 text-center md:text-left">
               <h2 className="text-lg md:text-xl font-bold" style={{ color: "#00ff88", fontFamily: mono }}>
-                {zh ? "这不是算命，而是一份自我理解报告" : "This is not fortune-telling — it's a self-understanding report"}
+                {zh ? "这是一份来自你内心深处的自我理解报告" : "This is not fortune-telling — it's a self-understanding report"}
               </h2>
               <div className="grid md:grid-cols-3 gap-4 text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
-                <p>{zh ? "以心理学（九型人格）为分析框架，不预测吉凶、不替你做任何决定" : "Built on psychology (Enneagram). No fortune predictions, no decisions made for you"}</p>
+                <p>{zh ? "以AI算法、代码程序、心理学、九型人格为分析框架，不预测吉凶、不替你做任何决定" : "Built on psychology (Enneagram). No fortune predictions, no decisions made for you"}</p>
                 <p>{zh ? "报告仅你本人登录可见，不会出现在任何公开页面，可随时申请删除" : "Your report is visible only to you, never public, deletable on request"}</p>
                 <p>{zh ? "AI 实时生成，无模板套话——同一个问题，一万个人有一万份答案" : "Generated live by AI — no templates, no boilerplate"}</p>
               </div>
             </div>
           </div>
         </section>
-
-        {/* ───── 用户评价（真实截图，放入 public/reviews/ 后显示） ───── */}
-        {REVIEW_IMAGES.length > 0 && (
-          <section className="py-12 space-y-8">
-            {sectionTitle(zh ? "他们读完之后说" : "What readers say")}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {REVIEW_IMAGES.map((src) => (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img key={src} src={src} alt="user review" loading="lazy" className="w-full" style={{ border: "1px solid #1a3a1a", borderRadius: "12px" }} />
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* ───── 创作者 + 价格 ───── */}
         <section id="about" className="py-12 grid md:grid-cols-2 gap-4">
@@ -390,7 +414,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="p-6 space-y-4 text-center flex flex-col justify-center" style={{ border: "1px solid #00ff8855", background: "#0a1f0a", borderRadius: "16px", boxShadow: "0 0 50px #00ff8814" }}>
-            <div className="text-4xl font-bold" style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855" }}>¥18.8</div>
+            <div className="text-4xl font-bold" style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855", fontFamily: "'Alibaba PuHuiTi 2.0', 'Courier New', monospace" }}>¥18.80</div>
             <div className="space-y-1 text-xs" style={{ color: "#4a7a4a", fontFamily: mono }}>
               <div>✓ {zh ? "AI 逐字逐句实时生成" : "Generated live, word by word"}</div>
               <div>✓ {zh ? "约 15-30 分钟收到完整报告" : "Full report in 15-30 min"}</div>

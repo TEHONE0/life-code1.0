@@ -2,11 +2,48 @@
 
 /* 科幻英文标题字体（自托管，国内无依赖） */
 @font-face {
+  font-family: "Audiowide";
+  src: url("/fonts/audiowide-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Orbitron";
   src: url("/fonts/orbitron-700.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+}
+
+/* 中文科技标题字体「得意黑」(子集，仅首页标题用字，自托管) */
+@font-face {
+  font-family: "Smiley Sans";
+  src: url("/fonts/smiley-sans-title.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 首页标语中文字体「阿里巴巴普惠体 2.0 Bold」(子集，仅首页标语用字，自托管) */
+@font-face {
+  font-family: "Alibaba PuHuiTi 2.0";
+  src: url("/fonts/alibaba-puhuiti-bold-title.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+7528,U+770B,U+89C1,U+4F60,U+751F,U+547D,U+91CC,U+53CD,U+590D,U+51FA,U+73B0,U+7684;
+}
+
+/* 价格数字字体「阿里巴巴普惠体 2.0 Bold」(子集，¥与数字，自托管) */
+@font-face {
+  font-family: "Alibaba PuHuiTi 2.0";
+  src: url("/fonts/alibaba-puhuiti-bold-price.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+00A5, U+002E, U+0030-0039;
 }
 
 * { box-sizing: border-box; }

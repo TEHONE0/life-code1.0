@@ -129,7 +129,7 @@ const CARD = { border: "1px solid #1a3a1a", background: "#0a150a", borderRadius:
 // 页面级 UI 文案（导航/侧边栏等界面文字）
 const CHROME = {
   zh: {
-    navLinks: [["", "首页"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#about", "关于作者"]],
+    navLinks: [["", "首页"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#reviews", "用户体验"], ["#about", "关于作者"]],
     navCta: "再测一位 →",
     sidebarTitle: "生命代码解析报告",
     sidebarSub: "LIFE CODE REPORT",
@@ -149,7 +149,7 @@ const CHROME = {
     securityNote: "报告仅你本人登录可见，不会出现在任何公开页面。",
   },
   en: {
-    navLinks: [["", "Home"], ["#how", "How"], ["#preview", "Sample"], ["#about", "About"]],
+    navLinks: [["", "Home"], ["#how", "How"], ["#preview", "Sample"], ["#reviews", "Reviews"], ["#about", "About"]],
     navCta: "Scan another →",
     sidebarTitle: "Life Code Report",
     sidebarSub: "LIFE CODE REPORT",
@@ -169,7 +169,7 @@ const CHROME = {
     securityNote: "Your report is visible only to you and never appears on any public page.",
   },
   ko: {
-    navLinks: [["", "홈"], ["#how", "생성 방식"], ["#preview", "리포트 예시"], ["#about", "제작자"]],
+    navLinks: [["", "홈"], ["#how", "생성 방식"], ["#preview", "리포트 예시"], ["#reviews", "리뷰"], ["#about", "제작자"]],
     navCta: "한 명 더 →",
     sidebarTitle: "라이프 코드 리포트",
     sidebarSub: "LIFE CODE REPORT",
@@ -309,7 +309,7 @@ function AsciiPortraitSVG({ face, name, code, caption, color }: { face: string; 
   const capY = codeY + 20
   const H = capY + 30
   const cx = W / 2
-  const cells: JSX.Element[] = []
+  const cells: React.JSX.Element[] = []
   lineArr.forEach((chs, i) => chs.forEach((ch, j) => {
     if (ch === " ") return
     cells.push(<text key={i + "-" + j} x={(j - minCol) * CW + CW / 2} y={(i + 0.78) * LH} textAnchor="middle" fill={color} fontFamily="'Courier New', monospace" fontSize={FS}>{ch}</text>)
@@ -403,6 +403,8 @@ function ResultPage() {
   }
   const reportRef = useRef<HTMLDivElement>(null)
   const reportInnerRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [cardBusy, setCardBusy] = useState(false)
   // Prevents double execution (StrictMode guard + re-render guard)
   const effectRan = useRef(false)
 
@@ -536,6 +538,35 @@ function ResultPage() {
       node.style.width = origNodeStyle.width
       inner.style.transform = origInnerTransform
       setExportingPdf(false)
+    }
+  }
+
+  // 生成分享卡片：把屏外的卡片 DOM 用 html2canvas 截成 PNG，移动端走系统分享面板、桌面端直接下载
+  const handleShareCard = async () => {
+    const node = cardRef.current
+    if (!node || cardBusy) return
+    setCardBusy(true)
+    try {
+      const canvas = await html2canvas(node, { backgroundColor: null, scale: 2.5, useCORS: true })
+      const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/png"))
+      if (!blob) return
+      const fileName = `生命代码_${userName || "card"}_${Date.now()}.png`
+      const file = new File([blob], fileName, { type: "image/png" })
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName })
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = fileName
+        a.click()
+        URL.revokeObjectURL(url)
+      }
+    } catch (e) {
+      if (!(e instanceof Error && e.name === "AbortError")) console.error("Share card failed:", e)
+    } finally {
+      setCardBusy(false)
     }
   }
 
@@ -1067,6 +1098,20 @@ function ResultPage() {
               // {lang === 'zh' ? '保存 · 分享' : 'SAVE · SHARE'}
             </div>
 
+            {/* 生成分享卡片（主推：把报告精华拼成一张可发朋友圈的卡） */}
+            <button
+              onClick={handleShareCard}
+              disabled={cardBusy}
+              className="btn-result w-full py-3 text-sm font-bold tracking-wider"
+              style={{ ...btnBase, border: "1px solid #00ff88", color: "#00ff88", opacity: cardBusy ? 0.6 : 1, cursor: cardBusy ? "not-allowed" : "pointer", boxShadow: "0 0 18px #00ff8822" }}
+              onMouseEnter={(e) => { if (!cardBusy) { e.currentTarget.style.background = "#00ff8811"; e.currentTarget.style.boxShadow = "0 0 26px #00ff8844" } }}
+              onMouseLeave={(e) => { if (!cardBusy) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "0 0 18px #00ff8822" } }}
+            >
+              {cardBusy
+                ? (lang === 'zh' ? '生成中...' : lang === 'ko' ? '생성 중...' : 'Generating...')
+                : (lang === 'zh' ? '◇ 生成我的分享卡片' : lang === 'ko' ? '◇ 공유 카드 만들기' : '◇ Create share card')}
+            </button>
+
             {/* 3-button row */}
             <div className="flex flex-wrap gap-3">
               <button
@@ -1159,7 +1204,7 @@ function ResultPage() {
             >
               {giftBuying
                 ? (lang === 'zh' ? '跳转支付中...' : '...')
-                : (lang === 'zh' ? '🎁 再送一位朋友 ¥18.8' : lang === 'ko' ? '🎁 친구에게 선물 ¥18.8' : '🎁 Gift a friend ¥18.8')}
+                : (lang === 'zh' ? '🎁 再送一位朋友 ¥18.80' : lang === 'ko' ? '🎁 친구에게 선물 ¥18.80' : '🎁 Gift a friend ¥18.80')}
             </button>
 
             {/* Share modal */}
@@ -1246,6 +1291,68 @@ function ResultPage() {
             {labels.home}
           </button>
         </div>
+        </div>
+      </div>
+
+      {/* 屏外分享卡片（html2canvas 截图源）：品牌头 + 真实觉醒画像 + 四格读数 + 二维码 */}
+      <div
+        ref={cardRef}
+        style={{ position: "absolute", left: "-9999px", top: 0, width: "400px", padding: "28px 24px", background: "#07120a", border: "1.5px solid #1c3c1c", borderRadius: "22px", fontFamily: "'Courier New', monospace", boxSizing: "border-box" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/dna-logo.png" alt="" width={18} height={27} style={{ filter: "drop-shadow(0 0 6px #00ff8855)" }} />
+          <span style={{ color: "#00ff88", fontSize: "17px", fontWeight: 700, textShadow: "0 0 12px #00ff8866" }}>生命代码</span>
+          <span style={{ color: "#2d5a2d", fontSize: "11px", letterSpacing: "2px" }}>LIFE CODE</span>
+        </div>
+        <div style={{ textAlign: "center", color: "#5a7a5a", fontSize: "11.5px", marginTop: "8px" }}>
+          {lang === 'zh' ? '用 AI 看见你生命里反复出现的 BUG' : lang === 'ko' ? 'AI로 인생의 반복되는 버그를 본다' : 'See the bugs that quietly run your life'}
+        </div>
+        <div style={{ height: "1px", background: "#163016", margin: "12px 0 16px" }} />
+
+        {portrait && (
+          <div style={{ maxWidth: "300px", margin: "0 auto" }}>
+            <AsciiPortraitSVG {...portrait} />
+          </div>
+        )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "18px" }}>
+          {[
+            { label: chrome.statBug, value: bugScore != null ? `${bugScore}` : "—", suffix: bugScore != null ? " / 100" : "", color: "#4db8ff" },
+            { label: chrome.statHealth, value: healthLv != null ? `Lv.${healthLv}` : "—", suffix: healthLv != null ? ` / 9 · ${healthBand}` : "", color: healthLv != null && healthLv >= 7 ? "#4db8ff" : "#00ff88" },
+            { label: chrome.statWeight, value: mainWeight ? `${mainWeight}型` : "—", suffix: "", color: "#00ff88" },
+            { label: chrome.statBias, value: bias ? `${bias}型` : "—", suffix: "", color: "#00ff88" },
+          ].map((s) => (
+            <div key={s.label} style={{ padding: "12px 14px", background: "#0a1a12", border: "1px solid #1c3c2a", borderRadius: "11px" }}>
+              <div style={{ color: "#7fc97f", fontSize: "10.5px", marginBottom: "6px" }}>{s.label}</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+                <span style={{ color: s.color, fontSize: "20px", fontWeight: 700, textShadow: `0 0 14px ${s.color}55` }}>{s.value}</span>
+                <span style={{ color: "#2d5a6a", fontSize: "10px" }}>{s.suffix}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ position: "relative", height: "2px", width: "80%", margin: "22px auto 0" }}>
+          <div style={{ position: "absolute", inset: 0, borderRadius: "999px", background: "linear-gradient(90deg, transparent 0%, #FFC93C 50%, transparent 100%)" }} />
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "20px" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/share-qr.png" alt="" width={92} height={92} style={{ borderRadius: "8px", flexShrink: 0 }} />
+          <div>
+            <div style={{ color: "#FFC93C", fontSize: "15px", fontWeight: 700, textShadow: "0 0 10px #FFC93C55" }}>
+              {lang === 'zh' ? '扫码生成你的' : lang === 'ko' ? '스캔하여' : 'Scan to decode'}
+            </div>
+            <div style={{ color: "#FFC93C", fontSize: "15px", fontWeight: 700, textShadow: "0 0 10px #FFC93C55" }}>
+              {lang === 'zh' ? '生命代码 →' : lang === 'ko' ? '생명 코드 생성 →' : 'your life →'}
+            </div>
+            <div style={{ color: "#5a7a5a", fontSize: "11.5px", marginTop: "6px" }}>lifecode9.com</div>
+          </div>
+        </div>
+
+        <div style={{ textAlign: "center", color: "#00ff88", fontSize: "13px", fontWeight: 700, marginTop: "22px", textShadow: "0 0 10px #00ff8866" }}>
+          {lang === 'zh' ? '— 看见自己，疗愈自己 —' : lang === 'ko' ? '— 자신을 보고, 자신을 치유하라 —' : '— See yourself. Heal yourself. —'}
         </div>
       </div>
 

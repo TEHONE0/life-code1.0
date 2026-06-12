@@ -39,7 +39,7 @@ const QUESTION_ICONS: Record<string, React.ReactNode> = {
 // 页面级 UI 文案（导航/侧边栏等界面文字，题目内容一律来自 messages/）
 const UI = {
   zh: {
-    navLinks: [["", "首页"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#about", "关于作者"]],
+    navLinks: [["", "首页"], ["#how", "如何生成"], ["#preview", "报告示例"], ["#reviews", "用户体验"], ["#about", "关于作者"]],
     navCta: "开始生成我的报告 →",
     sidebarTitle: "生命代码问卷",
     sidebarSub: "LIFE CODE SCANNER",
@@ -56,7 +56,7 @@ const UI = {
     fuzzyPh: "例如：大概上午 / 不知道",
   },
   en: {
-    navLinks: [["", "Home"], ["#how", "How"], ["#preview", "Sample"], ["#about", "About"]],
+    navLinks: [["", "Home"], ["#how", "How"], ["#preview", "Sample"], ["#reviews", "Reviews"], ["#about", "About"]],
     navCta: "Generate my report →",
     sidebarTitle: "Life Code Survey",
     sidebarSub: "LIFE CODE SCANNER",
@@ -73,7 +73,7 @@ const UI = {
     fuzzyPh: "e.g. around morning / unknown",
   },
   ko: {
-    navLinks: [["", "홈"], ["#how", "생성 방식"], ["#preview", "리포트 예시"], ["#about", "제작자"]],
+    navLinks: [["", "홈"], ["#how", "생성 방식"], ["#preview", "리포트 예시"], ["#reviews", "리뷰"], ["#about", "제작자"]],
     navCta: "내 리포트 생성하기 →",
     sidebarTitle: "라이프 코드 설문",
     sidebarSub: "LIFE CODE SCANNER",

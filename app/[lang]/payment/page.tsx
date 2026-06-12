@@ -155,9 +155,6 @@ export default function PaymentPage() {
         </div>
 
         <div className="space-y-2">
-          <div className="text-xs" style={{ color: "#2d5a2d" }}>
-            // SCAN_STATUS: COMPLETE · REPORT: PENDING_UNLOCK
-          </div>
           <h1 className="text-2xl font-bold" style={{ color: "#00ff88" }}>
             {t.paymentTitle}
           </h1>
@@ -168,7 +165,7 @@ export default function PaymentPage() {
 
         <div
           className="text-left p-4 border space-y-2"
-          style={{ borderColor: "#0f2a0f", background: "#080e08", fontFamily: "Courier New, monospace" }}
+          style={{ borderColor: "#0f2a0f", background: "#080e08", fontFamily: "Courier New, monospace", borderRadius: "16px" }}
         >
           <div className="text-xs" style={{ color: "#2d5a2d" }}>
             {lang === 'zh' ? '// 扫描完成 · 检测到以下信号' : '// Scan complete · Signals detected'}
@@ -207,6 +204,7 @@ export default function PaymentPage() {
                 fontFamily: "Courier New, monospace",
                 outline: "none",
                 letterSpacing: "0.1em",
+                borderRadius: "10px",
               }}
             />
             <button
@@ -237,9 +235,9 @@ export default function PaymentPage() {
 
         <div
           className="py-8 px-6 border space-y-3"
-          style={{ borderColor: "#1a3a1a", background: "#0a150a" }}
+          style={{ borderColor: "#1a3a1a", background: "#0a150a", borderRadius: "16px" }}
         >
-          <div className="text-4xl font-bold" style={{ color: "#00ff88" }}>
+          <div className="text-4xl font-bold" style={{ color: "#00ff88", fontFamily: "'Alibaba PuHuiTi 2.0', 'Courier New', monospace" }}>
             {inviteStatus === "valid" && inviteFreeAccess ? (
               <span>免费 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥18.80</span></span>
             ) : inviteStatus === "valid" ? (
@@ -249,11 +247,38 @@ export default function PaymentPage() {
             )}
           </div>
           {new Date() <= new Date("2026-06-30T23:59:59+08:00") && (
-            <p className="text-xs" style={{ color: "#fbbf24", fontFamily: "Courier New, monospace" }}>
-              🎁 {lang === "zh" ? "首发活动（至6月30日）：买一赠一，支付成功自动获得一个可送朋友的免费测试码" : lang === "ko" ? "런칭 이벤트 (6/30까지): 1+1, 결제 시 친구에게 선물할 무료 코드 증정" : "Launch offer (until Jun 30): buy one gift one — get a free code for a friend after payment"}
-            </p>
+            <div className="text-sm space-y-2" style={{ fontFamily: "Courier New, monospace" }}>
+              <div className="flex items-center justify-center gap-2">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, filter: "drop-shadow(0 0 6px #FFC93Caa)" }}>
+                  <defs>
+                    <linearGradient id="giftGoldGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#FFF3C4" />
+                      <stop offset="50%" stopColor="#FFC93C" />
+                      <stop offset="100%" stopColor="#B8860B" />
+                    </linearGradient>
+                  </defs>
+                  <g stroke="url(#giftGoldGrad)">
+                    <rect x="3" y="8" width="18" height="4" rx="1" />
+                    <path d="M5 12 v8 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1 -1 v-8" />
+                    <line x1="12" y1="8" x2="12" y2="21" />
+                    <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
+                    <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
+                  </g>
+                </svg>
+                <span className="font-bold" style={{ color: "#FFC93C" }}>
+                  {lang === "zh" ? "首发活动（至6月30日）：" : lang === "ko" ? "런칭 이벤트 (6/30까지):" : "Launch offer (until Jun 30):"}
+                </span>
+              </div>
+              <div className="font-bold" style={{ color: "#FFC93C" }}>
+                {lang === "zh" ? "买一赠一，获得一个免费码送给你想读懂的人" : lang === "ko" ? "1+1, 결제 시 친구에게 선물할 무료 코드 증정" : "Buy one gift one — get a free code for a friend after payment"}
+              </div>
+              <div className="relative mx-auto" style={{ width: "80%", height: "2px" }}>
+                <div className="absolute inset-0" style={{ borderRadius: "999px", background: "linear-gradient(90deg, transparent 0%, #FFC93C 50%, transparent 100%)" }} />
+                <div className="absolute top-1/2 left-1/2" style={{ transform: "translate(-50%, -50%)", width: "48px", height: "10px", borderRadius: "999px", background: "#FFC93C", filter: "blur(8px)" }} />
+              </div>
+            </div>
           )}
-          <p className="text-xs" style={{ color: "#2d5a2d" }}>
+          <p className="text-xs" style={{ color: "#00ff88" }}>
             {t.paymentDesc}
           </p>
         </div>
@@ -266,6 +291,7 @@ export default function PaymentPage() {
             color: '#00ff88',
             background: '#0a1f0a',
             fontFamily: 'Courier New, monospace',
+            borderRadius: '14px',
           }}
         >
           支付宝
@@ -302,6 +328,27 @@ export default function PaymentPage() {
         >
           {loading ? <>{lang === 'zh' ? '处理中' : lang === 'ko' ? '처리 중' : 'Processing'}<AnimatedDots /></> : t.paymentBtn}
         </button>
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => router.push(`/${lang}/survey`)}
+            className="btn-result flex-1 py-3 text-sm font-bold tracking-wider"
+            style={{ background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", transition: "all 0.2s", borderRadius: "12px", border: "1px solid #1a3a1a", color: "#2d5a2d" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}
+          >
+            {lang === 'zh' ? '重新填写' : lang === 'ko' ? '다시 작성' : 'Restart survey'}
+          </button>
+          <button
+            onClick={() => router.push(`/${lang}`)}
+            className="btn-result flex-1 py-3 text-sm font-bold tracking-wider"
+            style={{ background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", transition: "all 0.2s", borderRadius: "12px", border: "1px solid #1a3a1a", color: "#2d5a2d" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a3a1a"; e.currentTarget.style.color = "#2d5a2d" }}
+          >
+            {lang === 'zh' ? '返回首页' : lang === 'ko' ? '홈으로' : 'Back to home'}
+          </button>
+        </div>
 
         <p className="text-xs" style={{ color: "#1a3a1a" }}>
           {t.paymentNote}
