@@ -484,13 +484,17 @@ function ResultPage() {
       const scale = 1.5
       let pdf: jsPDF | null = null
 
-      // 四张核心读数卡片在 reportRef 之外，单独截成 PDF 第一页（否则导出报告里没有卡片）
+      // 四张核心读数卡片在 reportRef 之外，单独截成 PDF 第一页（否则导出报告里没有卡片）。
+      // 关键：页宽必须与报告页一致（pageW），否则混合页宽会被阅读器统一缩放，导致右侧被切、下方留白
+      const pageW = totalWidth * scale
       const statsNode = statsRef.current
       if (statsNode) {
-        const statsCanvas = await html2canvas(statsNode, { backgroundColor: "#080e08", scale, useCORS: true })
+        const sw = statsNode.scrollWidth
+        const statsCanvas = await html2canvas(statsNode, { backgroundColor: "#080e08", scale, useCORS: true, width: sw, windowWidth: sw })
         const statsImg = statsCanvas.toDataURL("image/jpeg", 0.92)
-        pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [statsCanvas.width, statsCanvas.height] })
-        pdf.addImage(statsImg, "JPEG", 0, 0, statsCanvas.width, statsCanvas.height)
+        const drawH = statsCanvas.height * (pageW / statsCanvas.width) // 按报告页宽等比缩放
+        pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [pageW, drawH] })
+        pdf.addImage(statsImg, "JPEG", 0, 0, pageW, drawH)
       }
 
       node.style.overflow = "hidden"
