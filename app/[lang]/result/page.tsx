@@ -555,6 +555,23 @@ function ResultPage() {
     }
   }
 
+  // 从数据库读取服务端已存的报告（服务端在客户端断连后仍会后台续写并存库）
+  const fetchReportFromDB = async (submissionId: string): Promise<string | null> => {
+    try {
+      const { data } = await supabaseBrowser.auth.getSession()
+      const token = data.session?.access_token
+      if (!token) return null
+      const res = await fetch(`/api/submission/${submissionId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) return null
+      const { submission } = await res.json()
+      return submission?.report || null
+    } catch {
+      return null
+    }
+  }
+
   const streamFromAnswers = async (answers: Record<string, string>, surveyLang: string, submissionId: string | null) => {
     const userName = extractName(answers.basic_info)
     setUserName(userName)
@@ -566,6 +583,36 @@ function ResultPage() {
     setStreaming(true)
     setVisible(true)
 
+    // 手机锁屏的三种死法都要兜住：①连接被直接掐断（read 报错）②解锁后连接变僵尸
+    // （read 永远挂起，靠看门狗强制断开）③解锁瞬间需要立刻拿结果（靠 visibilitychange）。
+    // 服务端在断连后会继续后台生成并存库，所以兜底统一是：去数据库取完整版。
+    const aborter = new AbortController()
+    let lastChunkAt = Date.now()
+    let dbReport: string | null = null
+
+    const checkDB = async () => {
+      if (!submissionId) return
+      const r = await fetchReportFromDB(submissionId)
+      if (r && r.length > accumulated.length) {
+        accumulated = r
+        setReport(cleanReport(accumulated, userName))
+        const b = parseBugScore(accumulated)
+        if (b != null) setBugScore(b)
+      }
+      if (r && /DIMENSION_LEVEL/.test(r)) {
+        dbReport = r
+        aborter.abort() // 数据库已有完整版，不再等流
+      }
+    }
+    const onVisible = () => {
+      if (document.visibilityState === "visible") checkDB()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    const watchdog = setInterval(() => {
+      // 60秒没收到新内容：连接已僵死（常见于熄屏后解锁），强制断开转入查库
+      if (Date.now() - lastChunkAt > 60000) aborter.abort()
+    }, 5000)
+
     try {
       const { data: sessionData } = await supabaseBrowser.auth.getSession()
       const accessToken = sessionData.session?.access_token
@@ -576,6 +623,7 @@ function ResultPage() {
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify({ answers, lang: surveyLang, submission_id: submissionId }),
+        signal: aborter.signal,
       })
       if (!res.ok) throw new Error("Stream failed")
       const reader = res.body!.getReader()
@@ -583,6 +631,7 @@ function ResultPage() {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
+        lastChunkAt = Date.now()
         const chunk = decoder.decode(value, { stream: true })
         accumulated += chunk
         const clean = cleanReport(accumulated, userName)
@@ -591,34 +640,22 @@ function ResultPage() {
         if (b != null) setBugScore(b)
       }
     } catch (err) {
-      console.error("Stream error:", err)
+      if (!(err instanceof DOMException && err.name === "AbortError")) console.error("Stream error:", err)
+    } finally {
+      clearInterval(watchdog)
     }
 
-    // 手机锁屏会让前台连接中断/提前结束，但服务端仍在后台续写并存库；
-    // 此时若报告不完整，轮询数据库直到拿到完整版（最多等待2分钟）
-    if (submissionId && !/DIMENSION_LEVEL/.test(accumulated)) {
-      for (let i = 0; i < 24; i++) {
+    // 流结束但报告不完整：轮询数据库等服务端写完（最多5分钟；熄屏时定时器
+    // 自动暂停，解锁后由 visibilitychange 立即补查一次）
+    if (submissionId && !dbReport && !/DIMENSION_LEVEL/.test(accumulated)) {
+      for (let i = 0; i < 60; i++) {
         await new Promise(r => setTimeout(r, 5000))
-        try {
-          const { data: sessionData } = await supabaseBrowser.auth.getSession()
-          const token = sessionData.session?.access_token
-          const res2 = await fetch(`/api/submission/${submissionId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          if (!res2.ok) continue
-          const { submission } = await res2.json()
-          if (submission?.report) {
-            accumulated = submission.report
-            setReport(cleanReport(accumulated, userName))
-            const b = parseBugScore(accumulated)
-            if (b != null) setBugScore(b)
-            if (/DIMENSION_LEVEL/.test(accumulated)) break
-          }
-        } catch {
-          // 网络抖动，继续轮询
-        }
+        await checkDB()
+        if (dbReport) break
       }
     }
+    document.removeEventListener("visibilitychange", onVisible)
+    if (dbReport) accumulated = dbReport
 
     const lvl = accumulated.match(/DIMENSION_LEVEL\s*[:：]\s*\[?(\w+)/)
     if (lvl && ['LOWER_DIMENSION','SAPIENT_ENTITY','AWAKENED','HIGH_DIMENSION'].includes(lvl[1])) {
