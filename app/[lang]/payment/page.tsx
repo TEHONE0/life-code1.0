@@ -197,7 +197,7 @@ export default function PaymentPage() {
         {/* Invite code */}
         <div className="space-y-2">
           <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
-            {lang === 'zh' ? '// 有邀请码？输入享8折' : lang === 'ko' ? '// 초대 코드가 있나요?' : '// Have an invite code? Get 20% off'}
+            {lang === 'zh' ? '// 输入邀请码享优惠' : lang === 'ko' ? '// 초대 코드가 있나요?' : '// Have an invite code? Get 20% off'}
           </div>
           <div className="flex gap-2">
             <input
