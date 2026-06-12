@@ -47,6 +47,8 @@ function cleanReport(text: string, userName?: string): string {
     .replace(/[^\n]*你目前为[^\n]*/g, '')
     // 过滤 DIMENSION_LEVEL 系统标记行（所有形式）
     .replace(/[^\n]*DIMENSION_LEVEL[^\n]*/g, '')
+    // 过滤 HEALTH_LEVEL 系统标记行（健康层级，前端反查用，用户不可见）
+    .replace(/[^\n]*HEALTH_LEVEL[^\n]*/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
   if (userName) {
@@ -67,7 +69,16 @@ function parseBugScore(raw: string): number | null {
   return m ? Math.min(100, parseInt(m[1], 10)) : null
 }
 
-// 健康等级：Bug指数反查 Riso-Hudson Lv.1–9（enneagram_analysis_guide §6.1 区间，共用区间内二分）
+// 健康层级（首选）：AI 在报告里显式判定的 Riso-Hudson 层级，输出隐藏标记 HEALTH_LEVEL: [N]
+// 解耦自 Bug 指数——层级测"觉察/被恐惧支配程度"，Bug 测"创伤"，两者不是一回事
+function parseHealthLevel(raw: string): number | null {
+  const m = raw.match(/HEALTH_LEVEL\s*[:：]\s*\[?\s*(\d)\s*\]?/i)
+  if (!m) return null
+  const n = parseInt(m[1], 10)
+  return n >= 1 && n <= 9 ? n : null
+}
+
+// 健康等级回退：旧报告没有 HEALTH_LEVEL 标记时，仍用 Bug指数反查（精度不如显式判定）
 function bugToLevel(score: number): number {
   if (score <= 10) return 1
   if (score <= 23) return 2
@@ -364,6 +375,7 @@ function ResultPage() {
   const [createdAt, setCreatedAt] = useState("")
   const [activeCh, setActiveCh] = useState("")
   const [bugScore, setBugScore] = useState<number | null>(null)
+  const [healthLevel, setHealthLevel] = useState<number | null>(null)
   const [stalled, setStalled] = useState(false)
   const [doneFlash, setDoneFlash] = useState(false)
 
@@ -616,6 +628,7 @@ function ResultPage() {
     let accumulated = ""
     setReport("")
     setDimensionLevel("")
+    setHealthLevel(null)
     setStreamDone(false)
     setStreaming(true)
     setVisible(true)
@@ -635,6 +648,8 @@ function ResultPage() {
         setReport(cleanReport(accumulated, userName))
         const b = parseBugScore(accumulated)
         if (b != null) setBugScore(b)
+        const h = parseHealthLevel(accumulated)
+        if (h != null) setHealthLevel(h)
       }
       if (r && /DIMENSION_LEVEL/.test(r)) {
         dbReport = r
@@ -675,6 +690,8 @@ function ResultPage() {
         setReport(clean)
         const b = parseBugScore(accumulated)
         if (b != null) setBugScore(b)
+        const h = parseHealthLevel(accumulated)
+        if (h != null) setHealthLevel(h)
       }
     } catch (err) {
       if (!(err instanceof DOMException && err.name === "AbortError")) console.error("Stream error:", err)
@@ -782,6 +799,7 @@ function ResultPage() {
             if (pair) setDimensionLevel(pair[1])
           }
           setBugScore(parseBugScore(submission.report))
+          setHealthLevel(parseHealthLevel(submission.report))
           setReport(cleanReport(submission.report, userName))
           setTimeout(() => setVisible(true), 300)
           setStreamDone(true)
@@ -835,6 +853,7 @@ function ResultPage() {
         if (pair) setDimensionLevel(pair[1])
       }
       setBugScore(parseBugScore(legacy))
+      setHealthLevel(parseHealthLevel(legacy))
       setReport(cleanReport(legacy, savedUserName))
       setTimeout(() => setVisible(true), 300)
       setStreamDone(true)
@@ -877,8 +896,9 @@ function ResultPage() {
     .filter(Boolean)
   const strikeFirst = strikeLines[0] || ""
 
-  // 报告核心读数（全部从报告文本解析，与Bug指数同源）
-  const healthLv = bugScore != null ? bugToLevel(bugScore) : null
+  // 健康层级：优先用 AI 显式判定（HEALTH_LEVEL 标记，从原始报告解析存入 healthLevel），
+  // 旧报告无标记时回退 Bug指数反查
+  const healthLv = healthLevel ?? (bugScore != null ? bugToLevel(bugScore) : null)
   const healthBand = healthLv != null
     ? (BAND_LABELS[lang] ?? BAND_LABELS.en)[healthLv <= 3 ? 0 : healthLv <= 6 ? 1 : 2]
     : ""
