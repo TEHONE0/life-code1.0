@@ -443,6 +443,7 @@ function ResultPage() {
   }
   const reportRef = useRef<HTMLDivElement>(null)
   const reportInnerRef = useRef<HTMLDivElement>(null)
+  const statsRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const [cardBusy, setCardBusy] = useState(false)
   const [cardToast, setCardToast] = useState("")
@@ -482,6 +483,15 @@ function ResultPage() {
       const sliceHeight = 1000 // 窗口高度（px），保持较小，确保每次克隆的DOM体积可控
       const scale = 1.5
       let pdf: jsPDF | null = null
+
+      // 四张核心读数卡片在 reportRef 之外，单独截成 PDF 第一页（否则导出报告里没有卡片）
+      const statsNode = statsRef.current
+      if (statsNode) {
+        const statsCanvas = await html2canvas(statsNode, { backgroundColor: "#080e08", scale, useCORS: true })
+        const statsImg = statsCanvas.toDataURL("image/jpeg", 0.92)
+        pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [statsCanvas.width, statsCanvas.height] })
+        pdf.addImage(statsImg, "JPEG", 0, 0, statsCanvas.width, statsCanvas.height)
+      }
 
       node.style.overflow = "hidden"
       for (let top = 0; top < totalHeight; top += sliceHeight) {
@@ -1100,7 +1110,7 @@ function ResultPage() {
 
         {/* 报告核心读数 */}
         {(bugScore != null || mainWeight) && (
-          <div className={`transition-opacity duration-700 delay-150 ${visible ? "opacity-100" : "opacity-0"}`}>
+          <div ref={statsRef} className={`transition-opacity duration-700 delay-150 ${visible ? "opacity-100" : "opacity-0"}`}>
             <div className="text-xs mb-2" style={{ color: "#2d5a2d", fontFamily: mono, letterSpacing: "0.08em" }}>
               ◇ {chrome.statsTitle}
             </div>
