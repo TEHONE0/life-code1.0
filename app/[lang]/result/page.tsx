@@ -1000,7 +1000,7 @@ function ResultPage() {
           </div>
           {streaming && (
             <div className="text-xs animate-glow-pulse" style={{ color: "#00ff8855", fontFamily: mono }}>
-              // WRITING YOUR LIFE CODE<span className="cursor" />
+              // WRITING YOUR LIFE CODE{lang === 'zh' ? ' / 解析中……' : ''}<span className="cursor" />
             </div>
           )}
         </div>
