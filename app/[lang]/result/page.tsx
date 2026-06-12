@@ -590,26 +590,52 @@ function ResultPage() {
         const b = parseBugScore(accumulated)
         if (b != null) setBugScore(b)
       }
-      const lvl = accumulated.match(/DIMENSION_LEVEL\s*[:：]\s*\[?(\w+)/)
-      if (lvl && ['LOWER_DIMENSION','SAPIENT_ENTITY','AWAKENED','HIGH_DIMENSION'].includes(lvl[1])) {
-        setDimensionLevel(lvl[1])
-      } else {
-        const MARKERS: [string, string][] = [
-          ['高维生物_HIGH_DIMENSION', 'HIGH_DIMENSION'],
-          ['觉醒者_AWAKENED', 'AWAKENED'],
-          ['智慧生物_SAPIENT_ENTITY', 'SAPIENT_ENTITY'],
-          ['低维生物_LOWER_DIMENSION', 'LOWER_DIMENSION'],
-        ]
-        const pair = MARKERS.find(([marker]) => accumulated.includes(marker))
-        if (pair) setDimensionLevel(pair[1])
-      }
-      sessionStorage.setItem("life_code_result", accumulated)
     } catch (err) {
       console.error("Stream error:", err)
-    } finally {
-      setStreaming(false)
-      setStreamDone(true)
     }
+
+    // 手机锁屏会让前台连接中断/提前结束，但服务端仍在后台续写并存库；
+    // 此时若报告不完整，轮询数据库直到拿到完整版（最多等待2分钟）
+    if (submissionId && !/DIMENSION_LEVEL/.test(accumulated)) {
+      for (let i = 0; i < 24; i++) {
+        await new Promise(r => setTimeout(r, 5000))
+        try {
+          const { data: sessionData } = await supabaseBrowser.auth.getSession()
+          const token = sessionData.session?.access_token
+          const res2 = await fetch(`/api/submission/${submissionId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (!res2.ok) continue
+          const { submission } = await res2.json()
+          if (submission?.report) {
+            accumulated = submission.report
+            setReport(cleanReport(accumulated, userName))
+            const b = parseBugScore(accumulated)
+            if (b != null) setBugScore(b)
+            if (/DIMENSION_LEVEL/.test(accumulated)) break
+          }
+        } catch {
+          // 网络抖动，继续轮询
+        }
+      }
+    }
+
+    const lvl = accumulated.match(/DIMENSION_LEVEL\s*[:：]\s*\[?(\w+)/)
+    if (lvl && ['LOWER_DIMENSION','SAPIENT_ENTITY','AWAKENED','HIGH_DIMENSION'].includes(lvl[1])) {
+      setDimensionLevel(lvl[1])
+    } else {
+      const MARKERS: [string, string][] = [
+        ['高维生物_HIGH_DIMENSION', 'HIGH_DIMENSION'],
+        ['觉醒者_AWAKENED', 'AWAKENED'],
+        ['智慧生物_SAPIENT_ENTITY', 'SAPIENT_ENTITY'],
+        ['低维生物_LOWER_DIMENSION', 'LOWER_DIMENSION'],
+      ]
+      const pair = MARKERS.find(([marker]) => accumulated.includes(marker))
+      if (pair) setDimensionLevel(pair[1])
+    }
+    sessionStorage.setItem("life_code_result", accumulated)
+    setStreaming(false)
+    setStreamDone(true)
   }
 
   useEffect(() => {
