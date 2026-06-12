@@ -364,6 +364,36 @@ function ResultPage() {
   const [createdAt, setCreatedAt] = useState("")
   const [activeCh, setActiveCh] = useState("")
   const [bugScore, setBugScore] = useState<number | null>(null)
+  const [stalled, setStalled] = useState(false)
+  const [doneFlash, setDoneFlash] = useState(false)
+
+  // 生成进度：按报告固定章节结构（第零章～第七章）数已出现的章数
+  const CHAPTER_MARKERS = ["第零章", "第一章", "第二章", "第三章", "第四章", "第五章", "第六章", "第七章"]
+  const chaptersDone = CHAPTER_MARKERS.filter((m) => report.includes(m)).length
+
+  // 停顿检测：流式输出超过8秒没新内容（续写衔接/查库期间），底部状态条切换为"衔接中"文案
+  const lastGrowthAt = useRef(Date.now())
+  useEffect(() => {
+    lastGrowthAt.current = Date.now()
+    setStalled(false)
+  }, [report])
+  useEffect(() => {
+    if (!streaming) { setStalled(false); return }
+    const t = setInterval(() => setStalled(Date.now() - lastGrowthAt.current > 8000), 2000)
+    return () => clearInterval(t)
+  }, [streaming])
+
+  // 生成结束后，底部状态条变绿显示"已完整生成"2.5秒再消失
+  const wasStreaming = useRef(false)
+  useEffect(() => {
+    if (streaming) { wasStreaming.current = true; return }
+    if (wasStreaming.current) {
+      wasStreaming.current = false
+      setDoneFlash(true)
+      const t = setTimeout(() => setDoneFlash(false), 2500)
+      return () => clearTimeout(t)
+    }
+  }, [streaming])
 
   // 我的赠礼码（买一赠一所得/单独购买）
   useEffect(() => {
@@ -1005,6 +1035,19 @@ function ResultPage() {
           )}
         </div>
 
+        {/* 底部悬浮状态条：滚到任何位置都能看到生成状态和章节进度 */}
+        {(streaming || doneFlash) && (
+          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, display: "flex", justifyContent: "center", padding: "10px 16px 14px", background: "linear-gradient(transparent, #050a05ee 55%)", pointerEvents: "none" }}>
+            <div className="text-xs" style={{ fontFamily: mono, border: `1px solid ${streaming ? "#4db8ff66" : "#00ff88"}`, color: streaming ? "#4db8ff" : "#00ff88", background: "#0a150aee", borderRadius: "999px", padding: "8px 18px", boxShadow: "0 0 18px #00000088" }}>
+              {!streaming
+                ? (lang === 'zh' ? '✓ 报告已完整生成' : '✓ Report complete')
+                : stalled
+                  ? (lang === 'zh' ? '⏳ 解析引擎衔接中，报告还没写完，请稍候……' : '⏳ Reconnecting — report is not finished yet, please wait…')
+                  : (lang === 'zh' ? `⏳ 报告解析中……已生成 ${chaptersDone}/8 章，请留在本页` : '⏳ Generating report… please stay on this page')}
+            </div>
+          </div>
+        )}
+
         {/* 报告核心读数 */}
         {(bugScore != null || mainWeight) && (
           <div className={`transition-opacity duration-700 delay-150 ${visible ? "opacity-100" : "opacity-0"}`}>
@@ -1126,6 +1169,13 @@ function ResultPage() {
             >
               {report}
             </ReactMarkdown>
+
+            {/* 末尾跟随提示块：贴着正文断口，告诉用户"这里不是结尾" */}
+            {streaming && (
+              <div className="text-xs animate-glow-pulse" style={{ marginTop: "1rem", fontFamily: "Courier New, monospace", color: "#4db8ff", border: "1px dashed #4db8ff44", borderRadius: "10px", padding: "10px 14px", background: "#0a152088" }}>
+                ▊ {lang === 'zh' ? '解析中……下面还有内容正在生成，这里不是报告结尾' : 'Still generating — more content is coming below…'}
+              </div>
+            )}
           </div>
 
           {/* Dimension Portrait — only shown after stream completes. 放在 reportRef 容器内，导出PDF时才能截到 */}
