@@ -445,6 +445,7 @@ function ResultPage() {
   const reportInnerRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const [cardBusy, setCardBusy] = useState(false)
+  const [cardToast, setCardToast] = useState("")
   // Prevents double execution (StrictMode guard + re-render guard)
   const effectRan = useRef(false)
 
@@ -566,20 +567,32 @@ function ResultPage() {
     return { blob, file: new File([blob], fileName, { type: "image/png" }), fileName }
   }
 
-  // 生成分享卡：保存卡片图到本地（移动端系统面板可选"存储图像"，桌面直接下载）
+  // 生成报告卡：保存卡片图到本地（移动端系统面板可选"存储图像"，桌面直接下载）
   const handleSaveCard = async () => {
     if (cardBusy) return
     setCardBusy(true)
     try {
       const r = await captureCard()
-      if (!r) return
+      if (!r) { alert(lang === 'zh' ? '报告卡生成失败，请重试' : 'Failed, please retry'); return }
+      // 截图耗时数秒，瞬时授权常已过期导致 share 抛 NotAllowedError——失败一律降级为直接下载，
+      // 不能像以前那样静默吞掉（这是"点了没反应、没下载也没提示"的根因）
+      let saved = false
       if (isMobileUA() && navigator.canShare && navigator.canShare({ files: [r.file] })) {
-        await navigator.share({ files: [r.file] })
-      } else {
+        try {
+          await navigator.share({ files: [r.file] })
+          saved = true
+        } catch (e) {
+          if (e instanceof Error && e.name === "AbortError") saved = true // 用户主动取消
+        }
+      }
+      if (!saved) {
         downloadBlob(r.blob, r.fileName)
+        setCardToast(lang === 'zh' ? '✓ 报告卡已保存到下载' : lang === 'ko' ? '✓ 저장 완료' : '✓ Saved to downloads')
+        setTimeout(() => setCardToast(""), 2800)
       }
     } catch (e) {
-      if (!(e instanceof Error && e.name === "AbortError")) console.error("Save card failed:", e)
+      console.error("Save card failed:", e)
+      alert(lang === 'zh' ? '报告卡生成失败，请重试' : 'Failed, please retry')
     } finally {
       setCardBusy(false)
     }
@@ -1064,13 +1077,23 @@ function ResultPage() {
 
         {/* 底部悬浮状态条：滚到任何位置都能看到生成状态和章节进度 */}
         {(streaming || doneFlash) && (
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, display: "flex", justifyContent: "center", padding: "10px 16px 14px", background: "linear-gradient(transparent, #050a05ee 55%)", pointerEvents: "none" }}>
+          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "10px 16px 14px", background: "linear-gradient(transparent, #050a05ee 45%)", pointerEvents: "none" }}>
             <div className="text-xs" style={{ fontFamily: mono, border: `1px solid ${streaming ? "#4db8ff66" : "#00ff88"}`, color: streaming ? "#4db8ff" : "#00ff88", background: "#0a150aee", borderRadius: "999px", padding: "8px 18px", boxShadow: "0 0 18px #00000088" }}>
               {!streaming
                 ? (lang === 'zh' ? '✓ 报告已完整生成' : '✓ Report complete')
                 : stalled
                   ? (lang === 'zh' ? '⏳ 解析引擎衔接中，报告还没写完，请稍候……' : '⏳ Reconnecting — report is not finished yet, please wait…')
                   : (lang === 'zh' ? `⏳ 报告解析中……已生成 ${chaptersDone}/8 章，请留在本页` : '⏳ Generating report… please stay on this page')}
+            </div>
+            {/* 蓝色进度条：随已生成章节数推进，完成时填满变绿 */}
+            <div style={{ width: "min(420px, 78vw)", height: "5px", borderRadius: "999px", background: "#0a1a2a", overflow: "hidden", boxShadow: "0 0 12px #00000088" }}>
+              <div style={{
+                height: "100%", borderRadius: "999px",
+                width: `${!streaming ? 100 : Math.max(6, Math.round((chaptersDone / 8) * 100))}%`,
+                background: !streaming ? "#00ff88" : "linear-gradient(90deg, #1e5a8a, #4db8ff)",
+                boxShadow: !streaming ? "0 0 10px #00ff8888" : "0 0 10px #4db8ff88",
+                transition: "width 0.6s ease",
+              }} />
             </div>
           </div>
         )}
@@ -1234,8 +1257,11 @@ function ResultPage() {
             >
               {cardBusy
                 ? (lang === 'zh' ? '生成中...' : lang === 'ko' ? '생성 중...' : 'Generating...')
-                : (lang === 'zh' ? '◇ 生成分享卡' : lang === 'ko' ? '◇ 공유 카드 만들기' : '◇ Create share card')}
+                : (lang === 'zh' ? '◇ 生成你的报告卡' : lang === 'ko' ? '◇ 공유 카드 만들기' : '◇ Create share card')}
             </button>
+            {cardToast && (
+              <div className="text-xs text-center" style={{ color: "#00ff88", fontFamily: mono }}>{cardToast}</div>
+            )}
 
             {/* 第二排：分享给朋友 + 保存为PDF */}
             <div className="flex flex-wrap gap-3">
