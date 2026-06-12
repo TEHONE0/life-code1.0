@@ -329,6 +329,22 @@ export default function SurveyPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // 手机端"要点两下"修复：键盘收起触发页面回流，click 在抬手时按新位置结算会落空。
+  // touch 事件的 target 锁定在手指按下时的元素上，不受回流影响；位移>12px 视为滚动不触发。
+  const touchStartY = useRef<number | null>(null);
+  const touchHandledAt = useRef(0);
+  const tapProps = (fn: () => void) => ({
+    onTouchStart: (e: React.TouchEvent) => { touchStartY.current = e.touches[0].clientY; },
+    onTouchEnd: (e: React.TouchEvent) => {
+      const y0 = touchStartY.current;
+      touchStartY.current = null;
+      if (y0 == null || Math.abs(e.changedTouches[0].clientY - y0) > 12) return;
+      touchHandledAt.current = Date.now();
+      fn();
+    },
+    onClick: () => { if (Date.now() - touchHandledAt.current < 700) return; fn(); },
+  });
+
   const handleSubmit = async () => {
     if (submitting) return; // 防止手机网络慢时重复点击触发多次提交
     const missing = QUESTIONS.filter((q) => !(answers[q.id] || "").trim());
@@ -786,9 +802,9 @@ export default function SurveyPage() {
           {/* 翻页 / 提交 */}
           {page === 0 ? (
             <button
-              onClick={() => switchPage(1)}
+              {...tapProps(() => switchPage(1))}
               className="w-full py-4 text-sm font-bold tracking-wider"
-              style={{ border: "1px solid #2a5a2a", color: "#9fbf9f", background: "#0a150a88", cursor: "pointer", fontFamily: mono, borderRadius: "14px" }}
+              style={{ border: "1px solid #2a5a2a", color: "#9fbf9f", background: "#0a150a88", cursor: "pointer", fontFamily: mono, borderRadius: "14px", touchAction: "manipulation" }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#00ff88"; }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#2a5a2a"; e.currentTarget.style.color = "#9fbf9f"; }}
             >
@@ -797,16 +813,16 @@ export default function SurveyPage() {
           ) : (
             <div ref={submitRef} className="flex flex-col sm:flex-row gap-3">
               <button
-                onClick={() => switchPage(0)}
+                {...tapProps(() => switchPage(0))}
                 className="px-8 py-4 text-sm font-bold tracking-wider"
-                style={{ border: "1px solid #2a5a2a", color: "#9fbf9f", background: "#0a150a88", cursor: "pointer", fontFamily: mono, borderRadius: "14px" }}
+                style={{ border: "1px solid #2a5a2a", color: "#9fbf9f", background: "#0a150a88", cursor: "pointer", fontFamily: mono, borderRadius: "14px", touchAction: "manipulation" }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#00ff88"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#2a5a2a"; e.currentTarget.style.color = "#9fbf9f"; }}
               >
                 {ui.prev}
               </button>
               <button
-                onClick={handleSubmit}
+                {...tapProps(handleSubmit)}
                 disabled={submitting}
                 className="flex-1 py-4 text-base font-bold tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
                 style={{
@@ -816,6 +832,7 @@ export default function SurveyPage() {
                   fontSize: "clamp(0.85rem, 4vw, 1rem)",
                   WebkitTapHighlightColor: "transparent",
                   opacity: submitting ? 0.7 : 1,
+                  touchAction: "manipulation",
                 }}
               >
                 {submitting ? (
