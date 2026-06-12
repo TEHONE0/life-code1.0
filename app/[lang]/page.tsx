@@ -119,7 +119,7 @@ export default function HomePage() {
   // Hero 代码块：逐字打字动画（打完后光标在结尾持续闪烁）
   const codeLines: [string, string][] = zh
     ? [
-        ["// init", "这是一款用 AI 代码推演出的心理测试"],
+        ["// init", "这是用 AI 代码推演出的心理测试"],
         ["> scan", "看清人生中反复出现的卡点"],
         ["> debug", "找到生命系统里那些悄悄运行的 Bug"],
         ["> rebuild", "让你有机会重新选择怎么活"],
