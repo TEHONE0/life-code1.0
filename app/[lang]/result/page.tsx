@@ -446,7 +446,7 @@ function ResultPage() {
   const statsRef = useRef<HTMLDivElement>(null)
   const pdfStatsRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
-  const [pdfLink, setPdfLink] = useState<{ url: string; name: string } | null>(null)
+  const [pdfLink, setPdfLink] = useState<{ blob: Blob; name: string } | null>(null)
   const [cardBusy, setCardBusy] = useState(false)
   const [cardToast, setCardToast] = useState("")
   // Prevents double execution (StrictMode guard + re-render guard)
@@ -531,7 +531,7 @@ function ResultPage() {
       // 大 PDF 的分享预览还常灰屏/卡死（这是"点了黑屏/没反应"的根因）。改为生成完直接亮出
       // 可见的"保存PDF"按钮——用户点它时是全新激活，下载/打开必成功。
       if (isMobileUA()) {
-        setPdfLink({ url: URL.createObjectURL(blob), name: fileName })
+        setPdfLink({ blob, name: fileName })
         setCardToast(lang === 'zh' ? '✓ PDF 已生成，点下方「保存 PDF」按钮' : 'PDF ready — tap the Save button below')
         setTimeout(() => setCardToast(""), 4000)
       } else {
@@ -551,6 +551,32 @@ function ResultPage() {
       inner.style.transform = origInnerTransform
       setExportingPdf(false)
     }
+  }
+
+  // 手机端「保存PDF」按钮的点击动作：调起系统分享面板（iOS 的"存储到文件"在这里）。
+  // 按钮点击是全新用户激活，不会像生成后那样过期被拒；share 不可用时兜底直接下载。
+  const savePdf = async () => {
+    if (!pdfLink) return
+    const file = new File([pdfLink.blob], pdfLink.name, { type: "application/pdf" })
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] })
+        setPdfLink(null)
+        return
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return // 用户取消，保留按钮
+        // 其他错误走下载兜底
+      }
+    }
+    const url = URL.createObjectURL(pdfLink.blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = pdfLink.name
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 3000)
+    setPdfLink(null)
   }
 
   const isMobileUA = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
@@ -1297,19 +1323,15 @@ function ResultPage() {
               </button>
             </div>
 
-            {/* PDF 就绪后的可见保存按钮（手机分享失败/不可用时兜底，用户点击=新激活，下载/打开必成功） */}
+            {/* PDF 就绪后的可见保存按钮：点击=全新激活，调起系统分享面板（iOS"存储到文件"），不可用时直接下载 */}
             {pdfLink && (
-              <a
-                href={pdfLink.url}
-                download={pdfLink.name}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setTimeout(() => setPdfLink(null), 1500)}
+              <button
+                onClick={savePdf}
                 className="btn-result w-full py-3 text-sm font-bold tracking-wider"
-                style={{ ...btnBase, display: "block", textAlign: "center", textDecoration: "none", border: "1px solid #00ff88", color: "#00ff88", boxShadow: "0 0 18px #00ff8822" }}
+                style={{ ...btnBase, textAlign: "center", border: "1px solid #00ff88", color: "#00ff88", boxShadow: "0 0 18px #00ff8822", cursor: "pointer" }}
               >
-                {lang === 'zh' ? '📥 保存 PDF（点击下载 / 打开后可存到文件）' : lang === 'ko' ? '📥 PDF 저장' : '📥 Save PDF'}
-              </a>
+                {lang === 'zh' ? '📥 保存 PDF（弹出菜单 → 存储到文件）' : lang === 'ko' ? '📥 PDF 저장' : '📥 Save PDF'}
+              </button>
             )}
 
             {/* My Archive */}
