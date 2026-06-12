@@ -73,6 +73,17 @@ function AccountPage() {
     completeReport: lang === "zh" ? "继续生成报告 →" : lang === "ko" ? "보고서 생성 →" : "Continue →",
     payNow: lang === "zh" ? "去支付 →" : lang === "ko" ? "결제 →" : "Pay now →",
     rescan: lang === "zh" ? "↻ 重新扫描" : lang === "ko" ? "↻ 다시 스캔" : "↻ Rescan",
+    refill: lang === "zh" ? "✎ 重新填写" : lang === "ko" ? "✎ 다시 작성" : "✎ Refill",
+  };
+
+  // 把这份问卷的答案写入问卷页草稿，跳转后问卷已预填好（子字段/生日滚轮由问卷页反解）
+  const refillSurvey = (s: Submission) => {
+    try {
+      localStorage.setItem(`survey_draft_${lang}`, JSON.stringify(s.answers || {}));
+      localStorage.removeItem(`survey_draft_fields_${lang}`);
+      localStorage.removeItem(`survey_draft_birth_${lang}`);
+    } catch { /* ignore */ }
+    router.push(`/${lang}/survey?restore=1`);
   };
 
   useEffect(() => {
@@ -293,8 +304,19 @@ function AccountPage() {
                     <div className="text-sm font-bold" style={{ color: "#00ff88" }}>{s.name}</div>
                     <div className="text-xs mt-1" style={{ color: "#5b9bd5" }}>{date} · {s.lang.toUpperCase()}</div>
                   </div>
-                  <div className="text-xs" style={{ color: "#00ff8888" }}>
-                    {isExpanded ? t.collapse : t.expand}
+                  <div className="text-right space-y-2">
+                    <div className="text-xs" style={{ color: "#00ff8888" }}>
+                      {isExpanded ? t.collapse : t.expand}
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); refillSurvey(s); }}
+                      className="text-xs px-2 py-1 border block ml-auto"
+                      style={{ borderColor: "#3a6a3a", color: "#5a9a5a", background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", borderRadius: "8px" }}
+                      onMouseEnter={(ev) => { ev.currentTarget.style.borderColor = "#00ff8866"; ev.currentTarget.style.color = "#7aba7a" }}
+                      onMouseLeave={(ev) => { ev.currentTarget.style.borderColor = "#3a6a3a"; ev.currentTarget.style.color = "#5a9a5a" }}
+                    >
+                      {t.refill}
+                    </button>
                   </div>
                 </div>
                 {isExpanded && (

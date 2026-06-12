@@ -31,7 +31,7 @@ export default function PaymentPage() {
   useEffect(() => {
     const answersRaw = sessionStorage.getItem("survey_answers")
     if (!answersRaw) {
-      router.push(`/${lang}/survey`)
+      router.push(`/${lang}/survey?restore=1`)
       return
     }
     setHasAnswers(true)
@@ -348,7 +348,7 @@ export default function PaymentPage() {
 
         <div className="flex gap-4">
           <button
-            onClick={() => router.push(`/${lang}/survey`)}
+            onClick={() => router.push(`/${lang}/survey?restore=1`)}
             className="btn-result flex-1 py-3 text-sm font-bold tracking-wider"
             style={{ background: "transparent", cursor: "pointer", fontFamily: "Courier New, monospace", transition: "all 0.2s", borderRadius: "12px", border: "1px solid #1a3a1a", color: "#2d5a2d" }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#4a8a4a" }}

@@ -230,6 +230,42 @@ export default function SurveyPage() {
     return BIRTH_DEFAULT;
   });
 
+  // 草稿恢复策略：默认进来是空白问卷；只有带 ?restore=1（支付页"重新填写"/我的问卷"重新填写"）才恢复草稿
+  useEffect(() => {
+    const restore = new URLSearchParams(window.location.search).has("restore");
+    if (!restore) {
+      if (Object.keys(answers).length || basicFields.length) {
+        setAnswers({});
+        setBasicFields([]);
+        setBirth(BIRTH_DEFAULT);
+      }
+      localStorage.removeItem(DRAFT_KEY);
+      localStorage.removeItem(FIELDS_KEY);
+      localStorage.removeItem(BIRTH_KEY);
+      return;
+    }
+    // 来自"我的问卷-重新填写"：只有答案串（无子字段草稿），把 basic_info 合成串反解回子字段和生日滚轮
+    if (basicFields.length === 0 && (answers.basic_info || "").trim()) {
+      const parts = (answers.basic_info || "").split(" / ");
+      const fields = basicFieldDefs.map((f) => {
+        const p = parts.find((x) => x.startsWith(`${f.label}:`));
+        return p ? p.slice(f.label.length + 1).trim() : "";
+      });
+      setBasicFields(fields);
+      localStorage.setItem(FIELDS_KEY, JSON.stringify(fields));
+      const dateStr = fields[2] || "";
+      const timeStr = fields[3] || "";
+      const dm = dateStr.match(/(\d{4})[年\-/.](\d{1,2})[月\-/.](\d{1,2})/);
+      const tm = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+      const b: BirthState = { ...BIRTH_DEFAULT };
+      if (dm) { b.cal = /阴历|农历|陰曆|음력|lunar/i.test(dateStr) ? 1 : 0; b.y = +dm[1]; b.m = +dm[2]; b.d = +dm[3]; b.dateTouched = true; }
+      if (tm) { b.h = +tm[1]; b.min = +tm[2]; b.timeTouched = true; }
+      else if (timeStr.trim()) { b.unsure = true; b.fuzzy = timeStr.trim(); }
+      if (dm || timeStr.trim()) { setBirth(b); localStorage.setItem(BIRTH_KEY, JSON.stringify(b)); }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const updateBirth = (patch: Partial<BirthState>) => {
     const next = { ...birth, ...patch };
     next.d = Math.min(next.d, daysInMonth(next.y, next.m));

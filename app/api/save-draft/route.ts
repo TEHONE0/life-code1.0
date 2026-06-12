@@ -32,7 +32,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Create new draft (with or without user_id)
-  const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "anonymous";
+  // 新版问卷 basic_info 是 "姓名: 范向南 / 性别: 男 / ..." 合成串，优先按标签提取；旧格式回退首段
+  const _bi = (answers.basic_info || "") as string;
+  const name = (_bi.match(/(?:姓名|Name|이름)[:：]\s*([^/，,、\n]+)/i)?.[1] || _bi.split(/[，,、/\s]/)[0] || "").trim() || "anonymous";
   const { data: row, error: insertErr } = await supabase
     .from("submissions")
     .insert({
