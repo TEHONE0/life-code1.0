@@ -126,38 +126,50 @@ ${lang === 'ko' ? 'Note: This user\'s interface language is Korean (한국어). 
             { role: "user", content: userContent },
           ];
 
-          // 单次输出可能因 max_tokens 被截断（比如只写到第五章），最多自动续写3次
+          // 单次输出可能因 max_tokens 截断、或上游/网络在出字中途断连（手机、微信浏览器对长连接
+          // 尤其敏感）。最多自动续写/重试 4 轮，用已生成的 fullReport 作上下文从断点接着写，
+          // 避免报告半截（如只写到 bug2）就停，连带把 Bug 指数/健康等级也算错。
           for (let round = 0; round < 4; round++) {
             const messages = round === 0
               ? baseMessages
               : [...baseMessages, { role: "assistant" as const, content: fullReport }, { role: "user" as const, content: "继续，从刚才中断的地方接着往下写，不要重复已经写过的内容，也不要重新输出标题或开场白。" }];
 
-            const streamResponse = await client.chat.completions.create({
-              model,
-              max_tokens: 16384,
-              stream: true,
-              messages,
-            });
-
             let finishReason: string | null = null;
-            let lastBeat = 0;
-            for await (const chunk of streamResponse) {
-              const delta = chunk.choices[0]?.delta as { content?: string; reasoning_content?: string } | undefined;
-              const text = delta?.content || "";
-              if (text) {
-                fullReport += text;
-                controller.enqueue(encoder.encode(text));
-              } else if (delta?.reasoning_content && Date.now() - lastBeat > 1000) {
-                // 推理模型出正文前会先思考数十秒，期间无 content 输出，连接静默会被
-                // 手机/微信浏览器掐断（nginx 记 499），前端卡在加载页。每秒发一个空白
-                // 心跳保活；前端 cleanReport 的 trim() 会吃掉这些前导空白，不影响报告显示。
-                controller.enqueue(encoder.encode(" "));
-                lastBeat = Date.now();
+            let roundErr = false;
+            try {
+              const streamResponse = await client.chat.completions.create({
+                model,
+                max_tokens: 16384,
+                stream: true,
+                messages,
+              });
+
+              let lastBeat = 0;
+              for await (const chunk of streamResponse) {
+                const delta = chunk.choices[0]?.delta as { content?: string; reasoning_content?: string } | undefined;
+                const text = delta?.content || "";
+                if (text) {
+                  fullReport += text;
+                  controller.enqueue(encoder.encode(text));
+                } else if (delta?.reasoning_content && Date.now() - lastBeat > 1000) {
+                  // 推理模型出正文前会先思考数十秒，期间无 content 输出，连接静默会被
+                  // 手机/微信浏览器掐断（nginx 记 499），前端卡在加载页。每秒发一个空白
+                  // 心跳保活；前端 cleanReport 的 trim() 会吃掉这些前导空白，不影响报告显示。
+                  controller.enqueue(encoder.encode(" "));
+                  lastBeat = Date.now();
+                }
+                if (chunk.choices[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
               }
-              if (chunk.choices[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
+            } catch (streamErr) {
+              // 出字中途断连：不直接结束，下一轮用 fullReport 续写补全（这是报告卡在 bug2 的根因）
+              console.error(`Stream round ${round} interrupted:`, streamErr instanceof Error ? streamErr.message : streamErr);
+              roundErr = true;
             }
 
-            if (finishReason !== "length") break; // 正常结束，无需续写
+            // 正常写完（既不是 max_tokens 截断、本轮也没出错）→ 结束
+            if (finishReason !== "length" && !roundErr) break;
+            // 出错且一个字都没拿到，续写也没上下文 → 放弃，避免空转
+            if (roundErr && !fullReport) break;
           }
 
           // 先存库再关流：确保 Vercel 函数回收前写入完成
@@ -168,6 +180,8 @@ ${lang === 'ko' ? 'Note: This user\'s interface language is Korean (한국어). 
               .eq("id", submission_id);
             if (error) console.error("Supabase update error:", error.message);
           }
+        } catch (fatal) {
+          console.error("Readable stream fatal:", fatal instanceof Error ? fatal.message : fatal);
         } finally {
           controller.close();
         }
