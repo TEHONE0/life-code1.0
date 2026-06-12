@@ -51,8 +51,8 @@ function cleanReport(text: string, userName?: string): string {
     .replace(/[^\n]*HEALTH_LEVEL[^\n]*/g, '')
     // 健康等级模块标题统一：旧报告输出 "**0.1 健康等级·当前运行状态**"（白色粗体），转成绿色 ### 标题并去掉编号
     .replace(/^#{0,4}\s*\*{0,2}\s*(?:0\.1\s*)?健康[等层]级\s*[·•]\s*当前运行状态\s*\*{0,2}[：:]?\s*$/gm, '### 健康等级·当前运行状态')
-    // 第五章标题统一：旧报告输出 "第五章：Debug建议"，改为 "Debug-补丁建议"
-    .replace(/(第五章\s*[：:]\s*)Debug\s*建议/g, '$1Debug-补丁建议')
+    // 第五章标题统一：旧报告各版本（Debug建议 / Debug-补丁建议）一律改为 "修复补丁"
+    .replace(/(第五章\s*[：:]\s*)(?:Debug\s*建议|Debug-?补丁建议)/g, '$1修复补丁')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
   if (userName) {
