@@ -325,7 +325,8 @@ export default function HomePage() {
             >
               {zh ? "解析我的生命代码" : "Generate my report"}
             </button>
-            {zh ? "，回答几个问题，即可生成属于你的报告" : ", answer a few questions, and get your own report"}
+            <br />
+            <span className="inline-block mt-2">{zh ? "回答几个问题，即可生成属于你的报告" : "answer a few questions, and get your own report"}</span>
           </p>
         </section>
 
