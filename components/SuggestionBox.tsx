@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { useTap } from "@/lib/useTap";
 
 const mono = "Courier New, monospace";
 
@@ -21,6 +22,7 @@ export default function SuggestionBox({
 }) {
   const zh = lang === "zh";
   const ko = lang === "ko";
+  const tap = useTap();
   const [content, setContent] = useState("");
   const [wechat, setWechat] = useState("");
   const [email, setEmail] = useState("");
@@ -122,10 +124,10 @@ export default function SuggestionBox({
       </div>
       {err && <div className="text-xs" style={{ color: "#ff6b6b", fontFamily: mono }}>{err}</div>}
       <button
-        onClick={submit}
+        {...tap(submit)}
         disabled={busy}
         className="w-full py-3 text-sm font-bold tracking-wider"
-        style={{ border: "none", color: "#04140a", cursor: busy ? "not-allowed" : "pointer", fontFamily: mono, borderRadius: "12px", background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)", boxShadow: "0 0 20px #00ff8844", opacity: busy ? 0.7 : 1 }}
+        style={{ border: "none", color: "#04140a", cursor: busy ? "not-allowed" : "pointer", fontFamily: mono, borderRadius: "12px", background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)", boxShadow: "0 0 20px #00ff8844", opacity: busy ? 0.7 : 1, touchAction: "manipulation" }}
       >
         {busy ? (zh ? "提交中…" : ko ? "제출 중…" : "Submitting…") : (zh ? "提交建议" : ko ? "제출" : "Submit")}
       </button>

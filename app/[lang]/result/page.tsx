@@ -1143,6 +1143,25 @@ function ResultPage() {
               // WRITING YOUR LIFE CODE{lang === 'zh' ? ' / 解析中……' : ''}<span className="cursor" />
             </div>
           )}
+          {/* 卡住兜底出口：生成卡顿超时(stalled)时，明确告知报告已存档+找回+联系方式，避免误以为白付钱 */}
+          {stalled && (
+            <div className="text-xs leading-relaxed mt-3 p-3" style={{ border: "1px dashed #1a3a1a", borderRadius: "12px", color: "#5a9a5a", background: "#0a150a66", fontFamily: mono }}>
+              {lang === 'zh'
+                ? '生成比平时久了一点，别担心——你的报告已自动保存，不会丢失。可刷新本页继续，或稍后到「我的档案」查看完整报告。'
+                : 'Taking longer than usual — don\'t worry, your report is auto-saved and won\'t be lost. Refresh to continue, or check "My Archive" later.'}
+              <div className="flex flex-wrap gap-3 mt-2">
+                <button onClick={() => location.reload()} style={{ color: "#00ff88", background: "transparent", border: "1px solid #00ff8855", borderRadius: "8px", padding: "4px 10px", cursor: "pointer", fontFamily: mono }}>
+                  {lang === 'zh' ? '刷新本页' : 'Refresh'}
+                </button>
+                <button onClick={() => router.push(`/${lang}/account`)} style={{ color: "#5a9a5a", background: "transparent", border: "1px solid #1a3a1a", borderRadius: "8px", padding: "4px 10px", cursor: "pointer", fontFamily: mono }}>
+                  {lang === 'zh' ? '我的档案' : 'My Archive'}
+                </button>
+                <a href="mailto:theone208899@gmail.com" style={{ color: "#5a9a5a", border: "1px solid #1a3a1a", borderRadius: "8px", padding: "4px 10px", textDecoration: "none", fontFamily: mono }}>
+                  {lang === 'zh' ? '联系我们' : 'Contact us'}
+                </a>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 底部悬浮状态条：滚到任何位置都能看到生成状态和章节进度 */}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getT, Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { track } from "@/lib/track";
+import { useTap } from "@/lib/useTap";
 
 function AnimatedDots() {
   const [dots, setDots] = useState(1)
@@ -19,6 +20,7 @@ export default function PaymentPage() {
   const lang = (params.lang as Lang) ?? 'en'
   const t = getT(lang)
   const router = useRouter()
+  const tap = useTap()
   const [loading, setLoading] = useState(false)
   const [hasAnswers, setHasAnswers] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
@@ -312,10 +314,11 @@ export default function PaymentPage() {
         {error && <p className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</p>}
 
         <button
-          onClick={handlePayment}
+          {...tap(handlePayment)}
           disabled={loading}
           className="w-full py-5 text-base font-bold transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
           style={{
+            touchAction: "manipulation",
             border: "1px solid #00ff88",
             color: loading ? "#050a05" : "#00ff88",
             background: loading ? "#00ff88" : "transparent",
