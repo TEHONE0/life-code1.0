@@ -470,7 +470,10 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editEmail, setEditEmail] = useState("");
-  const [tab, setTab] = useState<"blogger"|"free"|"commissions">("blogger");
+  const [tab, setTab] = useState<"revenue"|"blogger"|"free"|"commissions"|"suggestions">("revenue");
+  const [revenue, setRevenue] = useState<null | {paidCount:number;gross:number;fullCount:number;discountCount:number;freeCount:number;bloggerTotal:number;bloggerPending:number;bloggerSettled:number;myNet:number;bloggers:{invite_code:string;label:string|null;email:string|null;pending:number;settled:number;total:number;count:number}[]}>(null);
+  const [suggestions, setSuggestions] = useState<{id:string;feature:string;content:string|null;email:string|null;vote:string|null;user_email:string|null;lang:string|null;created_at:string}[]>([]);
+  const [votes, setVotes] = useState<Record<string,number>>({});
   const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
   const [total, setTotal] = useState(0);
   const [settlements, setSettlements] = useState<{id:string;invite_code:string|null;order_count:number;amount_usd:number;note:string|null;created_at:string}[]>([]);
@@ -485,7 +488,22 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     return data.session?.access_token ?? "";
   };
 
-  useEffect(() => { fetchCodes(); fetchCommissions(); fetchSettlements(); }, []);
+  useEffect(() => { fetchCodes(); fetchCommissions(); fetchSettlements(); fetchRevenue(); fetchSuggestions(); }, []);
+
+  const fetchRevenue = async () => {
+    const token = await getToken();
+    const res = await fetch("/api/admin/revenue", { headers: { Authorization: `Bearer ${token}` } });
+    const json = await res.json();
+    if (!json.error) setRevenue(json);
+  };
+
+  const fetchSuggestions = async () => {
+    const token = await getToken();
+    const res = await fetch("/api/admin/suggestions", { headers: { Authorization: `Bearer ${token}` } });
+    const json = await res.json();
+    setSuggestions(json.suggestions || []);
+    setVotes(json.votes || {});
+  };
 
   const fetchCodes = async () => {
     const token = await getToken();
@@ -608,13 +626,17 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2" style={{ borderBottom: "1px solid #1a3a1a" }}>
-        {(["blogger", "free", "commissions"] as const).map((v) => (
+      <div className="flex gap-2 flex-wrap" style={{ borderBottom: "1px solid #1a3a1a" }}>
+        {(["revenue", "blogger", "free", "commissions", "suggestions"] as const).map((v) => (
           <button key={v} onClick={() => setTab(v)}
             className="px-3 py-2 text-xs font-bold"
             style={{ background: "transparent", border: "none", borderBottom: tab === v ? "2px solid #00ff88" : "2px solid transparent", color: tab === v ? "#00ff88" : "#2d5a2d", cursor: "pointer", fontFamily: mono, marginBottom: "-1px" }}
           >
-            {v === "blogger" ? (lang === "zh" ? "博主邀请码" : "Blogger") : v === "free" ? (lang === "zh" ? "免费码" : "Free") : `${lang === "zh" ? "佣金" : "Commissions"} (¥${total.toFixed(2)})`}
+            {v === "revenue" ? (lang === "zh" ? "收益" : "Revenue")
+              : v === "blogger" ? (lang === "zh" ? "博主邀请码" : "Blogger")
+              : v === "free" ? (lang === "zh" ? "免费码" : "Free")
+              : v === "commissions" ? `${lang === "zh" ? "佣金" : "Commissions"} (¥${total.toFixed(2)})`
+              : (lang === "zh" ? `用户建议${suggestions.length ? ` (${suggestions.length})` : ""}` : `Ideas${suggestions.length ? ` (${suggestions.length})` : ""}`)}
           </button>
         ))}
       </div>
@@ -804,6 +826,84 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             </div>
           ))}
           {commissions.length === 0 && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无佣金记录" : "No commissions yet"}</div>}
+        </div>
+        );
+      })()}
+
+      {tab === "revenue" && (
+        <div className="space-y-4">
+          {!revenue && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "加载中..." : "Loading..."}</div>}
+          {revenue && (<>
+            {/* 我的收益 */}
+            <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "我的收益" : "My income"}</div>
+            <div className="p-4 border" style={{ borderColor: "#00ff8855", background: "#0a1f0a", borderRadius: "14px", fontFamily: mono, boxShadow: "0 0 22px #00ff8814" }}>
+              <div className="text-xs" style={{ color: "#4a8a4a" }}>{lang === "zh" ? "我的净收益（总营收 − 博主佣金）" : "Net income (gross − commissions)"}</div>
+              <div className="text-3xl font-bold mt-1" style={{ color: "#00ff88", textShadow: "0 0 18px #00ff8844" }}>¥{revenue.myNet.toFixed(2)}</div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs" style={{ fontFamily: mono }}>
+              <div className="p-3 border" style={{ borderColor: "#1a3a1a", background: "#080e08", borderRadius: "12px" }}>
+                <div style={{ color: "#2d5a2d" }}>{lang === "zh" ? "总营收" : "Gross revenue"}</div>
+                <div className="text-lg font-bold mt-1" style={{ color: "#00ff88" }}>¥{revenue.gross.toFixed(2)}</div>
+                <div className="mt-1" style={{ color: "#4a7a4a" }}>{lang === "zh" ? `付费 ${revenue.paidCount} 单` : `${revenue.paidCount} paid`}</div>
+              </div>
+              <div className="p-3 border" style={{ borderColor: "#1a3a1a", background: "#080e08", borderRadius: "12px" }}>
+                <div style={{ color: "#2d5a2d" }}>{lang === "zh" ? "博主佣金支出" : "Commissions paid out"}</div>
+                <div className="text-lg font-bold mt-1" style={{ color: "#fbbf24" }}>−¥{revenue.bloggerTotal.toFixed(2)}</div>
+                <div className="mt-1" style={{ color: "#4a7a4a" }}>{lang === "zh" ? `待结 ¥${revenue.bloggerPending.toFixed(2)} · 已结 ¥${revenue.bloggerSettled.toFixed(2)}` : `pend ¥${revenue.bloggerPending.toFixed(2)} · settled ¥${revenue.bloggerSettled.toFixed(2)}`}</div>
+              </div>
+            </div>
+            <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>
+              // {lang === "zh" ? `标准价 ${revenue.fullCount} 单 · 达人价 ${revenue.discountCount} 单 · 免费 ${revenue.freeCount} 单` : `full ${revenue.fullCount} · discount ${revenue.discountCount} · free ${revenue.freeCount}`}
+            </div>
+
+            {/* 博主收益 */}
+            <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono, marginTop: "10px" }}>// {lang === "zh" ? "博主收益（各博主分成）" : "Blogger income"}</div>
+            {revenue.bloggers.map((b) => (
+              <div key={b.invite_code} className="p-3 border space-y-1" style={{ borderColor: "#1a3a1a", background: "#080e08", borderRadius: "12px", fontFamily: mono }}>
+                <div className="flex justify-between text-xs">
+                  <span style={{ color: "#00ff88", letterSpacing: "0.1em" }}>{b.invite_code}{b.label ? ` · ${b.label}` : ""}</span>
+                  <span style={{ color: "#00ff88", fontWeight: "bold" }}>¥{b.total.toFixed(2)}</span>
+                </div>
+                <div className="text-xs" style={{ color: "#4a7a4a" }}>{b.email || (lang === "zh" ? "未填邮箱" : "no email")} · {b.count}{lang === "zh" ? "单" : " orders"}</div>
+                <div className="text-xs" style={{ color: "#2d5a2d" }}>{lang === "zh" ? "待结算" : "pending"} <span style={{ color: "#fbbf24" }}>¥{b.pending.toFixed(2)}</span> · {lang === "zh" ? "已结算" : "settled"} <span style={{ color: "#00ff88" }}>¥{b.settled.toFixed(2)}</span></div>
+              </div>
+            ))}
+            {revenue.bloggers.length === 0 && <div className="text-xs text-center py-3" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无博主分成" : "No blogger income yet"}</div>}
+          </>)}
+        </div>
+      )}
+
+      {tab === "suggestions" && (() => {
+        const featLabel = (f: string) => f === "ai_healer" ? (lang === "zh" ? "AI疗愈室" : "AI Healer") : f === "vertical_reports" ? (lang === "zh" ? "细分报告" : "Reports") : f;
+        const voteLabel = (v: string) => ({ career: lang === "zh" ? "职业" : "Career", love: lang === "zh" ? "婚恋" : "Love", family: lang === "zh" ? "家庭" : "Family", enneagram: lang === "zh" ? "九型" : "Enneagram" } as Record<string,string>)[v] || v;
+        return (
+        <div className="space-y-3">
+          {/* 投票统计 */}
+          {Object.keys(votes).length > 0 && (
+            <div className="p-3 border" style={{ borderColor: "#1a3a1a", background: "#080e08", borderRadius: "12px", fontFamily: mono }}>
+              <div className="text-xs" style={{ color: "#2d5a2d" }}>// {lang === "zh" ? "细分报告投票" : "Report votes"}</div>
+              <div className="flex gap-3 flex-wrap mt-2 text-xs">
+                {Object.entries(votes).sort((a,b)=>b[1]-a[1]).map(([k,n]) => (
+                  <span key={k} style={{ color: "#00ff88" }}>{voteLabel(k)} <span style={{ color: "#fbbf24" }}>{n}</span></span>
+                ))}
+              </div>
+            </div>
+          )}
+          {suggestions.map((s) => (
+            <div key={s.id} className="p-3 border space-y-1" style={{ borderColor: "#1a3a1a", background: "#080e08", borderRadius: "12px", fontFamily: mono }}>
+              <div className="flex justify-between text-xs">
+                <span style={{ color: "#00ff88" }}>{featLabel(s.feature)}{s.vote ? ` · ${voteLabel(s.vote)}` : ""}</span>
+                <span style={{ color: "#2d5a2d" }}>{new Date(s.created_at).toLocaleDateString(lang === "zh" ? "zh-CN" : undefined)}</span>
+              </div>
+              {s.content && <div className="text-xs" style={{ color: "#cfe8cf", whiteSpace: "pre-wrap" }}>{s.content}</div>}
+              <div className="text-xs" style={{ color: "#4a7a4a" }}>
+                {s.email || s.user_email
+                  ? `📧 ${s.email || s.user_email}${s.email && s.user_email && s.email !== s.user_email ? ` (${lang === "zh" ? "登录" : "login"}: ${s.user_email})` : ""}`
+                  : (lang === "zh" ? "未留邮箱" : "no email")}
+              </div>
+            </div>
+          ))}
+          {suggestions.length === 0 && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无用户建议" : "No suggestions yet"}</div>}
         </div>
         );
       })()}
