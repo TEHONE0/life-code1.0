@@ -311,7 +311,15 @@ export default function PaymentPage() {
           支付宝
         </div>
 
-        {error && <p className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</p>}
+        {error && (
+          <p className="text-xs" style={{ color: "#ff6b6b" }}>
+            ⚠ {error}
+            <span style={{ color: "#5a7a5a" }}>
+              {lang === 'zh' ? ' · 如已扣款未解锁，请联系 ' : ' · If charged but not unlocked, contact '}
+              <a href="mailto:theone208899@gmail.com" style={{ color: "#7aba7a", textDecoration: "underline" }}>theone208899@gmail.com</a>
+            </span>
+          </p>
+        )}
 
         <button
           {...tap(handlePayment)}
