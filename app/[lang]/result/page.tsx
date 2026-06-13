@@ -1363,6 +1363,43 @@ function ResultPage() {
             </div>
 
 
+            {/* 探索更多：AI疗愈室 + 细分领域报告（研发中） */}
+            <div className="pt-1 space-y-3">
+              <div className="text-xs" style={{ color: "#1e4a1e", fontFamily: "Courier New, monospace" }}>
+                // {lang === 'zh' ? '探索更多' : lang === 'ko' ? '더 보기' : 'EXPLORE MORE'}
+              </div>
+              <button
+                onClick={() => router.push(`/${lang}/ai-healer`)}
+                className="btn-result w-full py-3 px-4 text-left"
+                style={{ ...btnBase, border: "1px solid #00ff8855", color: "#00ff88", background: "#0a1f0a", boxShadow: "0 0 18px #00ff8814" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff88"; e.currentTarget.style.boxShadow = "0 0 26px #00ff8833" }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#00ff8855"; e.currentTarget.style.boxShadow = "0 0 18px #00ff8814" }}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold tracking-wider">{lang === 'zh' ? '🜂 AI 疗愈室' : lang === 'ko' ? 'AI 힐링룸' : 'AI Healing Room'}</span>
+                  <span className="text-xs" style={{ color: "#4a8a4a" }}>{lang === 'zh' ? '研发中 →' : 'Soon →'}</span>
+                </div>
+                <div className="text-xs mt-1" style={{ color: "#5a9a5a" }}>
+                  {lang === 'zh' ? '可以问你想问的问题，为你解答内心的困惑' : lang === 'ko' ? '마음의 질문에 답해드립니다' : 'Ask anything — answers for your inner questions'}
+                </div>
+              </button>
+              <button
+                onClick={() => router.push(`/${lang}/reports`)}
+                className="btn-result w-full py-3 px-4 text-left"
+                style={{ ...btnBase, border: "1px solid #00ff8855", color: "#00ff88", background: "#0a1f0a", boxShadow: "0 0 18px #00ff8814" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff88"; e.currentTarget.style.boxShadow = "0 0 26px #00ff8833" }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#00ff8855"; e.currentTarget.style.boxShadow = "0 0 18px #00ff8814" }}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold tracking-wider">{lang === 'zh' ? '◈ 细分领域解析报告' : lang === 'ko' ? '분야별 분석 리포트' : 'Specialized Reports'}</span>
+                  <span className="text-xs" style={{ color: "#4a8a4a" }}>{lang === 'zh' ? '研发中 →' : 'Soon →'}</span>
+                </div>
+                <div className="text-xs mt-1" style={{ color: "#5a9a5a" }}>
+                  {lang === 'zh' ? '职业报告 · 婚恋报告 · 家庭报告 · 九型人格报告' : lang === 'ko' ? '커리어 · 연애 · 가족 · 에니어그램' : 'Career · Love · Family · Enneagram'}
+                </div>
+              </button>
+            </div>
+
             {/* My Archive */}
             <button
               onClick={() => router.push(`/${lang}/account`)}
