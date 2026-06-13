@@ -16,12 +16,12 @@ export default function AiHealerPage() {
     back: zh ? "← 返回报告" : ko ? "← 보고서로" : "← Back to report",
     badge: zh ? "研发中 · COMING SOON" : "COMING SOON",
     title: zh ? "AI 疗愈室" : ko ? "AI 힐링룸" : "AI Healing Room",
-    sub: zh ? "AI 疗愈师" : "AI healing companion",
+    sub: zh ? "基于你的生命代码 · AI 疗愈师" : "Built on your Life Code · AI companion",
     intro: zh
-      ? "一个可以随时倾诉的空间。把你心里的困惑、纠结、说不出口的事写下来，AI 疗愈室会陪你一起梳理、慢慢看见。"
+      ? "读懂你的生命代码之后，还有很多说不出口的事。AI 疗愈室以你的报告为底，陪你把困惑、纠结慢慢梳理、慢慢看见。"
       : ko
-      ? "언제든 마음을 털어놓을 수 있는 공간. AI 힐링룸이 함께 정리하고 바라봐 드립니다."
-      : "A space you can talk to anytime. Write down what weighs on you, and the AI Healing Room helps you untangle it and slowly see clearly.",
+      ? "생명 코드를 읽은 뒤에도 말 못 할 것들이 많습니다. AI 힐링룸이 당신의 리포트를 바탕으로 함께 정리하고 바라봐 드립니다."
+      : "Even after reading your Life Code, some things stay hard to say. Grounded in your report, the AI Healing Room helps you untangle them and slowly see clearly.",
     devNote: zh
       ? "这项功能正在打磨中。先告诉我们：你最想问 TA 的第一个问题是什么？这会直接决定我们怎么把它做出来。"
       : ko

@@ -19,10 +19,10 @@ export default function ReportsPage() {
     badge: zh ? "研发中 · COMING SOON" : "COMING SOON",
     title: zh ? "细分领域解析报告" : ko ? "분야별 분석 리포트" : "Specialized Reports",
     intro: zh
-      ? "在生命代码总报告之外，针对你最在意的人生维度，做更深一层的专属解析。"
+      ? "在你的生命代码总报告基础上展开，针对你最在意的人生维度，做更深一层的专属解析。"
       : ko
-      ? "생명 코드 종합 리포트 외에, 가장 중요한 영역을 더 깊이 분석합니다."
-      : "Beyond your core Life Code report — a deeper, dedicated analysis for the dimension you care about most.",
+      ? "당신의 생명 코드 종합 리포트를 바탕으로, 가장 중요한 영역을 더 깊이 분석합니다."
+      : "Built on your core Life Code report — a deeper, dedicated analysis for the dimension you care about most.",
     voteHint: zh ? "你最想先要哪一份？点一下投票 ↓" : ko ? "어떤 리포트를 먼저 원하나요? ↓" : "Which do you want first? Tap to vote ↓",
     placeholder: zh
       ? "你希望这些报告解答什么？或者你还想要哪个领域的报告…"

@@ -1380,7 +1380,7 @@ function ResultPage() {
                   <span className="text-xs" style={{ color: "#4a8a4a" }}>{lang === 'zh' ? '研发中 →' : 'Soon →'}</span>
                 </div>
                 <div className="text-xs mt-1" style={{ color: "#5a9a5a" }}>
-                  {lang === 'zh' ? '可以问你想问的问题，为你解答内心的困惑' : lang === 'ko' ? '마음의 질문에 답해드립니다' : 'Ask anything — answers for your inner questions'}
+                  {lang === 'zh' ? '读懂你的生命代码，陪你梳理那些说不出口的困惑' : lang === 'ko' ? '당신의 생명 코드를 읽고, 말 못 할 고민을 함께 풀어갑니다' : 'Built on your Life Code — untangling what’s hard to say'}
                 </div>
               </button>
               <button
@@ -1395,7 +1395,7 @@ function ResultPage() {
                   <span className="text-xs" style={{ color: "#4a8a4a" }}>{lang === 'zh' ? '研发中 →' : 'Soon →'}</span>
                 </div>
                 <div className="text-xs mt-1" style={{ color: "#5a9a5a" }}>
-                  {lang === 'zh' ? '职业报告 · 婚恋报告 · 家庭报告 · 九型人格报告' : lang === 'ko' ? '커리어 · 연애 · 가족 · 에니어그램' : 'Career · Love · Family · Enneagram'}
+                  {lang === 'zh' ? '以你的生命代码为底，展开职业·婚恋·家庭·九型人格' : lang === 'ko' ? '생명 코드 기반 · 커리어 · 연애 · 가족 · 에니어그램' : 'From your Life Code — Career · Love · Family · Enneagram'}
                 </div>
               </button>
             </div>
