@@ -18,20 +18,25 @@ export default function AiHealerPage() {
     title: zh ? "AI 疗愈室" : ko ? "AI 힐링룸" : "AI Healing Room",
     sub: zh ? "基于你的生命代码 · AI 疗愈师" : "Built on your Life Code · AI companion",
     intro: zh
-      ? "读懂你的生命代码之后，还有很多说不出口的事。AI 疗愈室以你的报告为底，陪你把困惑、纠结慢慢梳理、慢慢看见。"
+      ? "读懂你的生命代码之后，还有很多说不出口的事。"
       : ko
-      ? "생명 코드를 읽은 뒤에도 말 못 할 것들이 많습니다. AI 힐링룸이 당신의 리포트를 바탕으로 함께 정리하고 바라봐 드립니다."
-      : "Even after reading your Life Code, some things stay hard to say. Grounded in your report, the AI Healing Room helps you untangle them and slowly see clearly.",
+      ? "생명 코드를 읽은 뒤에도 말 못 할 것들이 많습니다."
+      : "Even after reading your Life Code, some things stay hard to say.",
+    intro2: zh
+      ? "AI 疗愈室以你的报告为底，陪你把困惑、纠结慢慢梳理、慢慢看见。"
+      : ko
+      ? "AI 힐링룸이 당신의 리포트를 바탕으로 함께 정리하고 바라봐 드립니다."
+      : "Grounded in your report, the AI Healing Room helps you untangle them and slowly see clearly.",
     devNote: zh
-      ? "这项功能正在打磨中。先告诉我们：你最想问 TA 的第一个问题是什么？这会直接决定我们怎么把它做出来。"
+      ? "这项功能正在打磨中。先告诉我们：你最想问 TA 的第一个问题是什么？你对 AI 疗愈室有什么想法建议？这会直接决定我们怎么把它做出来。"
       : ko
-      ? "개발 중입니다. 가장 묻고 싶은 첫 질문을 알려주세요."
-      : "We're still building it. Tell us: what's the very first thing you'd want to ask? It shapes how we build it.",
+      ? "개발 중입니다. 가장 묻고 싶은 첫 질문은 무엇인가요? AI 힐링룸에 대한 의견이나 제안이 있나요? 여러분의 답이 방향을 정합니다."
+      : "We're still building it. Tell us: what's the very first thing you'd want to ask? And what ideas or suggestions do you have for the AI Healing Room? It shapes how we build it.",
     placeholder: zh
-      ? "把你最想问的问题写在这里…"
+      ? "写下你最想问的问题，或对 AI 疗愈室的任何想法、建议…"
       : ko
-      ? "가장 묻고 싶은 질문을 적어주세요…"
-      : "Write the question you most want to ask…",
+      ? "가장 묻고 싶은 질문, 또는 AI 힐링룸에 대한 의견을 적어주세요…"
+      : "Write the question you most want to ask, or any ideas for the AI Healing Room…",
     disclaimer: zh
       ? "AI 疗愈室是陪伴式的自我探索，不替代专业心理咨询与医疗。如果此刻情绪难受，请拨打全国 24 小时心理援助热线 12356。"
       : ko
@@ -68,7 +73,10 @@ export default function AiHealerPage() {
           <div className="text-xs" style={{ color: "#4a7a4a", fontFamily: mono }}>{t.sub}</div>
         </div>
 
-        <p className="text-sm leading-relaxed text-center" style={{ color: "#7aba7a" }}>{t.intro}</p>
+        <div className="text-sm leading-relaxed text-center space-y-2" style={{ color: "#7aba7a" }}>
+          <p>{t.intro}</p>
+          <p>{t.intro2}</p>
+        </div>
 
         <div className="p-4 text-xs leading-relaxed" style={{ border: "1px dashed #1a3a1a", borderRadius: "12px", color: "#5a9a5a", background: "#0a150a66", fontFamily: mono }}>
           {t.devNote}
