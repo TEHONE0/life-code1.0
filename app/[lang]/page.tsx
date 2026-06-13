@@ -399,35 +399,13 @@ export default function HomePage() {
               <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {zh ? "关于创作者" : "About the creator"}</div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center" style={{ width: 52, height: 52, border: "1.5px solid #00ff88", borderRadius: "50%", boxShadow: "0 0 16px #00ff8833", overflow: "hidden", background: "#0a150a" }}>
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none" stroke="#00ff88" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-label="THEONE">
-                    {/* 肩膀 */}
-                    <path d="M8 52 C8 42 15 38 26 38 C37 38 44 42 44 52" />
-                    {/* 脖子 */}
-                    <path d="M22 35 L22 39" /><path d="M30 35 L30 39" />
-                    {/* 长方形脸 */}
-                    <path d="M16 17 C16 11 19 9 26 9 C33 9 36 11 36 17 L36 27 C36 32 32 36 26 36 C20 36 16 32 16 27 Z" />
-                    {/* 梳分短发 */}
-                    <path d="M15.5 17 C15 7 37 7 36.5 17" />
-                    <path d="M20 10 C24 13.5 30 13.5 33 11" />
-                    {/* 耳朵 */}
-                    <path d="M16 21 q-2 1.5 0 4.5" /><path d="M36 21 q2 1.5 0 4.5" />
-                    {/* 眉毛 */}
-                    <path d="M18 15 L23.5 15.3" /><path d="M28.5 15.3 L34 15" />
-                    {/* 圆眼镜 */}
-                    <circle cx="21" cy="20" r="4" /><circle cx="31" cy="20" r="4" />
-                    <path d="M25 20 q1 -1.1 2 0" />
-                    <path d="M17 19.6 L15.6 19.2" /><path d="M35 19.6 L36.4 19.2" />
-                    {/* 眼睛 */}
-                    <circle cx="21" cy="20" r="0.95" fill="#00ff88" stroke="none" />
-                    <circle cx="31" cy="20" r="0.95" fill="#00ff88" stroke="none" />
-                    {/* 鼻子 */}
-                    <path d="M26 22 L25 26.5 q1.2 0.8 2.2 0" />
-                    {/* 小胡子 */}
-                    <path d="M22.5 28.6 Q26 30 29.5 28.6" />
-                    {/* 嘴 */}
-                    <path d="M24 30.6 Q26 31.4 28 30.6" />
-                    {/* 下巴短须 */}
-                    <path d="M23.5 32 Q26 34.8 28.5 32" />
+                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none" stroke="#00ff88" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="THEONE">
+                    {/* 极简圆框眼镜 */}
+                    <circle cx="18" cy="26" r="7.5" />
+                    <circle cx="34" cy="26" r="7.5" />
+                    <path d="M25.5 25 q2.5 -2.2 5 0" />
+                    <path d="M10.5 25 L6 23.5" />
+                    <path d="M41.5 25 L46 23.5" />
                   </svg>
                 </div>
                 <div>
