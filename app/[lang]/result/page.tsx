@@ -1156,7 +1156,7 @@ function ResultPage() {
                 <button onClick={() => router.push(`/${lang}/account`)} style={{ color: "#5a9a5a", background: "transparent", border: "1px solid #1a3a1a", borderRadius: "8px", padding: "4px 10px", cursor: "pointer", fontFamily: mono }}>
                   {lang === 'zh' ? '我的档案' : 'My Archive'}
                 </button>
-                <a href="mailto:theone208899@gmail.com" style={{ color: "#5a9a5a", border: "1px solid #1a3a1a", borderRadius: "8px", padding: "4px 10px", textDecoration: "none", fontFamily: mono }}>
+                <a href="mailto:theone@lifecode9.com" style={{ color: "#5a9a5a", border: "1px solid #1a3a1a", borderRadius: "8px", padding: "4px 10px", textDecoration: "none", fontFamily: mono }}>
                   {lang === 'zh' ? '联系我们' : 'Contact us'}
                 </a>
               </div>
