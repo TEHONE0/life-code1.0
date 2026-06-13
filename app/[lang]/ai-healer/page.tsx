@@ -15,33 +15,33 @@ export default function AiHealerPage() {
   const t = {
     back: zh ? "← 返回报告" : ko ? "← 보고서로" : "← Back to report",
     badge: zh ? "研发中 · COMING SOON" : "COMING SOON",
-    title: zh ? "AI 疗愈室" : ko ? "AI 힐링룸" : "AI Healing Room",
-    sub: zh ? "基于你的生命代码 · AI 疗愈师" : "Built on your Life Code · AI companion",
+    title: zh ? "疗愈室" : ko ? "힐링룸" : "Healing Room",
+    sub: zh ? "基于你的生命代码 · AI陪伴 + 真人心理咨询师" : ko ? "생명 코드를 바탕으로 · AI 동반자 + 전문 상담사" : "Built on your Life Code · AI companion + licensed counselors",
     intro: zh
       ? "读懂你的生命代码之后，还有很多说不出口的事。"
       : ko
       ? "생명 코드를 읽은 뒤에도 말 못 할 것들이 많습니다."
       : "Even after reading your Life Code, some things stay hard to say.",
     intro2: zh
-      ? "AI 疗愈室以你的报告为底，陪你把困惑、纠结慢慢梳理、慢慢看见。"
+      ? "疗愈室以你的报告为底，结合AI陪伴与持证心理咨询师的真人疗愈，陪你把困惑、纠结慢慢梳理、慢慢看见。"
       : ko
-      ? "AI 힐링룸이 당신의 리포트를 바탕으로 함께 정리하고 바라봐 드립니다."
-      : "Grounded in your report, the AI Healing Room helps you untangle them and slowly see clearly.",
+      ? "힐링룸이 당신의 리포트를 바탕으로, AI 동반자와 전문 상담사의 도움을 결합해 함께 정리하고 바라봐 드립니다."
+      : "Grounded in your report, the Healing Room combines an AI companion with licensed counselors to help you untangle things and slowly see clearly.",
     devNote: zh
-      ? "这项功能正在打磨中。先告诉我们：你最想问 TA 的第一个问题是什么？你对 AI 疗愈室有什么想法建议？这会直接决定我们怎么把它做出来。"
+      ? "AI陪伴功能正在打磨，真人心理咨询师的疗愈服务也在筹备中。先告诉我们：你最想问的第一个问题是什么？你期待什么样的疗愈方式？这会直接决定我们怎么把它做出来。"
       : ko
-      ? "개발 중입니다. 가장 묻고 싶은 첫 질문은 무엇인가요? AI 힐링룸에 대한 의견이나 제안이 있나요? 여러분의 답이 방향을 정합니다."
-      : "We're still building it. Tell us: what's the very first thing you'd want to ask? And what ideas or suggestions do you have for the AI Healing Room? It shapes how we build it.",
+      ? "AI 동반자 기능을 다듬고 있고, 전문 상담사의 힐링 서비스도 준비 중입니다. 가장 묻고 싶은 첫 질문은 무엇인가요? 어떤 방식의 힐링을 기대하시나요? 여러분의 답이 방향을 정합니다."
+      : "We're refining the AI companion, and a licensed-counselor healing service is also in the works. Tell us: what's the very first thing you'd want to ask? What kind of support are you hoping for? It shapes how we build it.",
     placeholder: zh
-      ? "写下你最想问的问题，或对 AI 疗愈室的任何想法、建议…"
+      ? "写下你最想问的问题，或对疗愈室的任何想法、建议…"
       : ko
-      ? "가장 묻고 싶은 질문, 또는 AI 힐링룸에 대한 의견을 적어주세요…"
-      : "Write the question you most want to ask, or any ideas for the AI Healing Room…",
+      ? "가장 묻고 싶은 질문, 또는 힐링룸에 대한 의견을 적어주세요…"
+      : "Write the question you most want to ask, or any ideas for the Healing Room…",
     disclaimer: zh
-      ? "AI 疗愈室是陪伴式的自我探索，不替代专业心理咨询与医疗。如果此刻情绪难受，请拨打全国 24 小时心理援助热线 12356。"
+      ? "疗愈室目前是陪伴式的自我探索功能，不替代专业心理咨询与医疗。如果此刻情绪难受，请拨打全国 24 小时心理援助热线 12356。"
       : ko
-      ? "AI 힐링룸은 자기 탐색을 돕는 동반자이며 전문 상담·의료를 대체하지 않습니다. 지금 힘들다면 자살예방 상담전화 109."
-      : "The AI Healing Room is companion-style self-exploration, not a substitute for professional counseling or medical care. If you're struggling right now, please reach out to a local crisis hotline.",
+      ? "힐링룸은 자기 탐색을 돕는 동반자이며 전문 상담·의료를 대체하지 않습니다. 지금 힘들다면 자살예방 상담전화 109."
+      : "The Healing Room is companion-style self-exploration, not a substitute for professional counseling or medical care. If you're struggling right now, please reach out to a local crisis hotline.",
   };
 
   return (

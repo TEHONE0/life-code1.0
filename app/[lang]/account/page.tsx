@@ -936,7 +936,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
       )}
 
       {tab === "suggestions" && (() => {
-        const featLabel = (f: string) => f === "ai_healer" ? (lang === "zh" ? "AI疗愈室" : "AI Healer") : f === "vertical_reports" ? (lang === "zh" ? "细分报告" : "Reports") : f;
+        const featLabel = (f: string) => f === "ai_healer" ? (lang === "zh" ? "疗愈室" : "Healing Room") : f === "vertical_reports" ? (lang === "zh" ? "细分报告" : "Reports") : f;
         const voteLabel = (v: string) => ({ career: lang === "zh" ? "职业" : "Career", love: lang === "zh" ? "婚恋" : "Love", family: lang === "zh" ? "家庭" : "Family", enneagram: lang === "zh" ? "九型" : "Enneagram" } as Record<string,string>)[v] || v;
         return (
         <div className="space-y-3">

@@ -1395,7 +1395,7 @@ function ResultPage() {
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#00ff8855"; e.currentTarget.style.boxShadow = "0 0 18px #00ff8814" }}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold tracking-wider">{lang === 'zh' ? '🜂 AI 疗愈室' : lang === 'ko' ? 'AI 힐링룸' : 'AI Healing Room'}</span>
+                  <span className="text-sm font-bold tracking-wider">{lang === 'zh' ? '🜂 疗愈室' : lang === 'ko' ? '힐링룸' : 'Healing Room'}</span>
                   <span className="text-xs" style={{ color: "#4a8a4a" }}>{lang === 'zh' ? '研发中 →' : 'Soon →'}</span>
                 </div>
                 <div className="text-xs mt-1" style={{ color: "#5a9a5a" }}>
