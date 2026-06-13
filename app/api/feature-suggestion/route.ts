@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(req: NextRequest) {
   try {
     const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-    const { feature, content, email, vote, lang } = await req.json();
+    const { feature, content, wechat, email, vote, lang } = await req.json();
 
     if (!feature || !content || !String(content).trim()) {
       return NextResponse.json({ error: "Missing content" }, { status: 400 });
@@ -19,14 +19,21 @@ export async function POST(req: NextRequest) {
       userEmail = data?.user?.email ?? null;
     }
 
-    const { error } = await supabase.from("feature_suggestions").insert({
+    const base = {
       feature: String(feature).slice(0, 40),
       content: String(content).slice(0, 2000),
       email: email ? String(email).slice(0, 200) : null,
       vote: vote ? String(vote).slice(0, 40) : null,
       user_email: userEmail,
       lang: lang ? String(lang).slice(0, 8) : null,
-    });
+    };
+    const wx = wechat ? String(wechat).slice(0, 100) : null;
+
+    // 优先带 wechat 列写入；若该列尚未创建（ALTER 未跑），退回不含 wechat 再写一次，保证不丢数据
+    let { error } = await supabase.from("feature_suggestions").insert({ ...base, wechat: wx });
+    if (error && /wechat/i.test(error.message)) {
+      ({ error } = await supabase.from("feature_suggestions").insert(base));
+    }
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     return NextResponse.json({ ok: true });

@@ -12,10 +12,18 @@ export async function GET(req: NextRequest) {
   const { data: userData } = await supabase.auth.getUser(token);
   if (userData.user?.email !== ADMIN_EMAIL) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { data, error } = await supabase
+  // wechat 列可能尚未创建（ALTER 未跑），失败则退回不含 wechat 的查询
+  let res = await supabase
     .from("feature_suggestions")
-    .select("id, feature, content, email, vote, user_email, lang, created_at")
+    .select("id, feature, content, wechat, email, vote, user_email, lang, created_at")
     .order("created_at", { ascending: false });
+  if (res.error && /wechat/i.test(res.error.message)) {
+    res = await supabase
+      .from("feature_suggestions")
+      .select("id, feature, content, email, vote, user_email, lang, created_at")
+      .order("created_at", { ascending: false }) as typeof res;
+  }
+  const { data, error } = res;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // 细分报告投票统计

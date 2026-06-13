@@ -472,7 +472,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [editEmail, setEditEmail] = useState("");
   const [tab, setTab] = useState<"revenue"|"blogger"|"free"|"commissions"|"suggestions">("revenue");
   const [revenue, setRevenue] = useState<null | {paidCount:number;gross:number;fullCount:number;discountCount:number;freeCount:number;bloggerTotal:number;bloggerPending:number;bloggerSettled:number;myNet:number;bloggers:{invite_code:string;label:string|null;email:string|null;pending:number;settled:number;total:number;count:number}[]}>(null);
-  const [suggestions, setSuggestions] = useState<{id:string;feature:string;content:string|null;email:string|null;vote:string|null;user_email:string|null;lang:string|null;created_at:string}[]>([]);
+  const [suggestions, setSuggestions] = useState<{id:string;feature:string;content:string|null;wechat?:string|null;email:string|null;vote:string|null;user_email:string|null;lang:string|null;created_at:string}[]>([]);
   const [votes, setVotes] = useState<Record<string,number>>({});
   const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
   const [total, setTotal] = useState(0);
@@ -896,10 +896,11 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                 <span style={{ color: "#2d5a2d" }}>{new Date(s.created_at).toLocaleDateString(lang === "zh" ? "zh-CN" : undefined)}</span>
               </div>
               {s.content && <div className="text-xs" style={{ color: "#cfe8cf", whiteSpace: "pre-wrap" }}>{s.content}</div>}
-              <div className="text-xs" style={{ color: "#4a7a4a" }}>
-                {s.email || s.user_email
-                  ? `📧 ${s.email || s.user_email}${s.email && s.user_email && s.email !== s.user_email ? ` (${lang === "zh" ? "登录" : "login"}: ${s.user_email})` : ""}`
-                  : (lang === "zh" ? "未留邮箱" : "no email")}
+              <div className="text-xs space-y-0.5" style={{ color: "#4a7a4a" }}>
+                {s.wechat && <div>💬 {lang === "zh" ? "微信" : "WeChat"}: {s.wechat}</div>}
+                {s.email && <div>📧 {s.email}</div>}
+                {s.user_email && s.user_email !== s.email && <div style={{ color: "#2d5a2d" }}>{lang === "zh" ? "登录账号" : "login"}: {s.user_email}</div>}
+                {!s.wechat && !s.email && !s.user_email && <div>{lang === "zh" ? "未留联系方式" : "no contact"}</div>}
               </div>
             </div>
           ))}

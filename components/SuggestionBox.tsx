@@ -22,6 +22,7 @@ export default function SuggestionBox({
   const zh = lang === "zh";
   const ko = lang === "ko";
   const [content, setContent] = useState("");
+  const [wechat, setWechat] = useState("");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -49,7 +50,7 @@ export default function SuggestionBox({
       const res = await fetch("/api/feature-suggestion", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ feature, content: content.trim(), email: email.trim() || null, vote: vote || null, lang }),
+        body: JSON.stringify({ feature, content: content.trim(), wechat: wechat.trim() || null, email: email.trim() || null, vote: vote || null, lang }),
       });
       if (!res.ok) throw new Error("submit failed");
       setDone(true);
@@ -60,6 +61,8 @@ export default function SuggestionBox({
     }
   };
 
+  const hasContact = !!(wechat.trim() || email.trim());
+
   if (done) {
     return (
       <div className="p-6 text-center space-y-2" style={{ border: "1px solid #00ff8844", background: "#0a1f0a", borderRadius: "16px", fontFamily: mono }}>
@@ -67,8 +70,8 @@ export default function SuggestionBox({
           {zh ? "✓ 收到了，谢谢你" : ko ? "✓ 감사합니다" : "✓ Got it, thank you"}
         </div>
         <div className="text-xs" style={{ color: "#5a9a5a" }}>
-          {email
-            ? (zh ? "上线第一时间通知你，并邀你内测优先体验" : ko ? "출시되면 가장 먼저 알려드릴게요" : "We'll notify you first when it launches")
+          {hasContact
+            ? (zh ? "上线第一时间通知你，并邀你优先内测体验" : ko ? "출시되면 가장 먼저 알려드릴게요" : "We'll notify you first when it launches")
             : (zh ? "你的建议会直接影响我们的设计" : ko ? "당신의 의견이 설계에 반영됩니다" : "Your suggestion shapes what we build")}
         </div>
       </div>
@@ -90,16 +93,33 @@ export default function SuggestionBox({
         onFocus={(e) => (e.currentTarget.style.borderColor = "#00ff88")}
         onBlur={(e) => (e.currentTarget.style.borderColor = "#1a3a1a")}
       />
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder={zh ? "邮箱（选填）— 上线第一时间通知你 + 内测优先" : ko ? "이메일 (선택) — 출시 알림" : "Email (optional) — get notified first + early access"}
-        className="w-full p-3 text-sm"
-        style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "10px", color: "#cfe8cf", fontFamily: mono, outline: "none" }}
-        onFocus={(e) => (e.currentTarget.style.borderColor = "#00ff88")}
-        onBlur={(e) => (e.currentTarget.style.borderColor = "#1a3a1a")}
-      />
+      <div className="pt-1 space-y-2">
+        <div className="text-xs" style={{ color: "#4a8a4a", fontFamily: mono }}>
+          {zh ? "// 联系方式（选填）— 留下联系方式，上线第一时间通知你 + 优先内测"
+            : ko ? "// 연락처 (선택) — 출시 시 가장 먼저 알림 + 우선 베타"
+            : "// Contact (optional) — get notified first + priority beta access"}
+        </div>
+        <input
+          type="text"
+          value={wechat}
+          onChange={(e) => setWechat(e.target.value)}
+          placeholder={zh ? "微信号" : ko ? "위챗 ID" : "WeChat ID"}
+          className="w-full p-3 text-sm"
+          style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "10px", color: "#cfe8cf", fontFamily: mono, outline: "none" }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = "#00ff88")}
+          onBlur={(e) => (e.currentTarget.style.borderColor = "#1a3a1a")}
+        />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={zh ? "邮箱" : ko ? "이메일" : "Email"}
+          className="w-full p-3 text-sm"
+          style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "10px", color: "#cfe8cf", fontFamily: mono, outline: "none" }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = "#00ff88")}
+          onBlur={(e) => (e.currentTarget.style.borderColor = "#1a3a1a")}
+        />
+      </div>
       {err && <div className="text-xs" style={{ color: "#ff6b6b", fontFamily: mono }}>{err}</div>}
       <button
         onClick={submit}
