@@ -406,8 +406,8 @@ export default function HomePage() {
               </div>
               <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
                 {zh
-                  ? "喜欢研究心理学、九型人格、AI技术，用代码理解命运，看见自己，治愈众生。"
-                  : "Fascinated by psychology, the Enneagram and AI. I use code to understand fate — to see myself, and to heal all beings."}
+                  ? "我喜欢研究心理学、九型人格、AI技术。当我用 AI 架构出 agent 员工之后，开始思考：AI 既然能模拟人的性格，那人的性格，是否也能被 AI 代码反过来模拟？于是研发了这款 AI 心理测试——生命代码。一开始只是为了看见自己，后来朋友们测完效果很好、也真的帮到了 TA 们，便想发布上线，帮助更多人。用代码理解内心潜意识的角落，看见自己，治愈众生。"
+                  : "I'm fascinated by psychology, the Enneagram and AI. After architecting a team of AI agents, a question hit me: if AI can simulate a human personality, can a human personality be modeled back in AI code? That's how Life Code — this AI psychological test — was born. It started as a way to see myself; then friends took it, found it genuinely helpful, so I decided to launch it for more people. Reading the unconscious corners of the heart through code — to see yourself, and to heal all beings."}
               </p>
             </div>
             <div className="p-6 space-y-2" style={CARD}>
