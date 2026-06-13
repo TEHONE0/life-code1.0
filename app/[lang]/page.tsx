@@ -183,7 +183,7 @@ export default function HomePage() {
   ]
 
   const chapters = zh
-    ? ["生命系统 Bug 指数", "第零章 · 初始参数 · 源代码", "第一章 · 内核审计（5 个核心 Bug）", "第二章 · 演化路径分析", "第三章 · 当下奇点", "第四章 · 命运渲染预测", "第五章 · Debug 建议", "第六章 · 命运公式", "第七章 · 总结 · 禅语 · 生命问答", "觉醒画像"]
+    ? ["生命系统 Bug 指数", "第零章 · 初始参数 · 源代码", "第一章 · 内核审计（5 个核心 Bug）", "第二章 · 演化路径分析", "第三章 · 当下奇点", "第四章 · 命运渲染预测", "第五章 · 修复补丁", "第六章 · 命运公式", "第七章 · 总结 · 禅语 · 生命问答", "觉醒画像"]
     : ["Life-system Bug index", "Ch.0 Initial parameters · Source code", "Ch.1 Kernel audit (5 core bugs)", "Ch.2 Evolution path", "Ch.3 The present singularity", "Ch.4 Destiny rendering forecast", "Ch.5 Debug suggestions", "Ch.6 Destiny formula", "Ch.7 Summary · Zen · Life Q&A", "Awakening portrait"]
 
   const previews = [
@@ -192,7 +192,7 @@ export default function HomePage() {
     { src: "/preview/v2-weight.png", label: zh ? "性格权重解读" : "Personality weight" },
     { src: "/preview/v2-health.png", label: zh ? "健康等级 · 运行状态" : "Health level · Runtime" },
     { src: "/preview/v2-audit.png", label: zh ? "内核审计 · Bug" : "Kernel audit · Bug" },
-    { src: "/preview/v2-debug.png", label: zh ? "Debug 建议" : "Debug suggestions" },
+    { src: "/preview/v2-debug.png", label: zh ? "修复补丁" : "Patch fixes" },
     { src: "/preview/v2-forecast.png", label: zh ? "命运渲染预测" : "Destiny forecast" },
     { src: "/preview/v2-portrait.png", label: zh ? "觉醒画像" : "Awakening portrait" },
   ]
