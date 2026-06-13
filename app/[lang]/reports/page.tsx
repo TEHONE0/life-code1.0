@@ -17,7 +17,7 @@ export default function ReportsPage() {
   const t = {
     back: zh ? "← 返回报告" : ko ? "← 보고서로" : "← Back to report",
     badge: zh ? "研发中 · COMING SOON" : "COMING SOON",
-    title: zh ? "细分领域解析报告" : ko ? "분야별 분석 리포트" : "Specialized Reports",
+    title: zh ? "专属领域深度报告" : ko ? "심층 분야별 리포트" : "In-Depth Reports",
     intro: zh
       ? "在你的生命代码总报告基础上展开，针对你最在意的人生维度，做更深一层的专属解析。"
       : ko

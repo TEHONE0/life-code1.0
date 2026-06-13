@@ -1391,11 +1391,11 @@ function ResultPage() {
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#00ff8855"; e.currentTarget.style.boxShadow = "0 0 18px #00ff8814" }}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold tracking-wider">{lang === 'zh' ? '◈ 细分领域解析报告' : lang === 'ko' ? '분야별 분석 리포트' : 'Specialized Reports'}</span>
+                  <span className="text-sm font-bold tracking-wider">{lang === 'zh' ? '◈ 专属领域深度报告' : lang === 'ko' ? '심층 분야별 리포트' : 'In-Depth Reports'}</span>
                   <span className="text-xs" style={{ color: "#4a8a4a" }}>{lang === 'zh' ? '研发中 →' : 'Soon →'}</span>
                 </div>
                 <div className="text-xs mt-1" style={{ color: "#5a9a5a" }}>
-                  {lang === 'zh' ? '以你的生命代码为底，展开职业·婚恋·家庭·九型人格' : lang === 'ko' ? '생명 코드 기반 · 커리어 · 연애 · 가족 · 에니어그램' : 'From your Life Code — Career · Love · Family · Enneagram'}
+                  {lang === 'zh' ? '顺着你的生命代码，深入职业·婚恋·家庭·九型人格' : lang === 'ko' ? '생명 코드를 따라 · 커리어 · 연애 · 가족 · 에니어그램 심층 분석' : 'Following your Life Code — dive into Career · Love · Family · Enneagram'}
                 </div>
               </button>
             </div>
