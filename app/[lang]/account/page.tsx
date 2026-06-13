@@ -473,6 +473,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [tab, setTab] = useState<"revenue"|"blogger"|"free"|"commissions"|"suggestions">("revenue");
   const [revenue, setRevenue] = useState<null | {paidCount:number;gross:number;fullCount:number;discountCount:number;freeCount:number;bloggerTotal:number;bloggerPending:number;bloggerSettled:number;myNet:number;bloggers:{invite_code:string;label:string|null;email:string|null;pending:number;settled:number;total:number;count:number}[]}>(null);
   const [funnel, setFunnel] = useState<null | {stages:{key:string;count:number}[];hasData:boolean}>(null);
+  const [funnelRange, setFunnelRange] = useState<"today"|"7d"|"30d"|"all">("all");
   const [suggestions, setSuggestions] = useState<{id:string;feature:string;content:string|null;wechat?:string|null;email:string|null;vote:string|null;user_email:string|null;lang:string|null;created_at:string}[]>([]);
   const [votes, setVotes] = useState<Record<string,number>>({});
   const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
@@ -489,7 +490,8 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     return data.session?.access_token ?? "";
   };
 
-  useEffect(() => { fetchCodes(); fetchCommissions(); fetchSettlements(); fetchRevenue(); fetchSuggestions(); fetchFunnel(); }, []);
+  useEffect(() => { fetchCodes(); fetchCommissions(); fetchSettlements(); fetchRevenue(); fetchSuggestions(); }, []);
+  useEffect(() => { fetchFunnel(funnelRange); }, [funnelRange]);
 
   const fetchRevenue = async () => {
     const token = await getToken();
@@ -498,9 +500,9 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     if (!json.error) setRevenue(json);
   };
 
-  const fetchFunnel = async () => {
+  const fetchFunnel = async (range: string) => {
     const token = await getToken();
-    const res = await fetch("/api/admin/funnel", { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(`/api/admin/funnel?range=${range}`, { headers: { Authorization: `Bearer ${token}` } });
     const json = await res.json();
     if (!json.error) setFunnel(json);
   };
@@ -846,8 +848,19 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             const top = funnel.stages[0]?.count || 0;
             return (
               <div className="space-y-2">
-                <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "转化漏斗" : "Conversion funnel"}</div>
-                {!funnel.hasData && <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无访问数据，埋点上线后开始累计" : "No data yet"}</div>}
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "转化漏斗" : "Conversion funnel"}</div>
+                  <div className="flex gap-1">
+                    {(["today","7d","30d","all"] as const).map((r) => (
+                      <button key={r} onClick={() => setFunnelRange(r)}
+                        className="px-2 py-1 text-xs"
+                        style={{ border: `1px solid ${funnelRange === r ? "#00ff88" : "#1a3a1a"}`, color: funnelRange === r ? "#00ff88" : "#4a7a4a", background: funnelRange === r ? "#0a1f0a" : "transparent", borderRadius: "8px", cursor: "pointer", fontFamily: mono }}>
+                        {r === "today" ? (lang === "zh" ? "今天" : "Today") : r === "7d" ? (lang === "zh" ? "近7天" : "7d") : r === "30d" ? (lang === "zh" ? "近30天" : "30d") : (lang === "zh" ? "全部" : "All")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {!funnel.hasData && <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "该时段暂无访问数据" : "No data in this range"}</div>}
                 {funnel.hasData && funnel.stages.map((s, i) => {
                   const pct = top > 0 ? Math.round((s.count / top) * 100) : 0;
                   const prev = i > 0 ? funnel.stages[i-1].count : s.count;

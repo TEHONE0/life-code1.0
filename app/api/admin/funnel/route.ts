@@ -12,10 +12,26 @@ export async function GET(req: NextRequest) {
   const { data: userData } = await supabase.auth.getUser(token);
   if (userData.user?.email !== ADMIN_EMAIL) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const [{ data: events }, { count: paidCount }] = await Promise.all([
-    supabase.from("page_events").select("event, session_id"),
-    supabase.from("submissions").select("id", { count: "exact", head: true }).eq("paid", true).neq("email", ADMIN_EMAIL),
-  ]);
+  // 时间范围：today / 7d / 30d / all（默认 all）。今天以中国时区(UTC+8)零点为界
+  const range = new URL(req.url).searchParams.get("range") || "all";
+  let cutoff: string | null = null;
+  const now = Date.now();
+  if (range === "today") {
+    const cn = new Date(now + 8 * 3600 * 1000); // 转到UTC+8
+    cutoff = new Date(Date.UTC(cn.getUTCFullYear(), cn.getUTCMonth(), cn.getUTCDate()) - 8 * 3600 * 1000).toISOString();
+  } else if (range === "7d") {
+    cutoff = new Date(now - 7 * 86400 * 1000).toISOString();
+  } else if (range === "30d") {
+    cutoff = new Date(now - 30 * 86400 * 1000).toISOString();
+  }
+
+  let eventsQ = supabase.from("page_events").select("event, session_id");
+  let paidQ = supabase.from("submissions").select("id", { count: "exact", head: true }).eq("paid", true).neq("email", ADMIN_EMAIL);
+  if (cutoff) {
+    eventsQ = eventsQ.gte("created_at", cutoff);
+    paidQ = paidQ.gte("created_at", cutoff);
+  }
+  const [{ data: events }, { count: paidCount }] = await Promise.all([eventsQ, paidQ]);
 
   // 各阶段去重会话数
   const distinct = (ev: string) => new Set((events || []).filter((e) => e.event === ev && e.session_id).map((e) => e.session_id)).size;
