@@ -406,8 +406,8 @@ export default function HomePage() {
               </div>
               <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
                 {zh
-                  ? "我喜欢研究心理学、九型人格、AI技术。当我用 AI 架构出 agent 员工之后，开始思考：AI 既然能模拟人的性格，那人的性格，是否也能被 AI 代码反过来模拟？于是研发了这款 AI 心理测试——生命代码。一开始只是为了看见自己，后来朋友们测完效果很好、也真的帮到了 TA 们，便想发布上线，帮助更多人。用代码理解内心潜意识的角落，看见自己，治愈众生。"
-                  : "I'm fascinated by psychology, the Enneagram and AI. After architecting a team of AI agents, a question hit me: if AI can simulate a human personality, can a human personality be modeled back in AI code? That's how Life Code — this AI psychological test — was born. It started as a way to see myself; then friends took it, found it genuinely helpful, so I decided to launch it for more people. Reading the unconscious corners of the heart through code — to see yourself, and to heal all beings."}
+                  ? "我喜欢研究心理学、九型人格、AI技术。在用 AI 架构出一队 agent 员工后，一个问题击中了我：如果 AI 能模拟人的性格，那人的性格能否被 AI 代码反过来模拟？「生命代码」AI 心理测试就这样诞生了。起初只是用它看见自己，后来朋友们测了觉得真有帮助，我就决定上线、帮到更多人。用代码读懂内心潜意识的角落——看见自己，治愈众生。"
+                  : "I'm fascinated by psychology, the Enneagram and AI. After architecting a team of AI agents, a question struck me: if AI can simulate a human personality, can a human personality be simulated back in AI code? That's how the Life Code AI psychological test was born. At first I just used it to see myself; later friends took it and found it genuinely helpful, so I decided to launch it and help more people. Reading the unconscious corners of the heart through code — to see yourself, and to heal all beings."}
               </p>
             </div>
             <div className="p-6 space-y-2" style={CARD}>
