@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const ADMIN_EMAIL = "theone208899@gmail.com";
-const FULL_PRICE = 18.80;     // 标准价
-const DISCOUNT_PRICE = 16.80; // 达人邀请码价
+// 价格在 2026-06-12 调整：之前 ¥8.8/¥6.8，之后 ¥18.8/¥16.8
+const PRICE_CHANGE = new Date("2026-06-12T00:00:00+08:00").getTime();
+const OLD_FULL = 8.80, OLD_DISCOUNT = 6.80;
+const NEW_FULL = 18.80, NEW_DISCOUNT = 16.80;
 
 // 营收统计：我的收益（总营收 − 博主佣金）+ 各博主收益汇总
 export async function GET(req: NextRequest) {
@@ -15,12 +17,16 @@ export async function GET(req: NextRequest) {
   if (userData.user?.email !== ADMIN_EMAIL) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   // 已付费订单 + 邀请码元数据 + 佣金
-  const [{ data: subs }, { data: codes }, { data: comms }] = await Promise.all([
-    // 排除管理员自己的测试报告（admin 邮箱 paid 自动为 true，非真实营收）
-    supabase.from("submissions").select("invite_code").eq("paid", true).neq("email", ADMIN_EMAIL),
+  // amount 列可能尚未创建（ALTER 未跑），失败则退回不含 amount 的查询
+  let subsRes = await supabase.from("submissions").select("invite_code, created_at, amount").eq("paid", true).neq("email", ADMIN_EMAIL);
+  if (subsRes.error && /amount/i.test(subsRes.error.message)) {
+    subsRes = await supabase.from("submissions").select("invite_code, created_at").eq("paid", true).neq("email", ADMIN_EMAIL) as typeof subsRes;
+  }
+  const [{ data: codes }, { data: comms }] = await Promise.all([
     supabase.from("invite_codes").select("code, free_access, commission_usd, label, blogger_email"),
     supabase.from("commissions").select("invite_code, amount_usd, status"),
   ]);
+  const subs = subsRes.data as { invite_code: string | null; created_at: string; amount?: number | null }[] | null;
 
   const codeMeta = new Map<string, { free: boolean; discount: boolean; label: string | null; email: string | null }>();
   for (const c of codes || []) {
@@ -32,14 +38,22 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // 每单价格反推：无码→标准价；免费码→0；博主码→折扣价；其它码→标准价
+  // 每单金额：优先用真实记录的 amount；无则按"下单日期×档位"反推（06-12前后价格不同）
   let gross = 0, fullCount = 0, discountCount = 0, freeCount = 0;
+  let estimated = false; // 是否含按价格反推的历史订单（非精确）
   for (const s of subs || []) {
-    const code = s.invite_code as string | null;
+    const code = s.invite_code;
     const meta = code ? codeMeta.get(code) : null;
     if (meta?.free) { freeCount++; continue; }
-    if (meta?.discount) { gross += DISCOUNT_PRICE; discountCount++; }
-    else { gross += FULL_PRICE; fullCount++; }
+    const isDiscount = !!meta?.discount;
+    if (isDiscount) discountCount++; else fullCount++;
+    if (s.amount != null) {
+      gross += Number(s.amount); // 真实金额，精确
+    } else {
+      estimated = true;
+      const old = new Date(s.created_at).getTime() < PRICE_CHANGE;
+      gross += isDiscount ? (old ? OLD_DISCOUNT : NEW_DISCOUNT) : (old ? OLD_FULL : NEW_FULL);
+    }
   }
 
   // 博主佣金：按邀请码汇总（pending/settled）
@@ -69,6 +83,7 @@ export async function GET(req: NextRequest) {
     bloggerPending: +bloggerPending.toFixed(2),
     bloggerSettled: +bloggerSettled.toFixed(2),
     myNet: +(gross - bloggerTotal).toFixed(2),
+    estimated, // true=含历史反推订单，数字为估算（真实以支付宝/ZPay为准）
     bloggers,
   });
 }

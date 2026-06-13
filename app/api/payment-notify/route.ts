@@ -68,7 +68,14 @@ async function handle(req: NextRequest) {
       .single();
 
     if (submission) {
-      await supabase.from("submissions").update({ paid: true }).eq("id", submission.id);
+      // 记录真实付款金额（ZPay 回调 money），用于精确营收统计；amount 列不存在时静默忽略
+      const paidAmount = params.money ? Number(params.money) : null;
+      const upd: { paid: boolean; amount?: number } = { paid: true };
+      if (paidAmount != null && !Number.isNaN(paidAmount)) upd.amount = paidAmount;
+      let updRes = await supabase.from("submissions").update(upd).eq("id", submission.id);
+      if (updRes.error && /amount/i.test(updRes.error.message)) {
+        updRes = await supabase.from("submissions").update({ paid: true }).eq("id", submission.id);
+      }
       if (submission.invite_code) {
         const { data: codeRow } = await supabase
           .from("invite_codes").select("used_count, blogger_email, commission_usd").eq("code", submission.invite_code).single();
