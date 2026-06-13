@@ -6,6 +6,8 @@ const ADMIN_EMAIL = "theone208899@gmail.com";
 const PRICE_CHANGE = new Date("2026-06-12T00:00:00+08:00").getTime();
 const OLD_FULL = 8.80, OLD_DISCOUNT = 6.80;
 const NEW_FULL = 18.80, NEW_DISCOUNT = 16.80;
+// ZPay 手续费：1.0% 平台 + 0.6% 支付宝，结算到支付宝余额前扣除
+const ZPAY_FEE_RATE = 0.016;
 
 // 营收统计：我的收益（总营收 − 博主佣金）+ 各博主收益汇总
 export async function GET(req: NextRequest) {
@@ -75,6 +77,8 @@ export async function GET(req: NextRequest) {
     ...v,
   })).sort((a, b) => b.total - a.total);
 
+  const fee = gross * ZPAY_FEE_RATE;
+
   return NextResponse.json({
     paidCount: (subs || []).length,
     gross: +gross.toFixed(2),
@@ -82,7 +86,9 @@ export async function GET(req: NextRequest) {
     bloggerTotal: +bloggerTotal.toFixed(2),
     bloggerPending: +bloggerPending.toFixed(2),
     bloggerSettled: +bloggerSettled.toFixed(2),
-    myNet: +(gross - bloggerTotal).toFixed(2),
+    fee: +fee.toFixed(2),
+    feeRate: ZPAY_FEE_RATE,
+    myNet: +(gross - bloggerTotal - fee).toFixed(2),
     estimated, // true=含历史反推订单，数字为估算（真实以支付宝/ZPay为准）
     bloggers,
   });

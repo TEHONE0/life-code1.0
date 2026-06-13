@@ -471,7 +471,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [editLabel, setEditLabel] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [tab, setTab] = useState<"revenue"|"blogger"|"free"|"commissions"|"suggestions">("revenue");
-  const [revenue, setRevenue] = useState<null | {paidCount:number;gross:number;fullCount:number;discountCount:number;freeCount:number;bloggerTotal:number;bloggerPending:number;bloggerSettled:number;myNet:number;estimated?:boolean;bloggers:{invite_code:string;label:string|null;email:string|null;pending:number;settled:number;total:number;count:number}[]}>(null);
+  const [revenue, setRevenue] = useState<null | {paidCount:number;gross:number;fullCount:number;discountCount:number;freeCount:number;bloggerTotal:number;bloggerPending:number;bloggerSettled:number;fee:number;feeRate:number;myNet:number;estimated?:boolean;bloggers:{invite_code:string;label:string|null;email:string|null;pending:number;settled:number;total:number;count:number}[]}>(null);
   const [funnel, setFunnel] = useState<null | {stages:{key:string;count:number}[];hasData:boolean}>(null);
   const [funnelRange, setFunnelRange] = useState<"today"|"7d"|"30d"|"all">("all");
   const [suggestions, setSuggestions] = useState<{id:string;feature:string;content:string|null;wechat?:string|null;email:string|null;vote:string|null;user_email:string|null;lang:string|null;created_at:string}[]>([]);
@@ -891,8 +891,11 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             {/* 我的收益 */}
             <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "我的收益" : "My income"}</div>
             <div className="p-4 border" style={{ borderColor: "#00ff8855", background: "#0a1f0a", borderRadius: "14px", fontFamily: mono, boxShadow: "0 0 22px #00ff8814" }}>
-              <div className="text-xs" style={{ color: "#4a8a4a" }}>{lang === "zh" ? "我的净收益（总营收 − 博主佣金）" : "Net income (gross − commissions)"}</div>
+              <div className="text-xs" style={{ color: "#4a8a4a" }}>{lang === "zh" ? `我的净收益（总营收 − 博主佣金 − ZPay手续费${(revenue.feeRate * 100).toFixed(1)}%）` : `Net income (gross − commissions − ZPay fee ${(revenue.feeRate * 100).toFixed(1)}%)`}</div>
               <div className="text-3xl font-bold mt-1" style={{ color: "#00ff88", textShadow: "0 0 18px #00ff8844" }}>¥{revenue.myNet.toFixed(2)}</div>
+              <div className="text-xs mt-1" style={{ color: "#4a7a4a" }}>
+                ¥{revenue.gross.toFixed(2)} − ¥{revenue.bloggerTotal.toFixed(2)} − ¥{revenue.fee.toFixed(2)}
+              </div>
               {revenue.estimated && (
                 <div className="text-xs mt-2" style={{ color: "#fbbf24" }}>
                   {lang === "zh" ? "⚠ 含改价前历史订单（按 ¥8.8/¥6.8 估算），精确金额以支付宝/ZPay 为准；新订单起按真实付款额统计" : "⚠ Includes pre-pricing-change orders (estimated). Exact total per Alipay/ZPay."}
