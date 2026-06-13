@@ -6,6 +6,7 @@ import UserMenu from "@/components/UserMenu";
 import NavEntries from "@/components/NavEntries";
 import LangSwitch from "@/components/LangSwitch";
 import { NeonRing, IconHeartPulse, IconHourglass, IconMismatch, IconBirthCode, IconEnneagram, IconAI, IconShield } from "@/components/neon";
+import { track } from "@/lib/track";
 
 function MatrixRain({ side }: { side: 'left' | 'right' }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -115,6 +116,9 @@ export default function HomePage() {
   const zh = lang === 'zh'
   const router = useRouter()
   const promoActive = new Date() <= new Date("2026-06-30T23:59:59+08:00")
+
+  // 漏斗埋点：落地页访问（每会话一次）
+  useEffect(() => { track("landing", { once: true, lang }); }, [lang])
 
   // Hero 代码块：逐字打字动画（打完后光标在结尾持续闪烁）
   const codeLines: [string, string][] = zh

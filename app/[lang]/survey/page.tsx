@@ -3,6 +3,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { getT, Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { track } from "@/lib/track";
 import UserMenu from "@/components/UserMenu";
 import NavEntries from "@/components/NavEntries";
 import LangSwitch from "@/components/LangSwitch";
@@ -354,6 +355,7 @@ export default function SurveyPage() {
     }
     setSubmitting(true);
     setError("");
+    track("survey_submit", { lang });
     sessionStorage.setItem("survey_answers", JSON.stringify(answers));
     sessionStorage.setItem("survey_lang", lang);
     // 不清草稿：用户在支付页点「重新填写」回到问卷时，能完整恢复刚填的答案，避免白填

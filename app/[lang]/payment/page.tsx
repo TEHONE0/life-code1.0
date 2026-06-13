@@ -3,6 +3,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getT, Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { track } from "@/lib/track";
 
 function AnimatedDots() {
   const [dots, setDots] = useState(1)
@@ -35,6 +36,7 @@ export default function PaymentPage() {
       return
     }
     setHasAnswers(true)
+    track("payment_view", { once: true, lang })
     // 先用问卷页缓存的邮箱立即渲染界面，不必干等下面的 getSession 网络回来（手机黑屏根因）
     const cachedEmail = sessionStorage.getItem("user_email")
     if (cachedEmail) setUserEmail(cachedEmail)

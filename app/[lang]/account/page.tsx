@@ -472,6 +472,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
   const [editEmail, setEditEmail] = useState("");
   const [tab, setTab] = useState<"revenue"|"blogger"|"free"|"commissions"|"suggestions">("revenue");
   const [revenue, setRevenue] = useState<null | {paidCount:number;gross:number;fullCount:number;discountCount:number;freeCount:number;bloggerTotal:number;bloggerPending:number;bloggerSettled:number;myNet:number;bloggers:{invite_code:string;label:string|null;email:string|null;pending:number;settled:number;total:number;count:number}[]}>(null);
+  const [funnel, setFunnel] = useState<null | {stages:{key:string;count:number}[];hasData:boolean}>(null);
   const [suggestions, setSuggestions] = useState<{id:string;feature:string;content:string|null;wechat?:string|null;email:string|null;vote:string|null;user_email:string|null;lang:string|null;created_at:string}[]>([]);
   const [votes, setVotes] = useState<Record<string,number>>({});
   const [commissions, setCommissions] = useState<{id:string;invite_code:string;blogger_email:string;user_email:string;amount_usd:number;status:string;created_at:string}[]>([]);
@@ -488,13 +489,20 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     return data.session?.access_token ?? "";
   };
 
-  useEffect(() => { fetchCodes(); fetchCommissions(); fetchSettlements(); fetchRevenue(); fetchSuggestions(); }, []);
+  useEffect(() => { fetchCodes(); fetchCommissions(); fetchSettlements(); fetchRevenue(); fetchSuggestions(); fetchFunnel(); }, []);
 
   const fetchRevenue = async () => {
     const token = await getToken();
     const res = await fetch("/api/admin/revenue", { headers: { Authorization: `Bearer ${token}` } });
     const json = await res.json();
     if (!json.error) setRevenue(json);
+  };
+
+  const fetchFunnel = async () => {
+    const token = await getToken();
+    const res = await fetch("/api/admin/funnel", { headers: { Authorization: `Bearer ${token}` } });
+    const json = await res.json();
+    if (!json.error) setFunnel(json);
   };
 
   const fetchSuggestions = async () => {
@@ -832,6 +840,39 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
 
       {tab === "revenue" && (
         <div className="space-y-4">
+          {/* 转化漏斗 */}
+          {funnel && (() => {
+            const labelOf = (k: string) => ({ landing: lang === "zh" ? "访问首页" : "Landing", survey_submit: lang === "zh" ? "提交问卷" : "Survey", payment_view: lang === "zh" ? "到支付页" : "Payment", paid: lang === "zh" ? "实际付费" : "Paid" } as Record<string,string>)[k] || k;
+            const top = funnel.stages[0]?.count || 0;
+            return (
+              <div className="space-y-2">
+                <div className="text-xs font-bold" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "转化漏斗" : "Conversion funnel"}</div>
+                {!funnel.hasData && <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无访问数据，埋点上线后开始累计" : "No data yet"}</div>}
+                {funnel.hasData && funnel.stages.map((s, i) => {
+                  const pct = top > 0 ? Math.round((s.count / top) * 100) : 0;
+                  const prev = i > 0 ? funnel.stages[i-1].count : s.count;
+                  const stepPct = prev > 0 ? Math.round((s.count / prev) * 100) : 0;
+                  return (
+                    <div key={s.key} className="text-xs" style={{ fontFamily: mono }}>
+                      <div className="flex justify-between mb-1">
+                        <span style={{ color: "#7aba7a" }}>{labelOf(s.key)}</span>
+                        <span style={{ color: "#00ff88" }}>{s.count} {i > 0 && <span style={{ color: "#4a7a4a" }}>· {lang === "zh" ? "上一步转化" : "step"} {stepPct}%</span>}</span>
+                      </div>
+                      <div style={{ height: "8px", background: "#0a150a", borderRadius: "999px", overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg,#00cc6a,#00ff88)", borderRadius: "999px" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {funnel.hasData && top > 0 && (
+                  <div className="text-xs pt-1" style={{ color: "#4a8a4a", fontFamily: mono }}>
+                    // {lang === "zh" ? `整体转化率（访问→付费）：${Math.round((funnel.stages[3].count / top) * 100)}%` : `Overall: ${Math.round((funnel.stages[3].count / top) * 100)}%`}
+                  </div>
+                )}
+                <div style={{ borderBottom: "1px solid #1a3a1a", margin: "8px 0" }} />
+              </div>
+            );
+          })()}
           {!revenue && <div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "加载中..." : "Loading..."}</div>}
           {revenue && (<>
             {/* 我的收益 */}
