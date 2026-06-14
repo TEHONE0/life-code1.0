@@ -20,9 +20,26 @@ interface PreviewData {
 
 function parsePreview(text: string): PreviewData | null {
   try {
-    const get = (start: string, end: string) =>
-      text.match(new RegExp(start + "\n([\\s\\S]*?)\n" + end))?.[1]?.trim() || "";
-    const metaRaw = get("PREVIEW_META_START", "PREVIEW_META_END");
+    // 按 START 锚点切到下一段开头，不依赖 AI 精确闭合 END 标记
+    // （AI 偶尔会把 OPENING_END 误写成 PREVIEW_META_END、或漏写 JINJING_END）
+    const sliceFrom = (startMark: string, stopMarks: string[]) => {
+      const si = text.indexOf(startMark);
+      if (si === -1) return "";
+      const from = si + startMark.length;
+      let to = text.length;
+      for (const m of stopMarks) {
+        const ei = text.indexOf(m, from);
+        if (ei !== -1 && ei < to) to = ei;
+      }
+      return text.slice(from, to);
+    };
+    // 清掉段内残留的任何标记行
+    const clean = (s: string) =>
+      s.split("\n")
+        .filter((l) => !/^(PREVIEW_META_(START|END)|OPENING_(START|END)|BUG01_(START|END)|JINJING_(START|END)|BUG_TOTAL:)/.test(l.trim()))
+        .join("\n").trim();
+
+    const metaRaw = sliceFrom("PREVIEW_META_START", ["PREVIEW_META_END", "OPENING_START"]);
     const line = (key: string) =>
       metaRaw.match(new RegExp(key + ":(.+)"))?.[1]?.trim() || "";
     return {
@@ -30,10 +47,10 @@ function parsePreview(text: string): PreviewData | null {
       healthLevel: parseInt(line("HEALTH_LEVEL")) || 0,
       weight: line("WEIGHT"),
       bias: line("BIAS"),
-      opening: get("OPENING_START", "OPENING_END"),
-      bug01: get("BUG01_START", "BUG01_END"),
+      opening: clean(sliceFrom("OPENING_START", ["BUG01_START"])),
+      bug01: clean(sliceFrom("BUG01_START", ["BUG01_END", "BUG_TOTAL:", "JINJING_START"])),
       bugTotal: parseInt(text.match(/BUG_TOTAL:(\d+)/)?.[1] || "5"),
-      jinjing: get("JINJING_START", "JINJING_END"),
+      jinjing: clean(sliceFrom("JINJING_START", ["JINJING_END"])),
     };
   } catch {
     return null;
@@ -55,6 +72,7 @@ function OpeningBlock({ text }: { text: string }) {
         background: "#0a1a0a", border: "1px solid #1a3a1a", borderRadius: "12px",
         padding: "14px 16px", margin: "12px 0", fontFamily: "Courier New, monospace",
         fontSize: "13px", color: "#00cc6a", lineHeight: "1.7",
+        whiteSpace: "pre-wrap",
       }}>
         {codeLines.map((l, i) => <div key={i}>{l}</div>)}
       </div>
@@ -75,8 +93,8 @@ function OpeningBlock({ text }: { text: string }) {
 
   lines.forEach((raw, i) => {
     const l = raw.trim();
-    if (l === "```" || l === "```text") { inCode = !inCode; if (!inCode) flushCode(i); return; }
-    if (inCode) { codeLines.push(l); return; }
+    if (l.startsWith("```")) { inCode = !inCode; if (!inCode) flushCode(i); return; }
+    if (inCode) { codeLines.push(raw); return; }
     if (l.startsWith(">")) {
       if (!inQuote) inQuote = true;
       quoteLines.push(l);

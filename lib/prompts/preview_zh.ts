@@ -11,6 +11,12 @@ export const PREVIEW_PROMPT_ZH =
 你现在生成的是付费页展示的"系统速读预览"，不是完整报告。
 严格按下方格式输出，不得添加任何额外文字。
 
+⚠️ 标记闭合铁律（极重要）：每一段必须用**自己对应的** END 标记闭合，绝不能混用。
+- OPENING 段以 OPENING_END 结束（不是 PREVIEW_META_END）
+- BUG01 段以 BUG01_END 结束
+- JINJING 段以 JINJING_END 结束（最后一段也必须输出 JINJING_END，不可省略）
+每个 START/END 标记独占一行，前后不加任何符号或空格。
+
 PREVIEW_META_START
 BUG_SCORE:[根据Q03+Q05+Q06+Q09推算，0-100整数，不带小数]
 HEALTH_LEVEL:[根据健康层级判定规则，1-9整数]
