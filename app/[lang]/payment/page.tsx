@@ -389,7 +389,7 @@ export default function PaymentPage() {
                     {/* 姓名报告标题（图1样式）*/}
                     {previewName && (
                       <h1 style={{ color: "#00ff88", fontSize: "1.35rem", fontWeight: "bold", textShadow: "0 0 20px #00ff8844", textAlign: "center", margin: "8px 0 6px" }}>
-                        {previewName} · 生命代码解析报告
+                        {previewName} · 生命代码解析简报
                       </h1>
                     )}
                     <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, #00ff8855, transparent)", margin: "0 0 16px" }} />
@@ -454,12 +454,12 @@ export default function PaymentPage() {
                     )}
 
                     {/* 锁定目录 */}
-                    <div style={{ marginTop: "16px", padding: "12px 14px", background: "#080e08", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
-                      <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "11px", marginBottom: "8px" }}>
+                    <div style={{ marginTop: "16px", padding: "14px 16px", background: "#080e08", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
+                      <div style={{ color: "#8fbf8f", fontFamily: "Courier New, monospace", fontSize: "14px", fontWeight: "bold", marginBottom: "10px" }}>
                         🔒 完整报告还包含：
                       </div>
                       {["第零章 · 初始参数·源代码", "第一章 · 内核审计（全部 Bug）", "第二章 · 演化路径分析", "第三章 · 当下奇点", "第四章 · 命运渲染预测（近期+爆发期+远景）", "第五章 · 修复补丁", "第六章 · 命运公式", "第七章 · 总结·禅语·生命问答", "觉醒画像"].map(ch => (
-                        <div key={ch} style={{ color: "#1a3a1a", fontFamily: "Courier New, monospace", fontSize: "11px", lineHeight: "1.8" }}>
+                        <div key={ch} style={{ color: "#7aaa7a", fontFamily: "Courier New, monospace", fontSize: "13px", lineHeight: "2.0" }}>
                           {ch}
                         </div>
                       ))}
