@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
           status: answers.status, legacy: answers.legacy,
           dimension: answers.dimension, defense: answers.defense,
           invite_code: inviteCode || null,
+          preview: null, // 答案变了，旧简报失效（与 save-draft 一致）
         }).eq("id", existingSubmissionId);
         submissionId = existingSubmissionId;
       }

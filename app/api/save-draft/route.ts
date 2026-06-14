@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
           core_loop: answers.core_loop, const_value: answers.const,
           status: answers.status, legacy: answers.legacy,
           dimension: answers.dimension, defense: answers.defense,
+          preview: null, // 答案变了，旧简报必须失效，否则下一人会看到上一人的简报
         })
         .eq("id", existingSubmissionId);
       if (userId) {

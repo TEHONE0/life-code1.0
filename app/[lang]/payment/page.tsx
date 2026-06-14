@@ -141,6 +141,19 @@ export default function PaymentPage() {
   const [preview, setPreview] = useState<PreviewData | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewExpanded, setPreviewExpanded] = useState(true)
+  const [previewProgress, setPreviewProgress] = useState(0)
+  const [paymentRevealed, setPaymentRevealed] = useState(false)
+
+  // 简报生成进度条（模拟爬升到 90%，简报到了跳 100%）
+  useEffect(() => {
+    if (preview) { setPreviewProgress(100); return }
+    if (!previewLoading) return
+    setPreviewProgress(p => p < 8 ? 8 : p)
+    const id = setInterval(() => {
+      setPreviewProgress(p => (p < 90 ? p + Math.max(1, (90 - p) / 18) : p))
+    }, 600)
+    return () => clearInterval(id)
+  }, [previewLoading, preview])
 
   useEffect(() => {
     const answersRaw = sessionStorage.getItem("survey_answers")
@@ -282,6 +295,9 @@ export default function PaymentPage() {
     </main>
   )
 
+  // 简报就绪，或加载已结束（含失败兜底，progress>0 表示曾启动过）→ 允许解锁，绝不卡死付款
+  const canUnlock = !!preview || (!previewLoading && previewProgress > 0)
+
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center px-5 py-10"
@@ -308,30 +324,8 @@ export default function PaymentPage() {
           </p>
         </div>
 
-        <div
-          className="text-left p-4 border space-y-2"
-          style={{ borderColor: "#0f2a0f", background: "#080e08", fontFamily: "Courier New, monospace", borderRadius: "16px" }}
-        >
-          <div className="text-xs" style={{ color: "#2d5a2d" }}>
-            {lang === 'zh' ? '// 扫描完成 · 检测到以下信号' : '// Scan complete · Signals detected'}
-          </div>
-          <div className="text-xs" style={{ color: "#1a3a1a" }}>
-            {lang === 'zh' ? 'Bug 密度：' : 'Bug density: '}
-            <span style={{ color: "#00ff8855" }}>{'█'.repeat(7)}{'░'.repeat(5)} {lang === 'zh' ? '已检出' : 'detected'}</span>
-          </div>
-          <div className="text-xs" style={{ color: "#1a3a1a" }}>
-            {lang === 'zh' ? '主权重：' : 'Primary weight: '}
-            <span style={{ color: "#00ff8855" }}>{lang === 'zh' ? '已识别 · 待解锁' : 'identified · locked'}</span>
-          </div>
-          <div className="text-xs" style={{ color: "#1a3a1a" }}>
-            {lang === 'zh' ? '完整报告：' : 'Full report: '}
-            <span style={{ color: "#00ff8855" }}>{'█'.repeat(12)}{'░'.repeat(8)} {lang === 'zh' ? '待解锁' : 'pending unlock'}</span>
-          </div>
-        </div>
-
         {/* ── 系统速读简报 ── */}
-        {(previewLoading || preview) && (
-          <div style={{ border: "1px solid #1a3a1a", borderRadius: "16px", overflow: "hidden" }}>
+        <div style={{ border: "1px solid #1a3a1a", borderRadius: "16px", overflow: "hidden" }}>
             {/* 标题栏 */}
             <button
               onClick={() => setPreviewExpanded(e => !e)}
@@ -346,9 +340,17 @@ export default function PaymentPage() {
 
             {previewExpanded && (
               <div style={{ padding: "0 16px 16px", background: "#060c06" }}>
-                {previewLoading && !preview && (
-                  <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "12px", padding: "16px 0" }}>
-                    // 系统正在扫描你的生命代码<AnimatedDots />
+                {!preview && (
+                  <div style={{ padding: "20px 0 8px" }}>
+                    <div style={{ color: "#7aba7a", fontFamily: "Courier New, monospace", fontSize: "13px", marginBottom: "12px" }}>
+                      {lang === 'zh' ? '正在生成你的专属简报' : 'Generating your preview'}<AnimatedDots />
+                    </div>
+                    <div style={{ height: "6px", background: "#0a1a0a", borderRadius: "999px", overflow: "hidden" }}>
+                      <div style={{ width: `${previewProgress}%`, height: "100%", background: "linear-gradient(90deg, #00cc6a, #00ff88)", borderRadius: "999px", transition: "width 0.6s ease-out" }} />
+                    </div>
+                    <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "11px", marginTop: "8px" }}>
+                      {Math.round(previewProgress)}% · {lang === 'zh' ? '系统正在解析你的生命代码' : 'analyzing your life code'}
+                    </div>
                   </div>
                 )}
 
@@ -428,8 +430,38 @@ export default function PaymentPage() {
               </div>
             )}
           </div>
+
+        {/* 解锁按钮：简报就绪 + 付款区未展开时显示 */}
+        {!paymentRevealed && (
+          <button
+            onClick={() => {
+              setPaymentRevealed(true)
+              setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 100)
+            }}
+            disabled={!canUnlock}
+            className="w-full py-5 text-base font-bold transition-all duration-300 active:scale-95"
+            style={{
+              touchAction: "manipulation",
+              border: "1px solid #00ff88",
+              color: canUnlock ? "#00ff88" : "#2d5a2d",
+              background: "transparent",
+              letterSpacing: "0.05em",
+              cursor: canUnlock ? "pointer" : "not-allowed",
+              opacity: canUnlock ? 1 : 0.5,
+              borderRadius: "14px",
+              borderColor: canUnlock ? "#00ff88" : "#1a3a1a",
+            }}
+            onMouseEnter={(e) => { if (!canUnlock) return; e.currentTarget.style.background = "#00ff88"; e.currentTarget.style.color = "#050a05"; e.currentTarget.style.boxShadow = "0 0 30px #00ff8844" }}
+            onMouseLeave={(e) => { if (!canUnlock) return; e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#00ff88"; e.currentTarget.style.boxShadow = "none" }}
+          >
+            {canUnlock
+              ? (lang === 'zh' ? '◇ 解锁完整报告' : lang === 'ko' ? '◇ 전체 리포트 해제' : '◇ Unlock full report')
+              : (lang === 'zh' ? '简报生成中…' : 'Preview loading…')}
+          </button>
         )}
 
+        {/* ── 付款区（点解锁后展开）── */}
+        {paymentRevealed && (<>
         {/* Invite code */}
         <div className="space-y-2">
           <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
@@ -590,6 +622,7 @@ export default function PaymentPage() {
             </>
           ) : t.paymentBtn}
         </button>
+        </>)}
 
         <div className="flex gap-4">
           <button
