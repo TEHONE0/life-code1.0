@@ -5,6 +5,7 @@ import { getT, Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { track } from "@/lib/track";
 import { useTap } from "@/lib/useTap";
+import { NeonRing, IconScan } from "@/components/neon";
 
 // ── 简报数据解析 ────────────────────────────────────────────────
 interface PreviewData {
@@ -12,10 +13,12 @@ interface PreviewData {
   healthLevel: number;
   weight: string;
   bias: string;
+  tagline: string;
   opening: string;
   bug01: string;
   bugTotal: number;
   jinjing: string;
+  hook: string;
 }
 
 function parsePreview(text: string): PreviewData | null {
@@ -36,7 +39,7 @@ function parsePreview(text: string): PreviewData | null {
     // 清掉段内残留的任何标记行
     const clean = (s: string) =>
       s.split("\n")
-        .filter((l) => !/^(PREVIEW_META_(START|END)|OPENING_(START|END)|BUG01_(START|END)|JINJING_(START|END)|BUG_TOTAL:)/.test(l.trim()))
+        .filter((l) => !/^(PREVIEW_META_(START|END)|TAGLINE_(START|END)|OPENING_(START|END)|BUG01_(START|END)|JINJING_(START|END)|HOOK_(START|END)|BUG_TOTAL:)/.test(l.trim()))
         .join("\n").trim();
 
     const metaRaw = sliceFrom("PREVIEW_META_START", ["PREVIEW_META_END", "OPENING_START"]);
@@ -47,10 +50,12 @@ function parsePreview(text: string): PreviewData | null {
       healthLevel: parseInt(line("HEALTH_LEVEL")) || 0,
       weight: line("WEIGHT"),
       bias: line("BIAS"),
+      tagline: clean(sliceFrom("TAGLINE_START", ["TAGLINE_END", "OPENING_START"])),
       opening: clean(sliceFrom("OPENING_START", ["BUG01_START"])),
       bug01: clean(sliceFrom("BUG01_START", ["BUG01_END", "BUG_TOTAL:", "JINJING_START"])),
       bugTotal: parseInt(text.match(/BUG_TOTAL:(\d+)/)?.[1] || "5"),
-      jinjing: clean(sliceFrom("JINJING_START", ["JINJING_END"])),
+      jinjing: clean(sliceFrom("JINJING_START", ["JINJING_END", "HOOK_START"])),
+      hook: clean(sliceFrom("HOOK_START", ["HOOK_END"])),
     };
   } catch {
     return null;
@@ -143,6 +148,7 @@ export default function PaymentPage() {
   const [previewExpanded, setPreviewExpanded] = useState(true)
   const [previewProgress, setPreviewProgress] = useState(0)
   const [paymentRevealed, setPaymentRevealed] = useState(false)
+  const [previewName, setPreviewName] = useState("")
 
   // 简报生成进度条（模拟爬升到 90%，简报到了跳 100%）
   useEffect(() => {
@@ -162,6 +168,12 @@ export default function PaymentPage() {
       return
     }
     setHasAnswers(true)
+    // 从问卷答案解析姓名，用于简报顶部标题（不依赖AI，与 save-draft 同款正则）
+    try {
+      const bi = (JSON.parse(answersRaw).basic_info || "") as string
+      const nm = (bi.match(/(?:姓名|Name|이름)[:：]\s*([^/，,、\n]+)/i)?.[1] || bi.split(/[，,、/\s]/)[0] || "").trim()
+      if (nm) setPreviewName(nm)
+    } catch { /* ignore */ }
     track("payment_view", { once: true, lang })
     // 先用问卷页缓存的邮箱立即渲染界面，不必干等下面的 getSession 网络回来（手机黑屏根因）
     const cachedEmail = sessionStorage.getItem("user_email")
@@ -374,6 +386,24 @@ export default function PaymentPage() {
                       ))}
                     </div>
 
+                    {/* 姓名报告标题（图1样式）*/}
+                    {previewName && (
+                      <h1 style={{ color: "#00ff88", fontSize: "1.35rem", fontWeight: "bold", textShadow: "0 0 20px #00ff8844", textAlign: "center", margin: "8px 0 6px" }}>
+                        {previewName} · 生命代码解析报告
+                      </h1>
+                    )}
+                    <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, #00ff8855, transparent)", margin: "0 0 16px" }} />
+
+                    {/* 定调句卡片（图1样式：扫描图标 + 高亮绿字）*/}
+                    {preview.tagline && (
+                      <div className="flex items-center gap-3" style={{ background: "#0a1f0a", border: "1px solid #00ff8855", borderRadius: "14px", boxShadow: "0 0 35px #00ff8815", padding: "12px 16px", margin: "0 0 16px" }}>
+                        <div style={{ flexShrink: 0 }}><NeonRing size={36}>{IconScan}</NeonRing></div>
+                        <div style={{ color: "#00ff88", fontWeight: 700, fontSize: "0.98rem", lineHeight: 1.7, textShadow: "0 0 16px #00ff8844" }}>
+                          {preview.tagline.replace(/^>\s*/, "")}
+                        </div>
+                      </div>
+                    )}
+
                     {/* 开场白 */}
                     <OpeningBlock text={preview.opening} />
 
@@ -413,6 +443,15 @@ export default function PaymentPage() {
                     <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "12px", marginTop: "10px" }}>
                       🔒 远景·命运渲染预测（2032–2042）等待解锁
                     </div>
+
+                    {/* 钩子句（金色高亮，牢牢吸引）*/}
+                    {preview.hook && (
+                      <div style={{ margin: "18px 0 4px", padding: "14px 16px", background: "linear-gradient(135deg, #0a1f0a, #0d1a0d)", border: "1px solid #FFC93C55", borderRadius: "14px", boxShadow: "0 0 30px #FFC93C12" }}>
+                        <p style={{ color: "#FFC93C", fontSize: "15px", fontWeight: 600, lineHeight: 1.8, margin: 0, textAlign: "center" }}>
+                          {preview.hook}
+                        </p>
+                      </div>
+                    )}
 
                     {/* 锁定目录 */}
                     <div style={{ marginTop: "16px", padding: "12px 14px", background: "#080e08", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
