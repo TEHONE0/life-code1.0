@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { answersDiffer } from "@/lib/submissionAnswers";
 
 const ADMIN_EMAILS = ['theone208899@gmail.com'];
 // 免费码不再硬编码，统一以 invite_codes.free_access 字段为准（与 validate-invite 同源）
@@ -42,10 +43,12 @@ export async function POST(req: NextRequest) {
       // 已支付/已出报告的记录若被复用，新填的人会被旧档顶掉、新答案丢失（2026-06-13 线上bug）
       const { data: existing } = await supabase
         .from("submissions")
-        .select("id, paid, report")
+        .select("id, paid, report, enneagram, basic_info, origin, critical_error, core_loop, const_value, status, legacy, dimension, defense")
         .eq("id", existingSubmissionId)
         .maybeSingle();
       if (existing && !existing.paid && !existing.report) {
+        // 问卷未改 → 保留简报缓存；改了 → 简报失效（与 save-draft 一致）
+        const changed = answersDiffer(existing, answers);
         await supabase.from("submissions").update({
           name, lang,
           enneagram: answers.enneagram, basic_info: answers.basic_info,
@@ -54,7 +57,7 @@ export async function POST(req: NextRequest) {
           status: answers.status, legacy: answers.legacy,
           dimension: answers.dimension, defense: answers.defense,
           invite_code: inviteCode || null,
-          preview: null, // 答案变了，旧简报失效（与 save-draft 一致）
+          ...(changed ? { preview: null } : {}),
         }).eq("id", existingSubmissionId);
         submissionId = existingSubmissionId;
       }

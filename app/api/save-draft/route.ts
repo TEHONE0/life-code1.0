@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { answersDiffer } from "@/lib/submissionAnswers";
 
 export async function POST(req: NextRequest) {
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -28,10 +29,12 @@ export async function POST(req: NextRequest) {
   if (existingSubmissionId) {
     const { data: existing } = await supabase
       .from("submissions")
-      .select("id, paid, report")
+      .select("id, paid, report, enneagram, basic_info, origin, critical_error, core_loop, const_value, status, legacy, dimension, defense")
       .eq("id", existingSubmissionId)
       .maybeSingle();
     if (existing && !existing.paid && !existing.report) {
+      // 问卷一字未改 → 保留已生成的简报缓存（省算力）；改了任何字 → 简报失效重新解析
+      const changed = answersDiffer(existing, answers);
       await supabase
         .from("submissions")
         .update({
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
           core_loop: answers.core_loop, const_value: answers.const,
           status: answers.status, legacy: answers.legacy,
           dimension: answers.dimension, defense: answers.defense,
-          preview: null, // 答案变了，旧简报必须失效，否则下一人会看到上一人的简报
+          ...(changed ? { preview: null } : {}),
         })
         .eq("id", existingSubmissionId);
       if (userId) {
