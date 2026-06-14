@@ -29,6 +29,8 @@ OPENING_END
 BUG01_START
 ### Bug 01: \`VARIABLE_NAME = "ENGLISH_VALUE"\`
 **中文翻译：\`中文变量名 = "中文释义"\`**
+
+[人话：用白话解释这个Bug的成因和表现，必须与问卷原文直接对应，3-5句精准有力，命中此人最深的防御机制]
 BUG01_END
 BUG_TOTAL:[此用户预估的Bug总数，通常5-8个整数]
 JINJING_START

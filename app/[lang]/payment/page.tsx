@@ -377,11 +377,21 @@ export default function PaymentPage() {
 
                     {/* Bug 01 */}
                     <div style={{ margin: "16px 0 8px", padding: "12px 14px", background: "#0a150a", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
-                      <div style={{ color: "#00cc6a", fontFamily: "Courier New, monospace", fontSize: "13px", lineHeight: "1.7" }}>
-                        {preview.bug01.split("\n").map((l, i) => (
-                          <div key={i}>{l.replace(/\*\*/g, "").replace(/`/g, "")}</div>
-                        ))}
-                      </div>
+                      {preview.bug01.split("\n").map((l, i) => {
+                        const t = l.trim()
+                        if (!t) return <div key={i} style={{ height: "6px" }} />
+                        // 含反引号或###的是代码行（标题/中文翻译），其余是人话
+                        const isCode = t.startsWith("###") || t.includes("`")
+                        return isCode ? (
+                          <div key={i} style={{ color: "#00cc6a", fontFamily: "Courier New, monospace", fontSize: "13px", lineHeight: "1.7" }}>
+                            {t.replace(/\*\*/g, "").replace(/`/g, "")}
+                          </div>
+                        ) : (
+                          <p key={i} style={{ color: "#c8d8c8", fontSize: "14px", lineHeight: "1.8", margin: "8px 0 0" }}>
+                            {t.replace(/\*\*/g, "")}
+                          </p>
+                        )
+                      })}
                     </div>
                     {/* Bug 数量提示 */}
                     <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "12px", marginBottom: "16px" }}>
