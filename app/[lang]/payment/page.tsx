@@ -6,6 +6,96 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 import { track } from "@/lib/track";
 import { useTap } from "@/lib/useTap";
 
+// ── 简报数据解析 ────────────────────────────────────────────────
+interface PreviewData {
+  bugScore: number;
+  healthLevel: number;
+  weight: string;
+  bias: string;
+  opening: string;
+  bug01: string;
+  bugTotal: number;
+  jinjing: string;
+}
+
+function parsePreview(text: string): PreviewData | null {
+  try {
+    const get = (start: string, end: string) =>
+      text.match(new RegExp(start + "\n([\\s\\S]*?)\n" + end))?.[1]?.trim() || "";
+    const metaRaw = get("PREVIEW_META_START", "PREVIEW_META_END");
+    const line = (key: string) =>
+      metaRaw.match(new RegExp(key + ":(.+)"))?.[1]?.trim() || "";
+    return {
+      bugScore: parseInt(line("BUG_SCORE")) || 0,
+      healthLevel: parseInt(line("HEALTH_LEVEL")) || 0,
+      weight: line("WEIGHT"),
+      bias: line("BIAS"),
+      opening: get("OPENING_START", "OPENING_END"),
+      bug01: get("BUG01_START", "BUG01_END"),
+      bugTotal: parseInt(text.match(/BUG_TOTAL:(\d+)/)?.[1] || "5"),
+      jinjing: get("JINJING_START", "JINJING_END"),
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ── 简报渲染：将 markdown 开场白转为 JSX ────────────────────────
+function OpeningBlock({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const nodes: React.ReactNode[] = [];
+  let inCode = false;
+  let codeLines: string[] = [];
+  let inQuote = false;
+  let quoteLines: string[] = [];
+
+  const flushCode = (key: number) => {
+    nodes.push(
+      <div key={`code-${key}`} style={{
+        background: "#0a1a0a", border: "1px solid #1a3a1a", borderRadius: "12px",
+        padding: "14px 16px", margin: "12px 0", fontFamily: "Courier New, monospace",
+        fontSize: "13px", color: "#00cc6a", lineHeight: "1.7",
+      }}>
+        {codeLines.map((l, i) => <div key={i}>{l}</div>)}
+      </div>
+    );
+    codeLines = [];
+  };
+  const flushQuote = (key: number) => {
+    nodes.push(
+      <div key={`quote-${key}`} style={{
+        borderLeft: "3px solid #00ff8844", paddingLeft: "14px", margin: "12px 0",
+        color: "#4a8a4a", fontFamily: "Courier New, monospace", fontSize: "13px", lineHeight: "1.7",
+      }}>
+        {quoteLines.map((l, i) => <div key={i}>{l.replace(/^>\s?/, "")}</div>)}
+      </div>
+    );
+    quoteLines = [];
+  };
+
+  lines.forEach((raw, i) => {
+    const l = raw.trim();
+    if (l === "```" || l === "```text") { inCode = !inCode; if (!inCode) flushCode(i); return; }
+    if (inCode) { codeLines.push(l); return; }
+    if (l.startsWith(">")) {
+      if (!inQuote) inQuote = true;
+      quoteLines.push(l);
+      // peek next
+      const next = lines[i + 1]?.trim() || "";
+      if (!next.startsWith(">")) { inQuote = false; flushQuote(i); }
+      return;
+    }
+    if (l === "") { nodes.push(<div key={i} style={{ height: "8px" }} />); return; }
+    nodes.push(
+      <p key={i} style={{ color: "#c8d8c8", fontSize: "15px", lineHeight: "1.85", margin: "6px 0" }}>
+        {l.replace(/\*\*(.*?)\*\*/g, "$1")}
+      </p>
+    );
+  });
+
+  return <div>{nodes}</div>;
+}
+
 function AnimatedDots() {
   const [dots, setDots] = useState(1)
   useEffect(() => {
@@ -30,6 +120,9 @@ export default function PaymentPage() {
   const [inviteLabel, setInviteLabel] = useState("")
   const [inviteFreeAccess, setInviteFreeAccess] = useState(false)
   const [tradeType] = useState<"ALIPAY">("ALIPAY")
+  const [preview, setPreview] = useState<PreviewData | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewExpanded, setPreviewExpanded] = useState(true)
 
   useEffect(() => {
     const answersRaw = sessionStorage.getItem("survey_answers")
@@ -68,12 +161,32 @@ export default function PaymentPage() {
         const json = await res.json()
         if (json.submissionId) {
           sessionStorage.setItem("existing_submission_id", json.submissionId)
+          // 触发简报生成（不阻塞页面）
+          generatePreview(json.submissionId, data.session.access_token)
         }
       } catch {
         // Non-fatal: answers still in sessionStorage as fallback
       }
     })
   }, [lang, router])
+
+  const generatePreview = async (submissionId: string, accessToken: string) => {
+    setPreviewLoading(true)
+    try {
+      const res = await fetch("/api/generate-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ submissionId }),
+      })
+      const json = await res.json()
+      if (json.preview) {
+        const parsed = parsePreview(json.preview)
+        if (parsed) setPreview(parsed)
+      }
+    } catch { /* 静默失败 */ } finally {
+      setPreviewLoading(false)
+    }
+  }
 
   const handleInviteCheck = async () => {
     if (!inviteCode.trim()) return
@@ -197,6 +310,97 @@ export default function PaymentPage() {
             <span style={{ color: "#00ff8855" }}>{'█'.repeat(12)}{'░'.repeat(8)} {lang === 'zh' ? '待解锁' : 'pending unlock'}</span>
           </div>
         </div>
+
+        {/* ── 系统速读简报 ── */}
+        {(previewLoading || preview) && (
+          <div style={{ border: "1px solid #1a3a1a", borderRadius: "16px", overflow: "hidden" }}>
+            {/* 标题栏 */}
+            <button
+              onClick={() => setPreviewExpanded(e => !e)}
+              className="w-full flex items-center justify-between px-4 py-3"
+              style={{ background: "#080e08", cursor: "pointer", border: "none" }}
+            >
+              <span style={{ color: "#00ff88", fontFamily: "Courier New, monospace", fontSize: "13px" }}>
+                // 系统速读 · 先看一眼你的报告
+              </span>
+              <span style={{ color: "#2d5a2d", fontSize: "12px" }}>{previewExpanded ? "▲" : "▼"}</span>
+            </button>
+
+            {previewExpanded && (
+              <div style={{ padding: "0 16px 16px", background: "#060c06" }}>
+                {previewLoading && !preview && (
+                  <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "12px", padding: "16px 0" }}>
+                    // 系统正在扫描你的生命代码<AnimatedDots />
+                  </div>
+                )}
+
+                {preview && (
+                  <>
+                    {/* 四张核心读数卡 */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", padding: "12px 0 16px" }}>
+                      {[
+                        { label: "▲ BUG 指数", value: `${preview.bugScore} / 100`, accent: "#00ff88" },
+                        { label: "♥ 健康等级", value: `Lv.${preview.healthLevel} / 9`, accent: "#4db8ff" },
+                        { label: "⊗ 权重", value: preview.weight, accent: "#00ff88" },
+                        { label: "⬡ 偏置", value: preview.bias, accent: "#00ff88" },
+                      ].map(({ label, value, accent }) => (
+                        <div key={label} style={{
+                          background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px",
+                          padding: "12px", fontFamily: "Courier New, monospace",
+                        }}>
+                          <div style={{ color: "#2d5a2d", fontSize: "11px", marginBottom: "4px" }}>{label}</div>
+                          <div style={{ color: accent, fontSize: "16px", fontWeight: "bold" }}>{value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 开场白 */}
+                    <OpeningBlock text={preview.opening} />
+
+                    {/* Bug 01 */}
+                    <div style={{ margin: "16px 0 8px", padding: "12px 14px", background: "#0a150a", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
+                      <div style={{ color: "#00cc6a", fontFamily: "Courier New, monospace", fontSize: "13px", lineHeight: "1.7" }}>
+                        {preview.bug01.split("\n").map((l, i) => (
+                          <div key={i}>{l.replace(/\*\*/g, "").replace(/`/g, "")}</div>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Bug 数量提示 */}
+                    <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "12px", marginBottom: "16px" }}>
+                      🔒 还有 {preview.bugTotal - 1} 个 Bug 待解析
+                    </div>
+
+                    {/* 近景 */}
+                    <div style={{ borderTop: "1px solid #1a3a1a", paddingTop: "14px", marginBottom: "8px" }}>
+                      <div style={{ color: "#4db8ff", fontFamily: "Courier New, monospace", fontSize: "12px", marginBottom: "8px" }}>
+                        // 近景 · 当前阶段
+                      </div>
+                      <p style={{ color: "#c8d8c8", fontSize: "14px", lineHeight: "1.85", margin: 0 }}>
+                        {preview.jinjing}
+                      </p>
+                    </div>
+                    {/* 远景锁定提示 */}
+                    <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "12px", marginTop: "10px" }}>
+                      🔒 远景·命运渲染预测（2032–2042）等待解锁
+                    </div>
+
+                    {/* 锁定目录 */}
+                    <div style={{ marginTop: "16px", padding: "12px 14px", background: "#080e08", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
+                      <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "11px", marginBottom: "8px" }}>
+                        🔒 完整报告还包含：
+                      </div>
+                      {["第零章 · 初始参数·源代码", "第一章 · 内核审计（全部 Bug）", "第二章 · 演化路径分析", "第三章 · 当下奇点", "第四章 · 命运渲染预测（近期+爆发期+远景）", "第五章 · 修复补丁", "第六章 · 命运公式", "第七章 · 总结·禅语·生命问答", "觉醒画像"].map(ch => (
+                        <div key={ch} style={{ color: "#1a3a1a", fontFamily: "Courier New, monospace", fontSize: "11px", lineHeight: "1.8" }}>
+                          {ch}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Invite code */}
         <div className="space-y-2">
