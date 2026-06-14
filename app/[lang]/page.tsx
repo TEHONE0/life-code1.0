@@ -434,11 +434,12 @@ export default function HomePage() {
             </div>
           </div>
           <div className="p-6 space-y-4 text-center flex flex-col justify-center" style={{ border: "1px solid #00ff8855", background: "#0a1f0a", borderRadius: "16px", boxShadow: "0 0 50px #00ff8814" }}>
-            <div className="text-4xl font-bold" style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855", fontFamily: "'Alibaba PuHuiTi 2.0', 'Courier New', monospace" }}>¥18.80</div>
+            <div className="text-4xl font-bold" style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855", fontFamily: "'Alibaba PuHuiTi 2.0', 'Courier New', monospace" }}>{zh ? "免费生成" : "Free"}</div>
+            <div className="text-sm" style={{ color: "#7aba7a", fontFamily: mono }}>{zh ? "先看你的生命代码简报" : "See your Life Code preview first"}</div>
             <div className="space-y-1 text-xs" style={{ color: "#4a7a4a", fontFamily: mono }}>
-              <div>✓ {zh ? "AI 逐字逐句实时生成" : "Generated live, word by word"}</div>
-              <div>✓ {zh ? "约 15-30 分钟收到完整报告" : "Full report in 15-30 min"}</div>
-              <div>✓ {zh ? "报告永久保存，随时回看" : "Saved forever, revisit anytime"}</div>
+              <div>✓ {zh ? "免费查看核心读数与系统速读" : "Core stats & instant preview, free"}</div>
+              <div>✓ {zh ? "AI 逐字逐句实时解析" : "AI-generated, word by word"}</div>
+              <div>✓ {zh ? "完整报告解锁后永久保存" : "Full report saved forever once unlocked"}</div>
             </div>
             {promoActive && (
               <div className="text-xs flex items-center justify-center gap-1.5" style={{ color: "#4db8ff", fontFamily: mono }}>
