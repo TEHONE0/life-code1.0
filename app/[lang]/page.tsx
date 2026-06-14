@@ -283,8 +283,8 @@ export default function HomePage() {
                   <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
                   <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
                 </svg>
-                <span>{zh ? "首发活动（至6月30日）：" : "Launch offer (until Jun 30): "}</span>
-                <span>{zh ? "买一赠一，送给你最想读懂的人" : "buy one, gift one to someone you most want to understand"}</span>
+                <span>{zh ? "首发活动（至6月30日），" : "Launch offer (until Jun 30): "}</span>
+                <span>{zh ? "免费生成生命代码简报" : "free Life Code preview"}</span>
               </div>
               <div className="relative mx-auto" style={{ width: "80%", maxWidth: "420px", height: "2px" }}>
                 <div className="absolute inset-0" style={{ borderRadius: "999px", background: "linear-gradient(90deg, transparent 0%, #FFC93C 50%, transparent 100%)" }} />
@@ -450,7 +450,7 @@ export default function HomePage() {
                   <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
                   <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
                 </svg>
-                {zh ? "活动期内付费即赠一份，送给你最想读懂的人" : "Buy one, gift one free during launch"}
+                {zh ? "首发活动（至6月30日），免费生成生命代码简报" : "Launch offer (until Jun 30): free Life Code preview"}
               </div>
             )}
             <div className="w-full flex justify-center">{startBtn(true)}</div>
