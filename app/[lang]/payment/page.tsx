@@ -368,25 +368,7 @@ export default function PaymentPage() {
 
                 {preview && (
                   <>
-                    {/* 四张核心读数卡 */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", padding: "12px 0 16px" }}>
-                      {[
-                        { label: "▲ BUG 指数", value: `${preview.bugScore} / 100`, accent: "#00ff88" },
-                        { label: "♥ 健康等级", value: `Lv.${preview.healthLevel} / 9`, accent: "#4db8ff" },
-                        { label: "⊗ 权重", value: preview.weight, accent: "#00ff88" },
-                        { label: "⬡ 偏置", value: preview.bias, accent: "#00ff88" },
-                      ].map(({ label, value, accent }) => (
-                        <div key={label} style={{
-                          background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px",
-                          padding: "12px", fontFamily: "Courier New, monospace",
-                        }}>
-                          <div style={{ color: "#2d5a2d", fontSize: "11px", marginBottom: "4px" }}>{label}</div>
-                          <div style={{ color: accent, fontSize: "16px", fontWeight: "bold" }}>{value}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* 姓名报告标题（图1样式）*/}
+                    {/* 姓名标题 */}
                     {previewName && (
                       <h1 style={{ color: "#00ff88", fontSize: "1.35rem", fontWeight: "bold", textShadow: "0 0 20px #00ff8844", textAlign: "center", margin: "8px 0 6px" }}>
                         {previewName} · 生命代码解析简报
@@ -394,7 +376,26 @@ export default function PaymentPage() {
                     )}
                     <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, #00ff8855, transparent)", margin: "0 0 16px" }} />
 
-                    {/* 定调句卡片（图1样式：扫描图标 + 高亮绿字）*/}
+                    {/* 四张核心读数卡（带注释）*/}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", padding: "0 0 16px" }}>
+                      {[
+                        { label: "▲ BUG 指数", value: `${preview.bugScore} / 100`, accent: "#00ff88", note: "完整报告逐一解析你所有的心理 Bug 成因" },
+                        { label: "♥ 健康等级", value: `Lv.${preview.healthLevel} / 9`, accent: "#4db8ff", note: "完整报告呈现你的觉察层级与发展路径" },
+                        { label: "⊗ 权重", value: preview.weight, accent: "#00ff88", note: "完整报告深度解析你的核心人格驱动" },
+                        { label: "⬡ 偏置", value: preview.bias, accent: "#00ff88", note: "完整报告解析你的本能优先序与行为模式" },
+                      ].map(({ label, value, accent, note }) => (
+                        <div key={label} style={{
+                          background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px",
+                          padding: "12px", fontFamily: "Courier New, monospace",
+                        }}>
+                          <div style={{ color: "#2d5a2d", fontSize: "11px", marginBottom: "4px" }}>{label}</div>
+                          <div style={{ color: accent, fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>{value}</div>
+                          <div style={{ color: "#2d5a2d", fontSize: "10px", lineHeight: 1.5 }}>{note}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 破防句 */}
                     {preview.tagline && (
                       <div className="flex items-center gap-3" style={{ background: "#0a1f0a", border: "1px solid #00ff8855", borderRadius: "14px", boxShadow: "0 0 35px #00ff8815", padding: "12px 16px", margin: "0 0 16px" }}>
                         <div style={{ flexShrink: 0 }}><NeonRing size={36}>{IconScan}</NeonRing></div>
@@ -404,66 +405,8 @@ export default function PaymentPage() {
                       </div>
                     )}
 
-                    {/* 开场白 */}
+                    {/* 开场白（第一段介绍）*/}
                     <OpeningBlock text={preview.opening} />
-
-                    {/* Bug 01 */}
-                    <div style={{ margin: "16px 0 8px", padding: "12px 14px", background: "#0a150a", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
-                      {preview.bug01.split("\n").map((l, i) => {
-                        const t = l.trim()
-                        if (!t) return <div key={i} style={{ height: "6px" }} />
-                        // 含反引号或###的是代码行（标题/中文翻译），其余是人话
-                        const isCode = t.startsWith("###") || t.includes("`")
-                        return isCode ? (
-                          <div key={i} style={{ color: "#00cc6a", fontFamily: "Courier New, monospace", fontSize: "13px", lineHeight: "1.7" }}>
-                            {t.replace(/\*\*/g, "").replace(/`/g, "")}
-                          </div>
-                        ) : (
-                          <p key={i} style={{ color: "#c8d8c8", fontSize: "14px", lineHeight: "1.8", margin: "8px 0 0" }}>
-                            {t.replace(/\*\*/g, "")}
-                          </p>
-                        )
-                      })}
-                    </div>
-                    {/* Bug 数量提示 */}
-                    <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "12px", marginBottom: "16px" }}>
-                      🔒 还有 {preview.bugTotal - 1} 个 Bug 待解析
-                    </div>
-
-                    {/* 近景 */}
-                    <div style={{ borderTop: "1px solid #1a3a1a", paddingTop: "14px", marginBottom: "8px" }}>
-                      <div style={{ color: "#4db8ff", fontFamily: "Courier New, monospace", fontSize: "12px", marginBottom: "8px" }}>
-                        // 近景 · 当前阶段
-                      </div>
-                      <p style={{ color: "#c8d8c8", fontSize: "14px", lineHeight: "1.85", margin: 0 }}>
-                        {preview.jinjing}
-                      </p>
-                    </div>
-                    {/* 远景锁定提示 */}
-                    <div style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace", fontSize: "12px", marginTop: "10px" }}>
-                      🔒 远景·命运渲染预测（2032–2042）等待解锁
-                    </div>
-
-                    {/* 钩子句（金色高亮，牢牢吸引）*/}
-                    {preview.hook && (
-                      <div style={{ margin: "18px 0 4px", padding: "14px 16px", background: "linear-gradient(135deg, #0a1f0a, #0d1a0d)", border: "1px solid #FFC93C55", borderRadius: "14px", boxShadow: "0 0 30px #FFC93C12" }}>
-                        <p style={{ color: "#FFC93C", fontSize: "15px", fontWeight: 600, lineHeight: 1.8, margin: 0, textAlign: "center" }}>
-                          {preview.hook}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* 锁定目录 */}
-                    <div style={{ marginTop: "16px", padding: "14px 16px", background: "#080e08", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
-                      <div style={{ color: "#8fbf8f", fontFamily: "Courier New, monospace", fontSize: "14px", fontWeight: "bold", marginBottom: "10px" }}>
-                        🔒 完整报告还包含：
-                      </div>
-                      {["第零章 · 初始参数·源代码", "第一章 · 内核审计（全部 Bug）", "第二章 · 演化路径分析", "第三章 · 当下奇点", "第四章 · 命运渲染预测（近期+爆发期+远景）", "第五章 · 修复补丁", "第六章 · 命运公式", "第七章 · 总结·禅语·生命问答", "觉醒画像"].map(ch => (
-                        <div key={ch} style={{ color: "#7aaa7a", fontFamily: "Courier New, monospace", fontSize: "13px", lineHeight: "2.0" }}>
-                          {ch}
-                        </div>
-                      ))}
-                    </div>
                   </>
                 )}
               </div>

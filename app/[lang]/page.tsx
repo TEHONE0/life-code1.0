@@ -273,25 +273,6 @@ export default function HomePage() {
           <div className="w-full flex flex-wrap gap-3 justify-center">
             {startBtn(true)}
           </div>
-          {promoActive && (
-            <div className="space-y-2">
-              <div className="text-sm font-bold flex flex-wrap items-center justify-center gap-x-2 gap-y-1" style={{ color: "#FFC93C", textShadow: "0 0 10px #FFC93C55", fontFamily: mono }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, filter: "drop-shadow(0 0 5px #FFC93C88)" }}>
-                  <rect x="3" y="8" width="18" height="4" rx="1" />
-                  <path d="M5 12 v8 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1 -1 v-8" />
-                  <line x1="12" y1="8" x2="12" y2="21" />
-                  <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
-                  <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
-                </svg>
-                <span>{zh ? "首发活动（至6月30日），" : "Launch offer (until Jun 30): "}</span>
-                <span>{zh ? "免费生成生命代码简报" : "free Life Code preview"}</span>
-              </div>
-              <div className="relative mx-auto" style={{ width: "80%", maxWidth: "420px", height: "2px" }}>
-                <div className="absolute inset-0" style={{ borderRadius: "999px", background: "linear-gradient(90deg, transparent 0%, #FFC93C 50%, transparent 100%)" }} />
-                <div className="absolute top-1/2 left-1/2" style={{ transform: "translate(-50%, -50%)", width: "48px", height: "10px", borderRadius: "999px", background: "#FFC93C", filter: "blur(8px)" }} />
-              </div>
-            </div>
-          )}
 
         </section>
 
@@ -396,64 +377,40 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ───── 创作者 + 价格 ───── */}
-        <section id="about" className="py-12 grid md:grid-cols-2 gap-4">
-          <div className="space-y-4">
-            <div className="p-6 space-y-3" style={CARD}>
-              <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {zh ? "关于创作者" : "About the creator"}</div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center" style={{ width: 52, height: 52, border: "1.5px solid #00ff88", borderRadius: "50%", boxShadow: "0 0 16px #00ff8833", overflow: "hidden", background: "#0a150a" }}>
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none" stroke="#00ff88" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="THEONE">
-                    {/* 极简圆框眼镜 */}
-                    <circle cx="18" cy="26" r="7.5" />
-                    <circle cx="34" cy="26" r="7.5" />
-                    <path d="M25.5 25 q2.5 -2.2 5 0" />
-                    <path d="M10.5 25 L6 23.5" />
-                    <path d="M41.5 25 L46 23.5" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>THEONE</div>
-                  <div className="text-xs" style={{ color: "#4a7a4a" }}>{zh ? "AI架构师 · AI艺术家" : "AI architect · AI artist"}</div>
-                </div>
-              </div>
-              <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
-                {zh
-                  ? "我喜欢研究心理学、九型人格、AI技术。在用 AI 架构出一队 agent 员工后，一个问题击中了我：如果 AI 能模拟人的性格，那人的性格能否被 AI 代码反过来模拟？「生命代码」AI 心理测试就这样诞生了。起初只是用它看见自己，后来朋友们测了觉得真有帮助，我就决定上线、帮到更多人。用代码读懂内心潜意识的角落——看见自己，治愈众生。"
-                  : "I'm fascinated by psychology, the Enneagram and AI. After architecting a team of AI agents, a question struck me: if AI can simulate a human personality, can a human personality be simulated back in AI code? That's how the Life Code AI psychological test was born. At first I just used it to see myself; later friends took it and found it genuinely helpful, so I decided to launch it and help more people. Reading the unconscious corners of the heart through code — to see yourself, and to heal all beings."}
-              </p>
-            </div>
-            <div className="p-6 space-y-2" style={CARD}>
-              <p className="text-base leading-relaxed" style={{ color: "#4db8ff", fontFamily: scifi, textShadow: "0 0 12px #4db8ff44" }}>
-                &ldquo;There&rsquo;s a one in billions chance we&rsquo;re in base reality.&rdquo;
-              </p>
-              <p className="text-xs" style={{ color: "#4a7a4a", fontFamily: mono }}>— Elon Musk, Code Conference, 2016</p>
-              {zh && (
-                <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>「我们生活在真实世界中的概率，只有十亿分之一。」—埃隆·马斯克</p>
-              )}
-            </div>
-          </div>
-          <div className="p-6 space-y-4 text-center flex flex-col justify-center" style={{ border: "1px solid #00ff8855", background: "#0a1f0a", borderRadius: "16px", boxShadow: "0 0 50px #00ff8814" }}>
-            <div className="text-4xl font-bold" style={{ color: "#00ff88", textShadow: "0 0 24px #00ff8855", fontFamily: "'Alibaba PuHuiTi 2.0', 'Courier New', monospace" }}>{zh ? "免费生成简报" : "Free preview"}</div>
-            <div className="text-sm" style={{ color: "#7aba7a", fontFamily: mono }}>{zh ? "先看你的生命代码" : "See your Life Code first"}</div>
-            <div className="space-y-1 text-xs" style={{ color: "#4a7a4a", fontFamily: mono }}>
-              <div>✓ {zh ? "免费查看核心读数与系统速读" : "Core stats & instant preview, free"}</div>
-              <div>✓ {zh ? "AI 逐字逐句实时解析" : "AI-generated, word by word"}</div>
-              <div>✓ {zh ? "完整报告解锁后永久保存" : "Full report saved forever once unlocked"}</div>
-            </div>
-            {promoActive && (
-              <div className="text-xs flex items-center justify-center gap-1.5" style={{ color: "#4db8ff", fontFamily: mono }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, filter: "drop-shadow(0 0 4px #FFC93C88)" }}>
-                  <rect x="3" y="8" width="18" height="4" rx="1" />
-                  <path d="M5 12 v8 a1 1 0 0 0 1 1 h12 a1 1 0 0 0 1 -1 v-8" />
-                  <line x1="12" y1="8" x2="12" y2="21" />
-                  <path d="M12 8 C 12 4.5, 8.5 4, 8 6 C 7.7 7.6, 10.5 8, 12 8 Z" />
-                  <path d="M12 8 C 12 4.5, 15.5 4, 16 6 C 16.3 7.6, 13.5 8, 12 8 Z" />
+        {/* ───── 创作者 ───── */}
+        <section id="about" className="py-12 space-y-4 max-w-2xl mx-auto">
+          <div className="p-6 space-y-3" style={CARD}>
+            <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {zh ? "关于创作者" : "About the creator"}</div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center" style={{ width: 52, height: 52, border: "1.5px solid #00ff88", borderRadius: "50%", boxShadow: "0 0 16px #00ff8833", overflow: "hidden", background: "#0a150a" }}>
+                <svg width="52" height="52" viewBox="0 0 52 52" fill="none" stroke="#00ff88" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="THEONE">
+                  {/* 极简圆框眼镜 */}
+                  <circle cx="18" cy="26" r="7.5" />
+                  <circle cx="34" cy="26" r="7.5" />
+                  <path d="M25.5 25 q2.5 -2.2 5 0" />
+                  <path d="M10.5 25 L6 23.5" />
+                  <path d="M41.5 25 L46 23.5" />
                 </svg>
-                {zh ? "首发活动（至6月30日），免费生成生命代码简报" : "Launch offer (until Jun 30): free Life Code preview"}
               </div>
+              <div>
+                <div className="text-sm font-bold" style={{ color: "#00ff88", fontFamily: mono }}>THEONE</div>
+                <div className="text-xs" style={{ color: "#4a7a4a" }}>{zh ? "AI架构师 · AI艺术家" : "AI architect · AI artist"}</div>
+              </div>
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>
+              {zh
+                ? "我喜欢研究心理学、九型人格、AI技术。在用 AI 架构出一队 agent 员工后，一个问题击中了我：如果 AI 能模拟人的性格，那人的性格能否被 AI 代码反过来模拟？「生命代码」AI 心理测试就这样诞生了。起初只是用它看见自己，后来朋友们测了觉得真有帮助，我就决定上线、帮到更多人。用代码读懂内心潜意识的角落——看见自己，治愈众生。"
+                : "I'm fascinated by psychology, the Enneagram and AI. After architecting a team of AI agents, a question struck me: if AI can simulate a human personality, can a human personality be simulated back in AI code? That's how the Life Code AI psychological test was born. At first I just used it to see myself; later friends took it and found it genuinely helpful, so I decided to launch it and help more people. Reading the unconscious corners of the heart through code — to see yourself, and to heal all beings."}
+            </p>
+          </div>
+          <div className="p-6 space-y-2" style={CARD}>
+            <p className="text-base leading-relaxed" style={{ color: "#4db8ff", fontFamily: scifi, textShadow: "0 0 12px #4db8ff44" }}>
+              &ldquo;There&rsquo;s a one in billions chance we&rsquo;re in base reality.&rdquo;
+            </p>
+            <p className="text-xs" style={{ color: "#4a7a4a", fontFamily: mono }}>— Elon Musk, Code Conference, 2016</p>
+            {zh && (
+              <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>「我们生活在真实世界中的概率，只有十亿分之一。」—埃隆·马斯克</p>
             )}
-            <div className="w-full flex justify-center">{startBtn(true)}</div>
           </div>
         </section>
 

@@ -43,11 +43,24 @@ function AuthPage() {
     });
   }, [router, redirectTo]);
 
+  const toZhError = (msg: string): string => {
+    if (/invalid login credentials/i.test(msg)) return "账号或密码错误，请检查后重试";
+    if (/email not confirmed/i.test(msg)) return "账号尚未验证，请检查邮箱";
+    if (/user already registered/i.test(msg)) return "该账号已注册，请直接登录";
+    if (/too short|password.*\d+ char/i.test(msg)) return "密码至少需要6位";
+    if (/invalid email|email.*invalid/i.test(msg)) return "账号格式不正确";
+    if (/rate.?limit/i.test(msg)) return "操作太频繁，请稍后再试";
+    if (/network|fetch/i.test(msg)) return "网络错误，请检查连接";
+    if (/signup.*disabled/i.test(msg)) return "注册暂时关闭，请稍后再试";
+    if (/weak.*password/i.test(msg)) return "密码强度不足，请换一个";
+    return msg;
+  };
+
   const handleEmail = async () => {
     setError("");
     setInfo("");
     if (!email || !password) {
-      setError(t.authErrorEmpty);
+      setError(lang === "zh" ? "请填写账号和密码" : t.authErrorEmpty);
       return;
     }
     setLoading(true);
@@ -56,7 +69,7 @@ function AuthPage() {
       if (mode === "login") {
         const { error } = await supabaseBrowser.auth.signInWithPassword({ email: authEmail, password });
         if (error) {
-          setError(error.message);
+          setError(lang === "zh" ? toZhError(error.message) : error.message);
         } else {
           router.replace(redirectTo);
         }
@@ -69,10 +82,10 @@ function AuthPage() {
         });
         const json = await res.json();
         if (!res.ok) {
-          setError(json.error || "注册失败");
+          setError(lang === "zh" ? toZhError(json.error || "注册失败") : (json.error || "Registration failed"));
         } else {
           const { error } = await supabaseBrowser.auth.signInWithPassword({ email: authEmail, password });
-          if (error) setError(error.message);
+          if (error) setError(lang === "zh" ? toZhError(error.message) : error.message);
           else router.replace(redirectTo);
         }
       }
