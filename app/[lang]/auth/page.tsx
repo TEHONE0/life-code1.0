@@ -69,7 +69,22 @@ function AuthPage() {
       if (mode === "login") {
         const { error } = await supabaseBrowser.auth.signInWithPassword({ email: authEmail, password });
         if (error) {
-          setError(lang === "zh" ? toZhError(error.message) : error.message);
+          if (lang === "zh" && /invalid login credentials/i.test(error.message)) {
+            // 区分「账号不存在」vs「密码错误」
+            try {
+              const chk = await fetch("/api/check-account", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: authEmail }),
+              });
+              const { exists } = await chk.json();
+              setError(exists ? "密码错误，请重新输入" : "该账号不存在，请先注册");
+            } catch {
+              setError("账号或密码错误，请检查后重试");
+            }
+          } else {
+            setError(lang === "zh" ? toZhError(error.message) : error.message);
+          }
         } else {
           router.replace(redirectTo);
         }
