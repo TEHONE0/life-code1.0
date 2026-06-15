@@ -412,6 +412,38 @@ export default function HomePage() {
               <p className="text-xs leading-relaxed" style={{ color: "#5a7a5a" }}>「我们生活在真实世界中的概率，只有十亿分之一。」—埃隆·马斯克</p>
             )}
           </div>
+
+          {/* 合作专家 */}
+          <div className="p-6 space-y-4" style={CARD}>
+            <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: mono }}>// {zh ? "合作专家" : "Expert Advisors"}</div>
+            {[
+              {
+                name: zh ? "觉照" : "Juézhào",
+                role: zh ? "心理咨询师" : "Licensed Psychotherapist",
+                badge: zh ? "国家心理咨询师资格证" : "National Counseling License",
+                icon: "🧠",
+              },
+              {
+                name: zh ? "探寻" : "Tànxún",
+                role: zh ? "九型人格专家" : "Enneagram Specialist",
+                badge: zh ? "IEA 官方学分认证" : "IEA Accredited",
+                icon: "🔮",
+              },
+            ].map(({ name, role, badge, icon }) => (
+              <div key={name} className="flex items-center gap-3">
+                <div className="flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, border: "1px solid #1a3a1a", borderRadius: "50%", background: "#0a150a", fontSize: "18px" }}>
+                  {icon}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold" style={{ color: "#c8d8c8", fontFamily: mono }}>{name}</span>
+                    <span className="text-xs px-2 py-0.5" style={{ border: "1px solid #1a4a1a", borderRadius: "999px", color: "#4db8ff", fontFamily: mono, background: "#061206" }}>{badge}</span>
+                  </div>
+                  <div className="text-xs" style={{ color: "#4a7a4a", marginTop: "2px" }}>{role}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* ───── 页脚 ───── */}
