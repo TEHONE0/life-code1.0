@@ -764,7 +764,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                   <input type="number" min="1" max={pendingCountFor(c.code)} placeholder={lang === "zh" ? "单数" : "count"} value={settleCount} onChange={(e) => setSettleCount(e.target.value)}
                     className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", width: "80px" }} />
                   {(() => {
-                    const unit = Number(commissions.find((x) => x.invite_code === c.code && x.status === "pending")?.amount_usd ?? 3);
+                    const unit = Number(commissions.find((x) => x.invite_code === c.code && x.status === "pending")?.amount_usd ?? 5);
                     const amt = (parseInt(settleCount, 10) || 0) * unit;
                     return (
                       <input readOnly tabIndex={-1} value={`${lang === "zh" ? "金额 " : ""}¥${amt.toFixed(2)}`}

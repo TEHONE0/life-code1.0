@@ -4,6 +4,15 @@ import { useEffect, useState, Suspense } from "react";
 import { getT, Lang } from "@/lib/i18n";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
+// 账号可以是邮箱 / 手机号 / 任意字母数字。Supabase 只认邮箱格式，
+// 非邮箱账号统一映射成内部邮箱喂给 Supabase（原始账号存进 user_metadata.account）。
+const ACCOUNT_DOMAIN = "u.lifecode9.com";
+function toAuthEmail(id: string): string {
+  const v = id.trim();
+  if (v.includes("@")) return v.toLowerCase();
+  return `${v.toLowerCase()}@${ACCOUNT_DOMAIN}`;
+}
+
 export default function AuthPageWrapper() {
   return (
     <Suspense fallback={<main className="min-h-screen" style={{ background: "#050a05" }} />}>
@@ -42,26 +51,29 @@ function AuthPage() {
       return;
     }
     setLoading(true);
+    const authEmail = toAuthEmail(email);
     try {
       if (mode === "login") {
-        const { error } = await supabaseBrowser.auth.signInWithPassword({ email, password });
+        const { error } = await supabaseBrowser.auth.signInWithPassword({ email: authEmail, password });
         if (error) {
           setError(error.message);
         } else {
           router.replace(redirectTo);
         }
       } else {
-        const { data, error } = await supabaseBrowser.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}/${lang}/auth` },
+        // 服务端建用户（直接确认，不发验证邮件），再用同账号登录
+        const res = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: authEmail, password, account: email.trim() }),
         });
-        if (error) {
-          setError(error.message);
-        } else if (data.session) {
-          router.replace(redirectTo);
+        const json = await res.json();
+        if (!res.ok) {
+          setError(json.error || "注册失败");
         } else {
-          setInfo(t.authCheckEmail);
+          const { error } = await supabaseBrowser.auth.signInWithPassword({ email: authEmail, password });
+          if (error) setError(error.message);
+          else router.replace(redirectTo);
         }
       }
     } finally {
@@ -90,17 +102,10 @@ function AuthPage() {
         <div className="space-y-3">
           <input
             type="text"
-            inputMode="email"
-            autoComplete="new-password"
-            placeholder={t.authEmail}
+            autoComplete="username"
+            placeholder={lang === "zh" ? "邮箱 / 手机号 / 用户名" : lang === "ko" ? "이메일 / 휴대폰 / 아이디" : "Email / Phone / Username"}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onPaste={(e) => {
-              e.preventDefault();
-              const text = e.clipboardData.getData("text/plain");
-              const match = text.match(/[\w.+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/);
-              setEmail(match ? match[0] : text.replace(/[﻿​-‍­\r\n]/g, "").trim());
-            }}
             className="w-full p-3 text-sm"
             style={{
               background: "#0a150a",

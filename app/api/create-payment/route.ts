@@ -5,8 +5,8 @@ import { answersDiffer } from "@/lib/submissionAnswers";
 
 const ADMIN_EMAILS = ['theone208899@gmail.com'];
 // 免费码不再硬编码，统一以 invite_codes.free_access 字段为准（与 validate-invite 同源）
-const PRICE = "18.80";
-const DISCOUNT_PRICE = "16.80"; // 达人邀请码（lifecode01-10）专属价
+const PRICE = "8.80";
+const DISCOUNT_PRICE = "6.80"; // 达人邀请码（lifecode01-10）专属价
 
 function epaySign(params: Record<string, string>, key: string): string {
   const str =

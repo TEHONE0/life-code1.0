@@ -27,7 +27,14 @@ interface Answers {
   defense?: string;
 }
 
-const norm = (v: unknown) => (v ?? ""); // null/undefined/"" 归一，避免误判变化
+// 归一化：null/undefined/"" 统一；去首尾空白、内部空白折叠、全角冒号逗号转半角。
+// 重填时 basic_info 由滚轮重新拼装，标点/空格的细微差异不应判为"内容改了"导致简报被清空重生成。
+const norm = (v: unknown) =>
+  String(v ?? "")
+    .replace(/[：]/g, ":")
+    .replace(/[，]/g, ",")
+    .replace(/\s+/g, " ")
+    .trim();
 
 export function answersDiffer(row: AnswerRow, a: Answers): boolean {
   return (

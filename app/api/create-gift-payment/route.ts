@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
-const GIFT_PRICE = "18.80"; // 单独购买赠礼码，原价
+const GIFT_PRICE = "8.80"; // 单独购买赠礼码，原价
 
 function epaySign(params: Record<string, string>, key: string): string {
   const str =

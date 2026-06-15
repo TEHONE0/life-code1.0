@@ -539,7 +539,7 @@ export default function PaymentPage() {
               ✓ {inviteLabel ? `[${inviteLabel}] ` : ''}
               {inviteFreeAccess
                 ? (lang === 'zh' ? '内测邀请码有效 · 免费解锁' : lang === 'ko' ? '베타 코드 유효 · 무료 이용' : 'Beta code valid · Free access')
-                : (lang === 'zh' ? '邀请码有效 · 优惠价 ¥16.80 已激活' : lang === 'ko' ? '초대 코드 유효 · 할인가 ¥16.80 적용' : 'Code valid · discounted price ¥16.80 applied')
+                : (lang === 'zh' ? '邀请码有效 · 优惠价 ¥6.80 已激活' : lang === 'ko' ? '초대 코드 유효 · 할인가 ¥6.80 적용' : 'Code valid · discounted price ¥6.80 applied')
               }
             </div>
           )}
@@ -556,11 +556,11 @@ export default function PaymentPage() {
         >
           <div className="text-4xl font-bold" style={{ color: "#00ff88", fontFamily: "'Alibaba PuHuiTi 2.0', 'Courier New', monospace" }}>
             {inviteStatus === "valid" && inviteFreeAccess ? (
-              <span>免费 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥18.80</span></span>
+              <span>免费 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥8.80</span></span>
             ) : inviteStatus === "valid" ? (
-              <span>¥16.80 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥18.80</span></span>
+              <span>¥6.80 <span className="text-lg line-through" style={{ color: "#2d5a2d" }}>¥8.80</span></span>
             ) : (
-              <span>¥18.80</span>
+              <span>¥8.80</span>
             )}
           </div>
           {new Date() <= new Date("2026-06-30T23:59:59+08:00") && (

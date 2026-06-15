@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const ADMIN_EMAIL = "theone208899@gmail.com";
-// 价格在 2026-06-12 调整：之前 ¥8.8/¥6.8，之后 ¥18.8/¥16.8
+// 价格三段：≤06-12 为 ¥8.8/¥6.8；06-12~06-15 为 ¥18.8/¥16.8；≥06-15 回到 ¥8.8/¥6.8
+// 注：06-13 起新订单已存真实 amount，反推仅用于更早历史订单兜底
 const PRICE_CHANGE = new Date("2026-06-12T00:00:00+08:00").getTime();
+const PRICE_REVERT = new Date("2026-06-15T00:00:00+08:00").getTime();
 const OLD_FULL = 8.80, OLD_DISCOUNT = 6.80;
 const NEW_FULL = 18.80, NEW_DISCOUNT = 16.80;
 // ZPay 手续费：1.0% 平台 + 0.6% 支付宝，结算到支付宝余额前扣除
@@ -53,8 +55,10 @@ export async function GET(req: NextRequest) {
       gross += Number(s.amount); // 真实金额，精确
     } else {
       estimated = true;
-      const old = new Date(s.created_at).getTime() < PRICE_CHANGE;
-      gross += isDiscount ? (old ? OLD_DISCOUNT : NEW_DISCOUNT) : (old ? OLD_FULL : NEW_FULL);
+      const t = new Date(s.created_at).getTime();
+      // 06-12 之前 或 06-15 之后均为低价档；中间为高价档
+      const low = t < PRICE_CHANGE || t >= PRICE_REVERT;
+      gross += isDiscount ? (low ? OLD_DISCOUNT : NEW_DISCOUNT) : (low ? OLD_FULL : NEW_FULL);
     }
   }
 

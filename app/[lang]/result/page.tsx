@@ -16,6 +16,25 @@ import { IconLock, IconScan, IconWarning, IconHeartPulse, IconEnneagram, IconCub
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
+// 朗读用纯文本：从已清洗的报告里去掉 markdown 符号、表格竖线、代码围栏、
+// 以及觉醒画像那种 ASCII 框（含大量制表符/方框字符的行），让语音连贯不念符号。
+function toSpeechText(md: string): string {
+  return md
+    .split("\n")
+    .filter((l) => {
+      const boxChars = (l.match(/[╔╗╚╝═║│─┌┐└┘┤├┬┴┼▓▒░█]/g) || []).length;
+      return boxChars < 2; // 制表/方框字符多的行＝画像框，跳过
+    })
+    .join("\n")
+    .replace(/```[\s\S]*?```/g, "")        // 代码块整段去掉
+    .replace(/`([^`]*)`/g, "$1")            // 行内代码符号
+    .replace(/[#*>_~|]/g, "")              // markdown 标记与表格竖线
+    .replace(/^[-\s]{3,}$/gm, "")          // 分隔线
+    .replace(/\n{2,}/g, "。\n")            // 段落间补停顿
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
 function cleanReport(text: string, userName?: string): string {
   let result = text
     // 结构标签行（整行删除：破防段落/觉醒画像 等章节标题，含冒号/空行等变体）
@@ -382,6 +401,7 @@ function ResultPage() {
   const [healthLevel, setHealthLevel] = useState<number | null>(null)
   const [stalled, setStalled] = useState(false)
   const [doneFlash, setDoneFlash] = useState(false)
+  const [speaking, setSpeaking] = useState(false)
 
   // 生成进度：按报告固定章节结构（第零章～第七章）数已出现的章数
   const CHAPTER_MARKERS = ["第零章", "第一章", "第二章", "第三章", "第四章", "第五章", "第六章", "第七章"]
@@ -581,6 +601,28 @@ function ResultPage() {
     }
     downloadBlob(r.blob, r.name)
   }
+
+  // 语音朗读报告（浏览器免费 Web Speech，零成本）：切换 朗读/停止
+  const handleSpeak = () => {
+    const synth = typeof window !== "undefined" ? window.speechSynthesis : null
+    if (!synth) { setCardToast(lang === 'zh' ? '当前浏览器不支持语音朗读' : 'Voice not supported on this browser'); return }
+    if (speaking) { synth.cancel(); setSpeaking(false); return }
+    const text = toSpeechText(report)
+    if (!text) return
+    synth.cancel()
+    const u = new SpeechSynthesisUtterance(text)
+    u.lang = lang === 'zh' ? 'zh-CN' : lang === 'ko' ? 'ko-KR' : 'en-US'
+    const voice = synth.getVoices().find((v) => v.lang.startsWith(u.lang.slice(0, 2)))
+    if (voice) u.voice = voice
+    u.rate = 1
+    u.onend = () => setSpeaking(false)
+    u.onerror = () => setSpeaking(false)
+    setSpeaking(true)
+    synth.speak(u)
+  }
+
+  // 离开页面/卸载时停止朗读，避免语音在后台继续念
+  useEffect(() => () => { if (typeof window !== "undefined") window.speechSynthesis?.cancel() }, [])
 
   const handleExportPdf = async () => {
     if (exportingPdf) return
@@ -1335,6 +1377,19 @@ function ResultPage() {
               // {lang === 'zh' ? '保存 · 分享' : 'SAVE · SHARE'}
             </div>
 
+            {/* 朗读报告（浏览器语音，免费） */}
+            <button
+              onClick={handleSpeak}
+              className="btn-result w-full py-3 text-sm font-bold tracking-wider"
+              style={{ ...btnBase, border: "1px solid #3a6a3a", color: speaking ? "#00ff88" : "#5a9a5a" }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#00ff8866"; e.currentTarget.style.color = "#7aba7a" }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#3a6a3a"; e.currentTarget.style.color = speaking ? "#00ff88" : "#5a9a5a" }}
+            >
+              {speaking
+                ? (lang === 'zh' ? '■ 停止朗读' : lang === 'ko' ? '■ 정지' : '■ Stop')
+                : (lang === 'zh' ? '▶ 朗读报告' : lang === 'ko' ? '▶ 음성 읽기' : '▶ Read aloud')}
+            </button>
+
             {/* 第一排：生成分享卡（保存卡片图到本地/相册） */}
             <button
               onClick={handleSaveCard}
@@ -1477,7 +1532,7 @@ function ResultPage() {
             >
               {giftBuying
                 ? (lang === 'zh' ? '跳转支付中...' : '...')
-                : (lang === 'zh' ? '🎁 再送一位朋友 ¥18.80' : lang === 'ko' ? '🎁 친구에게 선물 ¥18.80' : '🎁 Gift a friend ¥18.80')}
+                : (lang === 'zh' ? '🎁 再送一位朋友 ¥8.80' : lang === 'ko' ? '🎁 친구에게 선물 ¥8.80' : '🎁 Gift a friend ¥8.80')}
             </button>
 
           </div>
