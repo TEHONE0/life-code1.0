@@ -32,13 +32,13 @@ export async function POST(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { code, label, blogger_email } = await req.json();
+  const { code, label, blogger_email, commission_usd, free_access } = await req.json();
   if (!code) return NextResponse.json({ error: "code required" }, { status: 400 });
 
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data, error } = await supabase
     .from("invite_codes")
-    .insert({ code: code.trim().toUpperCase(), label, blogger_email, created_by: admin.email })
+    .insert({ code: code.trim().toUpperCase(), label, blogger_email, commission_usd, free_access: !!free_access, created_by: admin.email })
     .select()
     .single();
 
@@ -51,12 +51,13 @@ export async function PATCH(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { code, is_active, label, blogger_email } = await req.json();
+  const { code, is_active, label, blogger_email, commission_usd } = await req.json();
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const updates: Record<string, unknown> = {};
   if (is_active !== undefined) updates.is_active = is_active;
   if (label !== undefined) updates.label = label;
   if (blogger_email !== undefined) updates.blogger_email = blogger_email;
+  if (commission_usd !== undefined) updates.commission_usd = commission_usd;
   const { error } = await supabase
     .from("invite_codes")
     .update(updates)

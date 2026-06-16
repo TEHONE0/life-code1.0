@@ -461,15 +461,17 @@ function BloggerInlinePanel({ lang, data }: { lang: Lang; data: BloggerData }) {
 }
 
 function AdminInlinePanel({ lang }: { lang: Lang }) {
-  const [codes, setCodes] = useState<{id:string;code:string;label:string|null;blogger_email:string|null;used_count:number;is_active:boolean}[]>([]);
+  const [codes, setCodes] = useState<{id:string;code:string;label:string|null;blogger_email:string|null;used_count:number;is_active:boolean;free_access:boolean;commission_usd:number|null}[]>([]);
   const [newCode, setNewCode] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [newCommission, setNewCommission] = useState("5");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editCommission, setEditCommission] = useState("");
   const [tab, setTab] = useState<"revenue"|"blogger"|"free"|"commissions"|"suggestions">("revenue");
   const [revenue, setRevenue] = useState<null | {paidCount:number;gross:number;fullCount:number;discountCount:number;freeCount:number;bloggerTotal:number;bloggerPending:number;bloggerSettled:number;fee:number;feeRate:number;myNet:number;estimated?:boolean;bloggers:{invite_code:string;label:string|null;email:string|null;pending:number;settled:number;total:number;count:number}[]}>(null);
   const [funnel, setFunnel] = useState<null | {stages:{key:string;count:number}[];hasData:boolean}>(null);
@@ -572,18 +574,19 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     const res = await fetch("/api/admin/invite-codes", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ code: newCode.trim(), label: newLabel.trim() || null, blogger_email: newEmail.trim() || null }),
+      body: JSON.stringify({ code: newCode.trim(), label: newLabel.trim() || null, blogger_email: newEmail.trim() || null, free_access: tab === "free", commission_usd: tab === "blogger" ? (parseFloat(newCommission) || null) : null }),
     });
     const json = await res.json();
     if (json.error) { setError(json.error); setCreating(false); return; }
-    setNewCode(""); setNewLabel(""); setNewEmail("");
+    setNewCode(""); setNewLabel(""); setNewEmail(""); setNewCommission("5");
     setCreating(false); fetchCodes();
   };
 
-  const handleEdit = (c: {code:string;label:string|null;blogger_email:string|null}) => {
+  const handleEdit = (c: {code:string;label:string|null;blogger_email:string|null;commission_usd:number|null}) => {
     setEditingCode(c.code);
     setEditLabel(c.label || "");
     setEditEmail(c.blogger_email || "");
+    setEditCommission(c.commission_usd != null ? String(c.commission_usd) : "");
   };
 
   const handleSaveEdit = async () => {
@@ -592,7 +595,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
     await fetch("/api/admin/invite-codes", {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ code: editingCode, label: editLabel.trim() || null, blogger_email: editEmail.trim() || null }),
+      body: JSON.stringify({ code: editingCode, label: editLabel.trim() || null, blogger_email: editEmail.trim() || null, commission_usd: parseFloat(editCommission) || null }),
     });
     setEditingCode(null);
     fetchCodes();
@@ -662,6 +665,11 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                 className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "80px" }} />
               <input placeholder={lang === "zh" ? "博主邮箱" : "Email"} value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
                 className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "120px" }} />
+              {tab === "blogger" && (
+                <input type="number" min="0" step="0.5" placeholder={lang === "zh" ? "每单佣金 ¥" : "¥/order"} value={newCommission} onChange={(e) => setNewCommission(e.target.value)}
+                  title={lang === "zh" ? "博主每单分成（人民币）" : "Commission per order"}
+                  className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#fbbf24", fontFamily: mono, outline: "none", width: "100px" }} />
+              )}
               <button onClick={handleCreate} disabled={creating || !newCode.trim()}
                 className="px-4 py-1 text-xs font-bold"
                 style={{ border: "1px solid #00ff88", color: "#00ff88", background: "transparent", cursor: "pointer", fontFamily: mono, opacity: creating ? 0.5 : 1 }}>
@@ -671,8 +679,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
             {error && <div className="text-xs" style={{ color: "#ff6b6b" }}>⚠ {error}</div>}
           </div>
           {(() => {
-            const prefix = tab === "blogger" ? "LIFECODE" : "LCFREE";
-            const filtered = codes.filter((c) => c.code.startsWith(prefix)).sort((a, b) => a.code.localeCompare(b.code));
+            const filtered = codes.filter((c) => !c.code.startsWith("LCGIFT") && (tab === "blogger" ? !c.free_access : c.free_access)).sort((a, b) => a.code.localeCompare(b.code));
             return filtered.map((c) => {
               return (
             <div key={c.id}>
@@ -692,7 +699,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                     />
                     <span>· {c.blogger_email || (lang === "zh" ? "未填邮箱" : "no email")} · {lang === "zh" ? "已用" : "used"} {c.used_count} {lang === "zh" ? "次" : "times"}</span>
                     {tab === "blogger" && (
-                      <span style={{ color: "#fbbf24" }}>· {lang === "zh" ? "待结算" : "pending"} {pendingCountFor(c.code)}{lang === "zh" ? "单" : ""} / {lang === "zh" ? "已结" : "settled"} {settledCountFor(c.code)}{lang === "zh" ? "单" : ""}</span>
+                      <span style={{ color: "#fbbf24" }}>· {lang === "zh" ? "每单" : "¥/order"} ¥{Number(c.commission_usd ?? 0).toFixed(2)} · {lang === "zh" ? "待结算" : "pending"} {pendingCountFor(c.code)}{lang === "zh" ? "单" : ""} / {lang === "zh" ? "已结" : "settled"} {settledCountFor(c.code)}{lang === "zh" ? "单" : ""}</span>
                     )}
                   </div>
                 </div>
@@ -752,6 +759,10 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
                     className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "80px" }} />
                   <input placeholder={lang === "zh" ? "博主邮箱" : "Email"} value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
                     className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#e2e8f0", fontFamily: mono, outline: "none", flex: "1", minWidth: "150px" }} />
+                  {tab === "blogger" && (
+                    <input type="number" min="0" step="0.5" placeholder={lang === "zh" ? "每单佣金 ¥" : "¥/order"} value={editCommission} onChange={(e) => setEditCommission(e.target.value)}
+                      className="px-2 py-1 text-xs" style={{ background: "#0a150a", border: "1px solid #1a3a1a", borderRadius: "12px", color: "#fbbf24", fontFamily: mono, outline: "none", width: "100px" }} />
+                  )}
                   <button onClick={handleSaveEdit} className="px-4 py-1 text-xs font-bold"
                     style={{ border: "1px solid #00ff88", color: "#00ff88", background: "transparent", cursor: "pointer", fontFamily: mono }}>
                     {lang === "zh" ? "保存" : "Save"}
@@ -786,7 +797,7 @@ function AdminInlinePanel({ lang }: { lang: Lang }) {
               );
             });
           })()}
-          {codes.filter((c) => c.code.startsWith(tab === "blogger" ? "LIFECODE" : "LCFREE")).length === 0 &&<div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无邀请码" : "No codes yet"}</div>}
+          {codes.filter((c) => !c.code.startsWith("LCGIFT") && (tab === "blogger" ? !c.free_access : c.free_access)).length === 0 &&<div className="text-xs text-center py-6" style={{ color: "#2d5a2d", fontFamily: mono }}>// {lang === "zh" ? "暂无邀请码" : "No codes yet"}</div>}
         </div>
       )}
 
