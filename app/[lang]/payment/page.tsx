@@ -386,7 +386,7 @@ export default function PaymentPage() {
                         }}>
                           <div style={{ color: "#2d5a2d", fontSize: "11px", marginBottom: "4px" }}>{label}</div>
                           <div style={{ color: accent, fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>{value}</div>
-                          <div style={{ color: "#2d5a2d", fontSize: "10px", lineHeight: 1.5 }}>{note}</div>
+                          <div style={{ color: "#8fbf8f", fontSize: "12px", lineHeight: 1.6 }}>{note}</div>
                         </div>
                       ))}
                     </div>
