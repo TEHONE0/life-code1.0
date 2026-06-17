@@ -147,7 +147,6 @@ export default function PaymentPage() {
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewExpanded, setPreviewExpanded] = useState(true)
   const [previewProgress, setPreviewProgress] = useState(0)
-  const [paymentRevealed, setPaymentRevealed] = useState(false)
   const [previewName, setPreviewName] = useState("")
 
   // 简报生成进度条（模拟爬升到 90%，简报到了跳 100%）
@@ -307,9 +306,6 @@ export default function PaymentPage() {
     </main>
   )
 
-  // 简报就绪，或加载已结束（含失败兜底，progress>0 表示曾启动过）→ 允许解锁，绝不卡死付款
-  const canUnlock = !!preview || (!previewLoading && previewProgress > 0)
-
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center px-5 py-10"
@@ -407,43 +403,25 @@ export default function PaymentPage() {
 
                     {/* 开场白（第一段介绍）*/}
                     <OpeningBlock text={preview.opening} />
+
+                    {/* 报告内容概览：解锁后可看到的完整章节目录 */}
+                    <div style={{ marginTop: "16px", padding: "14px 16px", background: "#080e08", borderRadius: "12px", border: "1px solid #1a3a1a" }}>
+                      <div style={{ color: "#8fbf8f", fontFamily: "Courier New, monospace", fontSize: "14px", fontWeight: "bold", marginBottom: "10px" }}>
+                        🔒 完整报告还包含：
+                      </div>
+                      {["第零章 · 初始参数·源代码", "第一章 · 内核审计（全部 Bug）", "第二章 · 演化路径分析", "第三章 · 当下奇点", "第四章 · 命运渲染预测（近期+爆发期+远景）", "第五章 · 修复补丁", "第六章 · 命运公式", "第七章 · 总结·禅语·生命问答", "觉醒画像"].map(ch => (
+                        <div key={ch} style={{ color: "#7aaa7a", fontFamily: "Courier New, monospace", fontSize: "13px", lineHeight: "2.0" }}>
+                          {ch}
+                        </div>
+                      ))}
+                    </div>
                   </>
                 )}
               </div>
             )}
           </div>
 
-        {/* 解锁按钮：简报就绪 + 付款区未展开时显示 */}
-        {!paymentRevealed && (
-          <button
-            onClick={() => {
-              setPaymentRevealed(true)
-              setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 100)
-            }}
-            disabled={!canUnlock}
-            className="w-full py-5 text-base font-bold transition-all duration-300 active:scale-95"
-            style={{
-              touchAction: "manipulation",
-              border: "1px solid #00ff88",
-              color: canUnlock ? "#00ff88" : "#2d5a2d",
-              background: "transparent",
-              letterSpacing: "0.05em",
-              cursor: canUnlock ? "pointer" : "not-allowed",
-              opacity: canUnlock ? 1 : 0.5,
-              borderRadius: "14px",
-              borderColor: canUnlock ? "#00ff88" : "#1a3a1a",
-            }}
-            onMouseEnter={(e) => { if (!canUnlock) return; e.currentTarget.style.background = "#00ff88"; e.currentTarget.style.color = "#050a05"; e.currentTarget.style.boxShadow = "0 0 30px #00ff8844" }}
-            onMouseLeave={(e) => { if (!canUnlock) return; e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#00ff88"; e.currentTarget.style.boxShadow = "none" }}
-          >
-            {canUnlock
-              ? (lang === 'zh' ? '◇ 解锁完整报告' : lang === 'ko' ? '◇ 전체 리포트 해제' : '◇ Unlock full report')
-              : (lang === 'zh' ? '简报生成中…' : 'Preview loading…')}
-          </button>
-        )}
-
-        {/* ── 付款区（点解锁后展开）── */}
-        {paymentRevealed && (<>
+        {/* ── 付款区（直接显示，不再二段式解锁）── */}
         {/* Invite code */}
         <div className="space-y-2">
           <div className="text-xs" style={{ color: "#2d5a2d", fontFamily: "Courier New, monospace" }}>
@@ -604,7 +582,6 @@ export default function PaymentPage() {
             </>
           ) : t.paymentBtn}
         </button>
-        </>)}
 
         <div className="flex gap-4">
           <button
